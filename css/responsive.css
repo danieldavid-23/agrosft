@@ -1,0 +1,74 @@
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    header .container {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    nav ul {
+        margin-top: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .hero h2 {
+        font-size: 2rem;
+    }
+    
+    .hero p {
+        font-size: 1rem;
+    }
+    
+    .filtros {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .filtro-btn {
+        margin: 5px 0;
+        width: 200px;
+    }
+    
+    .lista-productos {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    
+    .pasos {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-contacto {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-contenido {
+        width: 95%;
+        margin: 10% auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo h1 {
+        font-size: 1.5rem;
+    }
+    
+    .hero {
+        height: 60vh;
+    }
+    
+    .hero h2 {
+        font-size: 1.5rem;
+    }
+    
+    .productos h2, .vender h2, .nosotros h2, .contacto h2 {
+        font-size: 1.5rem;
+    }
+    
+    .lista-productos {
+        grid-template-columns: 1fr;
+    }
+    
+    .estadisticas {
+        grid-template-columns: 1fr;
+    }
+}
