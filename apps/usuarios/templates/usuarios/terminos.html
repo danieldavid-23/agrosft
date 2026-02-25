@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Términos y Condiciones{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h2 class="text-center">{{ titulo }}</h2>
+                <p class="text-center mb-0">
+                    Versión {{ version }} - Publicado el {{ fecha|date:"d/m/Y H:i" }}
+                </p>
+            </div>
+            <div class="card-body">
+                <div class="terminos-contenido p-4" style="background-color: #f8f9fa; border-radius: 5px;">
+                    {{ contenido|linebreaks }}
+                </div>
+                
+                <div class="mt-4 text-center">
+                    {% if user.is_authenticated %}
+                        {% if ya_acepto %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> 
+                                Ya has aceptado estos términos y condiciones.
+                            </div>
+                            <a href="{% url 'usuarios:historial' %}" class="btn btn-info">
+                                Ver mi historial
+                            </a>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Debes aceptar los términos y condiciones para continuar usando el sistema.
+                            </div>
+                            <a href="{% url 'usuarios:aceptar-terminos' %}" class="btn btn-success btn-lg">
+                                Aceptar Términos y Condiciones
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Inicia sesión para aceptar los términos y condiciones.
+                        </div>
+                        <a href="/admin/login/?next={% url 'usuarios:aceptar-terminos' %}" class="btn btn-primary">
+                            Iniciar sesión
+                        </a>
+                    {% endif %}
+                    
+                    <a href="/" class="btn btn-secondary ms-2">Volver al inicio</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
