@@ -1,0 +1,1 @@
+from .terminos_model import Termino, AceptacionTermino

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h3 class="text-center">Mi Perfil</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.username.id_for_label }}">Usuario:</label>
+                            {{ form.username }}
+                            <small class="text-muted">El usuario no se puede cambiar</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}">Email:</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}">Nombre:</label>
+                            {{ form.first_name }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}">Apellido:</label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success">Actualizar Datos</button>
+                        <a href="{% url 'usuarios:cambiar_password' %}" class="btn btn-warning">Cambiar Contraseña</a>
+                        <a href="{% url 'home' %}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5>Información de la cuenta</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Fecha de registro:</strong> {{ user.date_joined|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Último acceso:</strong> {{ user.last_login|date:"d/m/Y H:i" }}</p>
+                                <p><strong>¿Activo?:</strong> {% if user.is_active %}✅ Sí{% else %}❌ No{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5>Términos aceptados</h5>
+                            </div>
+                            <div class="card-body">
+                                <a href="{% url 'usuarios:historial' %}" class="btn btn-info btn-block">Ver historial</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
