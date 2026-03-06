@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 import re
+from ..models import UserProfile
 
 class RegistroForm(UserCreationForm):
     """Formulario para registro de nuevos usuarios"""
@@ -70,6 +71,7 @@ class LoginForm(forms.Form):
 class PerfilForm(UserChangeForm):
     """Formulario para editar perfil de usuario"""
     password = None  # Ocultar campo de contraseña
+    profile_picture = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
     
     class Meta:
         model = User
@@ -84,6 +86,20 @@ class PerfilForm(UserChangeForm):
         
         # Hacer username de solo lectura
         self.fields['username'].disabled = True
+        
+        # Inicializar profile_picture si existe
+        if self.instance and hasattr(self.instance, 'userprofile'):
+            self.fields['profile_picture'].initial = self.instance.userprofile.profile_picture
+    
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        profile_picture = self.cleaned_data.get('profile_picture')
+        if profile_picture:
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            profile.profile_picture = profile_picture
+            if commit:
+                profile.save()
+        return user
     
     def clean_email(self):
         email = self.cleaned_data.get('email')

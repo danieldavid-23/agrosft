@@ -109,7 +109,7 @@ class PerfilView(BaseController, View):
         })
     
     def post(self, request):
-        form = PerfilForm(request.POST, instance=request.user)
+        form = PerfilForm(request.POST, request.FILES, instance=request.user)
         
         if form.is_valid():
             form.save()
