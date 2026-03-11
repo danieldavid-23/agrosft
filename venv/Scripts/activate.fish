@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV 'C:\Users\daniel\mi_primer_django\agrosft\venv'
+set -gx VIRTUAL_ENV 'C:\Users\samup\OneDrive\Documentos\SENA\PORTAFOLIO\agrosft\venv'
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"Scripts $PATH

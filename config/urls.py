@@ -17,6 +17,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_redirect, name='home'),
     path('usuarios/', include('apps.usuarios.urls')),
+    path('inventario/', include('apps.inventario.urls')),
+    path('clientes/', include('apps.clientes.urls')),
+    path('ventas/', include('apps.ventas.urls')),
+    path('cultivos/', include('apps.cultivos.urls')),
 ]
 
 if settings.DEBUG:

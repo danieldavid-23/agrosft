@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ producto.nombre }} - AGROST{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Navegación Premium -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-white px-4 py-3 rounded-pill shadow-sm d-inline-flex border">
+            <li class="breadcrumb-item"><a href="{% url 'inventario:listar' %}" class="text-decoration-none text-muted"><i class="fas fa-home me-1"></i>Catálogo</a></li>
+            <li class="breadcrumb-item active fw-bold text-success" aria-current="page">{{ producto.nombre|truncatechars:30 }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Columna izquierda - Imagen (Estilo Galería) -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-sticky" style="top: 100px;">
+                <div class="position-relative bg-light">
+                    {% if producto.imagen %}
+                    <img src="{{ producto.imagen.url }}" class="img-fluid w-100 object-fit-cover" alt="{{ producto.nombre }}" style="aspect-ratio: 1/1;">
+                    {% else %}
+                    <div class="d-flex justify-content-center align-items-center w-100 bg-success bg-opacity-10" style="aspect-ratio: 1/1;">
+                        <i class="fas fa-seedling text-success" style="font-size: 8rem; opacity: 0.8;"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Badge superpuesto a la imagen -->
+                    <div class="position-absolute top-0 start-0 p-3">
+                        <span class="badge {% if producto.estado == 'aprobado' %}bg-success{% elif producto.estado == 'pendiente' %}bg-warning text-dark{% else %}bg-danger{% endif %} px-3 py-2 shadow-sm rounded-pill fs-6 border border-white">
+                            {{ producto.get_estado_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha - Información y Checkout -->
+        <div class="col-lg-7">
+            
+            <!-- Bloque Título y Categoría -->
+            <div class="mb-4">
+                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill mb-3 fw-bold">
+                    <i class="fas fa-tag me-2 text-success"></i>{{ producto.categoria_nombre }}
+                </span>
+                <h1 class="display-5 fw-black mb-2">{{ producto.nombre }}</h1>
+                <p class="text-muted"><i class="fas fa-map-marker-alt me-1"></i> Directo del campo a tu mesa</p>
+            </div>
+
+            <!-- Bloque Precio y Disponibilidad Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-sm-6 mb-4 mb-sm-0 border-sm-end">
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-1">Precio de Venta</span>
+                            <div class="d-flex align-items-start">
+                                <span class="fs-5 text-success mt-1 me-1">$</span>
+                                <span class="display-4 fw-bold text-success lh-1 mb-0">{{ producto.precio|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 ps-sm-4">
+                            <span class="text-muted small fw-bold text-uppercase d-block mb-2">Disponibilidad Actual</span>
+                            
+                            {% if producto.esta_agotado %}
+                                <div class="d-flex align-items-center text-danger mb-2">
+                                    <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-2"><i class="fas fa-times fa-fw"></i></div>
+                                    <h4 class="mb-0 fw-bold">Agotado</h4>
+                                </div>
+                                <button class="btn btn-outline-warning w-100 rounded-pill fw-bold" onclick="notificarStock('{{ producto.id }}')">
+                                    <i class="fas fa-bell me-2"></i>Avisarme cuando haya stock
+                                </button>
+                            {% else %}
+                                <div class="d-flex align-items-center text-dark mb-2">
+                                    <div class="bg-success bg-opacity-10 rounded-circle p-2 me-2"><i class="fas fa-check text-success fa-fw"></i></div>
+                                    <h4 class="mb-0 fw-bold">{{ producto.stock }} <span class="fs-6 text-muted fw-normal">unidades</span></h4>
+                                </div>
+                                
+                                {% if producto.stock < producto.stock_minimo %}
+                                <div class="alert alert-warning py-2 px-3 small border-0 d-inline-block rounded-pill mb-0 mt-2">
+                                    <i class="fas fa-fire text-danger me-1"></i> <strong>¡Últimas unidades!</strong> (Mín. {{ producto.stock_minimo }})
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botón de Acción Principal (Comprar / Gestionar) -->
+                {% if rol == 'agricultor' and user.id == producto.agricultor_id %}
+                <div class="card-footer bg-light border-0 p-3 pt-0 rounded-bottom-4">
+                    <div class="d-flex flex-column flex-sm-row gap-2 pt-3">
+                        <a href="{% url 'inventario:editar' producto.id %}" class="btn btn-primary btn-lg flex-grow-1 rounded-pill fw-bold shadow-sm">
+                            <i class="fas fa-edit me-2"></i>Editar Producto
+                        </a>
+                        <button type="button" class="btn btn-outline-danger btn-lg rounded-pill fw-bold px-4 bg-white" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                {% elif not producto.esta_agotado and producto.estado == 'aprobado' %}
+                <div class="card-footer bg-white border-top p-4 d-grid">
+                    <button class="btn btn-success btn-lg py-3 rounded-pill shadow fw-bold fs-5 text-uppercase" onclick="comprarProducto('{{ producto.id }}')">
+                        <i class="fas fa-shopping-basket me-2"></i> Solicitar Compra
+                    </button>
+                    <p class="text-center text-muted small mt-3 mb-0"><i class="fas fa-shield-alt text-success me-1"></i> Compra segura. Coordinación directa de envío.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Descripción Detallada -->
+            <div class="mb-5 mt-4">
+                <h4 class="fw-bold mb-3 border-bottom pb-2">Descripción del Producto</h4>
+                <div class="text-muted lh-lg" style="font-size: 1.05rem;">
+                    {{ producto.descripcion|linebreaks }}
+                </div>
+            </div>
+
+            <!-- Especificaciones Grid -->
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <div class="card border-0 bg-light rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-white p-2 rounded-circle shadow-sm me-3"><i class="fas fa-tractor text-primary fs-5"></i></div>
+                                <h5 class="fw-bold mb-0">Origen</h5>
+                            </div>
+                            <ul class="list-unstyled mb-0 text-muted">
+                                <li class="mb-2 d-flex align-items-start"><i class="fas fa-user-circle me-2 mt-1 px-1"></i> <div><strong>Agricultor ID:</strong> {{ producto.agricultor_id }}</div></li>
+                                <li class="mb-2 d-flex align-items-start"><i class="fas fa-calendar-alt me-2 mt-1 px-1"></i> <div><strong>Publicado:</strong> {{ producto.created_at|date:"d M Y" }}</div></li>
+                                <li class="d-flex align-items-start"><i class="fas fa-sync-alt me-2 mt-1 px-1"></i> <div><strong>Actualizado:</strong> <span class="small">{{ producto.updated_at|date:"d/m/Y H:i" }}</span></div></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 bg-light rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-white p-2 rounded-circle shadow-sm me-3"><i class="fas fa-info-circle text-info fs-5"></i></div>
+                                <h5 class="fw-bold mb-0">Detalles de Venta</h5>
+                            </div>
+                            <ul class="list-unstyled mb-0 text-muted">
+                                <li class="mb-3 d-flex align-items-start">
+                                    <div class="bg-white rounded p-1 shadow-sm me-3 mt-1"><i class="fas fa-box text-secondary"></i></div>
+                                    <div><strong>Alerta de stock:</strong><br/> <span class="small">Se notifica al bajar de {{ producto.stock_minimo }} uds.</span></div>
+                                </li>
+                                <li class="d-flex align-items-start">
+                                    <div class="bg-white rounded p-1 shadow-sm me-3 mt-1"><i class="fas fa-truck text-success"></i></div>
+                                    <div><strong>Envío:</strong><br/> <span class="small">A coordinar con el agricultor al confirmar compra.</span></div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Premium de confirmación para eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center px-4 pb-4">
+                <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                    <i class="fas fa-trash-alt fa-2x text-danger"></i>
+                </div>
+                <h3 class="fw-bold mb-3">¿Eliminar Producto?</h3>
+                <p class="text-muted mb-4 fs-5">Estás a punto de eliminar el producto <strong class="text-dark">"{{ producto.nombre }}"</strong>.</p>
+                
+                <div class="alert alert-danger bg-opacity-10 border-danger border-opacity-25 rounded-3 mb-4 text-start small">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Esta acción no se puede deshacer. El producto desaparecerá permanentemente de tu catálogo y del sistema de ventas.
+                </div>
+
+                <div class="d-flex gap-3 mt-2">
+                    <button type="button" class="btn btn-light btn-lg flex-grow-1 rounded-pill fw-bold text-dark" data-bs-dismiss="modal">Mantener</button>
+                    <form action="{% url 'inventario:eliminar' producto.id %}" method="post" class="flex-grow-1 m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold shadow-sm">
+                            <i class="fas fa-trash me-2"></i>Sí, Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function notificarStock(productoId) {
+    // Implementar lógica de notificación
+    alert('¡Te notificaremos en cuanto el agricultor reponga su stock de este producto!');
+}
+
+function comprarProducto(productoId) {
+    // Implementar lógica de compra
+    alert('Abriendo proceso de compra para este producto...');
+    // window.location.href = `/ventas/comprar/${productoId}/`;
+}
+</script>
+
+<style>
+/* Ajustes locales para la UI de producto_detail */
+.fw-black { font-weight: 900; }
+.object-fit-cover { object-fit: cover; }
+.border-sm-end { border-right: none; }
+@media (min-width: 576px) {
+    .border-sm-end { border-right: 1px solid var(--border-color) !important; }
+}
+</style>
+{% endblock %}

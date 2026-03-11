@@ -4,59 +4,268 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AGROSFT - {% block title %}{% endblock %}</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Estilos Premium -->
     <style>
-        .messages {
-            margin-top: 20px;
+        :root {
+            /* Paleta Premium */
+            --bg-color: #f7f9fc;
+            --surface-color: #ffffff;
+            --primary-color: #10b981;    /* Emerald Green más moderno */
+            --primary-hover: #059669;
+            --primary-light: #d1fae5;
+            --secondary-color: #3b82f6;  /* Azul suave para acciones secundarias */
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            
+            /* Sombras avanzadas */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            /* Bordes */
+            --radius-md: 0.5rem;   /* 8px */
+            --radius-lg: 1rem;     /* 16px */
+            --radius-xl: 1.5rem;   /* 24px */
         }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.01em;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Utilidades tipográficas */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-main);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .text-muted { color: var(--text-muted) !important; }
+        
+        /* Navbar Glassmorphism */
+        .navbar-premium {
+            background: rgba(255, 255, 255, 0.85); /* Translúcido */
+            backdrop-filter: blur(12px);          /* Efecto vidrio */
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: var(--shadow-sm);
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-light .navbar-nav .nav-link {
+            color: var(--text-main);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+
+        .navbar-light .navbar-nav .nav-link:hover {
+            color: var(--primary-color);
+            background-color: var(--primary-light);
+            transform: translateY(-1px);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+            letter-spacing: -0.05em;
+        }
+
+        /* Botones Premium */
+        .btn {
+            font-weight: 600;
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.01em;
+        }
+
+        .btn-success {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover, .btn-success:focus {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-outline-success {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-success:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Formularios y Inputs */
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background-color: white;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            outline: none;
+        }
+        
+        .input-group-text {
+            background-color: transparent;
+            border-color: var(--border-color);
+            color: var(--text-muted);
+        }
+
+        /* Tarjetas Base */
+        .card {
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            background-color: var(--surface-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+        }
+
+        .badge {
+            font-weight: 600;
+            padding: 0.4em 0.8em;
+            border-radius: 9999px; /* Pill */
+            letter-spacing: 0.02em;
+        }
+
+        .bg-success { background-color: var(--primary-color) !important; }
+        .bg-warning { background-color: var(--warning-color) !important; color: white !important;}
+
+        /* Main Container */
+        main.container, main.container-fluid {
+            flex: 1;
+            padding-top: 2rem;
+            padding-bottom: 4rem;
+        }
+
+        /* Alertas Toast-like */
+        .alert {
+            border: none;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            font-weight: 500;
+        }
+
+        /* Footer */
         .footer {
-            margin-top: 50px;
-            padding: 20px 0;
-            background-color: #f8f9fa;
-            text-align: center;
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+        
+        .footer a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .footer a:hover {
+            color: var(--primary-color);
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    
+    <!-- Navbar Premium Estilo Glassmorphism -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-premium sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">🌾 AGROSFT</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+                <i class="fas fa-leaf text-success"></i> <span>AgroSFT</span>
+            </a>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'home' %}">Inicio</a>
+                            <a class="nav-link" href="{% url 'home' %}"><i class="fas fa-home me-1 d-lg-none"></i> Inicio</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'usuarios:terminos' %}">Términos</a>
+                            <a class="nav-link" href="{% url 'inventario:listar' %}"><i class="fas fa-box-open me-1 d-lg-none"></i> Inventario</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'usuarios:historial' %}">Mi historial</a>
+                            <a class="nav-link" href="{% url 'clientes:cliente_list' %}"><i class="fas fa-users me-1 d-lg-none"></i> Clientes</a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> {{ user.username }}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ventas:venta_list' %}"><i class="fas fa-chart-line me-1 d-lg-none"></i> Ventas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'cultivos:cultivo_list' %}"><i class="fas fa-seedling me-1 d-lg-none"></i> Cultivos</a>
+                        </li>
+                        <li class="nav-item dropdown ms-lg-2 mt-2 mt-lg-0">
+                            <a class="nav-link dropdown-toggle btn btn-light px-3 fw-bold rounded-pill" style="color: var(--text-main)" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle text-success fs-5 me-1 align-middle"></i> {{ user.username }}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'usuarios:perfil' %}"><i class="fas fa-id-card"></i> Mi Perfil</a></li>
-                                <li><a class="dropdown-item" href="{% url 'usuarios:cambiar_password' %}"><i class="fas fa-key"></i> Cambiar Contraseña</a></li>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: var(--radius-md);">
+                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:perfil' %}"><i class="fas fa-id-card fa-fw text-muted me-2"></i> Mi Perfil</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:historial' %}"><i class="fas fa-history fa-fw text-muted me-2"></i> Mi historial</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:cambiar_password' %}"><i class="fas fa-key fa-fw text-muted me-2"></i> Seguridad</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="{% url 'usuarios:logout' %}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                                <li><a class="dropdown-item py-2 text-danger" href="{% url 'usuarios:logout' %}"><i class="fas fa-sign-out-alt fa-fw me-2"></i> Cerrar Sesión</a></li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'usuarios:terminos' %}">Términos</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-outline-light me-2" href="{% url 'usuarios:login' %}">Iniciar Sesión</a>
+                        <li class="nav-item mt-2 mt-lg-0 ms-lg-2">
+                            <a class="btn btn-outline-secondary rounded-pill px-4 me-2" href="{% url 'usuarios:login' %}">Iniciar Sesión</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn btn-light text-success" href="{% url 'usuarios:registro' %}">Registrarse</a>
+                        <li class="nav-item mt-2 mt-lg-0">
+                            <a class="btn btn-success rounded-pill px-4 shadow-sm" href="{% url 'usuarios:registro' %}">Registrarse</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -64,29 +273,41 @@
         </div>
     </nav>
 
-    <div class="container">
-        {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
+    <main class="container-fluid">
+        <!-- Contenedor general o fluido para que las vistas decidan -->
+        <div class="container">
+            {% if messages %}
+                <div class="messages mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+                            {% if message.tags == 'success' %}<i class="fas fa-check-circle text-success fs-5"></i>{% endif %}
+                            {% if message.tags == 'danger' or message.tags == 'error' %}<i class="fas fa-exclamation-circle text-danger fs-5"></i>{% endif %}
+                            {% if message.tags == 'warning' %}<i class="fas fa-exclamation-triangle text-warning fs-5"></i>{% endif %}
+                            {% if message.tags == 'info' %}<i class="fas fa-info-circle text-info fs-5"></i>{% endif %}
+                            <div>{{ message }}</div>
+                            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
 
         {% block content %}
         {% endblock %}
-    </div>
+    </main>
 
     <footer class="footer">
-        <div class="container">
-            <p>&copy; 2026 AgroSFT - Sistema de Gestión Agrícola</p>
-            <p>
-                <a href="{% url 'usuarios:terminos' %}">Términos y Condiciones</a> | 
+        <div class="container text-center">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                <i class="fas fa-leaf text-success fs-4"></i>
+                <h5 class="mb-0 fw-bold">AgroSFT</h5>
+            </div>
+            <p class="mb-2 text-muted small">&copy; 2026 Sistema de Gestión Agrícola</p>
+            <div class="d-flex justify-content-center gap-3 small">
+                <a href="{% url 'usuarios:terminos' %}">Términos y Condiciones</a>
+                <span class="text-muted">•</span> 
                 <a href="#">Política de Privacidad</a>
-            </p>
+            </div>
         </div>
     </footer>
 

@@ -1,0 +1,1 @@
+from .venta import Venta, DetalleVenta
