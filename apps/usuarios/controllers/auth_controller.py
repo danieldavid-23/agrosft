@@ -16,7 +16,7 @@ class RegistroView(BaseController, View):
     def get(self, request):
         # Si ya está autenticado, redirigir
         if request.user.is_authenticated:
-            return redirect('home')
+            return redirect('inventario:listar')
         
         form = RegistroForm()
         terminos = TerminosService.obtener_terminos_activos()
@@ -49,8 +49,8 @@ class RegistroView(BaseController, View):
                 
                 messages.success(request, f"¡Bienvenido {user.username}! Te has registrado exitosamente.")
                 
-                # Redirigir a completar perfil o al inicio
-                return redirect('usuarios:perfil')
+                # Redirigir a ver los productos (inventario)
+                return redirect('inventario:listar')
         
         if not acepto_terminos:
             messages.error(request, "Debes aceptar los términos y condiciones")
@@ -67,7 +67,7 @@ class LoginView(BaseController, View):
     
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('home')
+            return redirect('inventario:listar')
         
         form = LoginForm()
         return render(request, 'usuarios/login.html', {'form': form})
@@ -82,7 +82,7 @@ class LoginView(BaseController, View):
             messages.success(request, f"¡Bienvenido de nuevo {user.username}!")
             
             # Redirigir a la página solicitada o al inicio
-            next_url = request.GET.get('next', 'home')
+            next_url = request.GET.get('next', 'inventario:listar')
             return redirect(next_url)
         
         return render(request, 'usuarios/login.html', {'form': form})

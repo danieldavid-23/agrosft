@@ -10,7 +10,7 @@ def home_redirect(request):
         from apps.usuarios.services.terminos_service import TerminosService
         if TerminosService.usuario_debe_aceptar_terminos(request.user):
             return redirect('usuarios:aceptar-terminos')
-        return redirect('usuarios:perfil')  # O alguna página de inicio
+        return redirect('inventario:listar')  # Redirige a productos
     return redirect('usuarios:login')
 
 urlpatterns = [
