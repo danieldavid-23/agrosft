@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Solicitud #{{ solicitud.id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'ventas:solicitud_list' %}" class="btn btn-light rounded-circle me-3">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-1 d-flex align-items-center gap-2">
+                Solicitud #{{ solicitud.id }}
+                {% if solicitud.estado == 'pendiente' %}
+                    <span class="badge bg-warning text-dark fs-6 rounded-pill"><i class="fas fa-clock me-1"></i>Pendiente</span>
+                {% elif solicitud.estado == 'aceptada' %}
+                    <span class="badge bg-success fs-6 rounded-pill"><i class="fas fa-check me-1"></i>Aceptada</span>
+                {% elif solicitud.estado == 'rechazada' %}
+                    <span class="badge bg-danger fs-6 rounded-pill"><i class="fas fa-times me-1"></i>Rechazada</span>
+                {% elif solicitud.estado == 'vendido' %}
+                    <span class="badge bg-info text-white fs-6 rounded-pill"><i class="fas fa-shopping-cart me-1"></i>Vendido</span>
+                {% endif %}
+            </h2>
+            <p class="text-muted mb-0">Detalles de la compra combinada.</p>
+        </div>
+        
+        <div class="ms-auto d-flex gap-2">
+            {% if request.user.userprofile and request.user.userprofile.rol == 'agricultor' %}
+                {% if solicitud.estado == 'pendiente' %}
+                <form action="{% url 'ventas:solicitud_rechazar' solicitud.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('¿Está seguro de rechazar esta solicitud?');">
+                        <i class="fas fa-times me-1"></i> Rechazar
+                    </button>
+                </form>
+                <form action="{% url 'ventas:solicitud_aceptar' solicitud.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success" onclick="return confirm('¿Está seguro de aceptar esta solicitud? Se generará una Venta.');">
+                        <i class="fas fa-check me-1"></i> Aceptar y Generar Venta
+                    </button>
+                </form>
+                {% endif %}
+                
+                {% if solicitud.estado != 'vendido' and solicitud.estado != 'rechazada' %}
+                <form action="{% url 'ventas:solicitud_marcar_vendido' solicitud.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('¿Está seguro de marcar este pedido como Vendido?');">
+                        <i class="fas fa-shopping-cart me-1"></i> Marcar como Vendido
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-lg h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 text-success"><i class="fas fa-info-circle me-2"></i>Información General</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item px-0 pt-0">
+                            <span class="text-muted small d-block">Cliente</span>
+                            <span class="fw-bold">{{ solicitud.cliente.nombre_completo }}</span>
+                        </li>
+                        <li class="list-group-item px-0">
+                            <span class="text-muted small d-block">Fecha de Solicitud</span>
+                            <span class="fw-bold">{{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}</span>
+                        </li>
+                        <li class="list-group-item px-0">
+                            <span class="text-muted small d-block">Creado por</span>
+                            <span class="fw-bold">{{ solicitud.creado_por.username|default:"Sistema" }}</span>
+                        </li>
+                        <li class="list-group-item px-0 border-bottom-0 pb-0">
+                            <span class="text-muted small d-block">Observaciones</span>
+                            <p class="mb-0">{{ solicitud.observaciones|default:"Sin observaciones." }}</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-lg h-100">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-success"><i class="fas fa-boxes me-2"></i>Productos Solicitados</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4 py-3">Producto</th>
+                                    <th class="px-4 py-3 text-end">Cantidad</th>
+                                    <th class="px-4 py-3 text-end">Precio Unit.</th>
+                                    <th class="px-4 py-3 text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in solicitud.detalles.all %}
+                                <tr>
+                                    <td class="px-4 py-3 align-middle">
+                                        <div class="fw-bold">{{ detalle.producto.nombre }}</div>
+                                        <small class="text-muted">{{ detalle.producto.categoria.nombre }}</small>
+                                    </td>
+                                    <td class="px-4 py-3 align-middle text-end">{{ detalle.cantidad }}</td>
+                                    <td class="px-4 py-3 align-middle text-end">${{ detalle.producto.precio }}</td>
+                                    <td class="px-4 py-3 align-middle text-end fw-semibold">${{ detalle.subtotal }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light border-top">
+                                <tr>
+                                    <td colspan="3" class="px-4 py-3 text-end fw-bold">Total Estimado:</td>
+                                    <td class="px-4 py-3 text-end fw-bold text-success fs-5">${{ solicitud.total_estimado }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
