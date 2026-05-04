@@ -100,9 +100,16 @@
                 </div>
                 {% elif not producto.esta_agotado and producto.estado == 'aprobado' %}
                 <div class="card-footer bg-white border-top p-4 d-grid">
-                    <button class="btn btn-success btn-lg py-3 rounded-pill shadow fw-bold fs-5 text-uppercase" onclick="comprarProducto('{{ producto.id }}')">
-                        <i class="fas fa-shopping-basket me-2"></i> Solicitar Compra
-                    </button>
+                    <form action="{% url 'ventas:carrito_agregar' producto.id %}" method="post" class="d-grid gap-2">
+                        {% csrf_token %}
+                        <div class="d-flex align-items-center mb-3">
+                            <label for="cantidad" class="form-label me-3 fw-bold mb-0 text-nowrap">Cantidad:</label>
+                            <input type="number" name="cantidad" id="cantidad" class="form-control" value="1" min="1" max="{{ producto.stock }}">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg py-3 rounded-pill shadow fw-bold fs-5 text-uppercase">
+                            <i class="fas fa-cart-plus me-2"></i> Añadir al Carrito
+                        </button>
+                    </form>
                     <p class="text-center text-muted small mt-3 mb-0"><i class="fas fa-shield-alt text-success me-1"></i> Compra segura. Coordinación directa de envío.</p>
                 </div>
                 {% endif %}

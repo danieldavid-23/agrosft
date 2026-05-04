@@ -1,9 +1,15 @@
 from django.urls import path
-from .controllers import venta_controller, solicitud_controller
+from .controllers import venta_controller, solicitud_controller, carrito_controller
 
 app_name = 'ventas'
 
 urlpatterns = [
+    # Carrito de Compras
+    path('carrito/', carrito_controller.detalle_carrito, name='carrito_detalle'),
+    path('carrito/agregar/<int:producto_id>/', carrito_controller.agregar_al_carrito, name='carrito_agregar'),
+    path('carrito/actualizar/<int:producto_id>/', carrito_controller.actualizar_carrito, name='carrito_actualizar'),
+    path('carrito/eliminar/<int:producto_id>/', carrito_controller.eliminar_del_carrito, name='carrito_eliminar'),
+
     # Ventas
     path('', venta_controller.listar_ventas, name='venta_list'),
     path('<int:pk>/', venta_controller.detalle_venta, name='venta_detail'),
