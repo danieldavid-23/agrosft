@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from ..models import SolicitudCompra, Venta, DetalleVenta
+from ..models import SolicitudCompra, Venta, DetalleVenta, DetalleSolicitudCompra
 from ..forms.solicitud_form import SolicitudCompraForm, DetalleSolicitudFormSet
 
 @login_required
@@ -67,6 +67,11 @@ def aceptar_solicitud(request, pk):
             messages.warning(request, 'Solo se pueden aceptar solicitudes pendientes.')
             return redirect('ventas:solicitud_detail', pk=pk)
             
+        productos_validos = solicitud.detalles.exclude(estado='rechazado')
+        if not productos_validos.exists():
+            messages.warning(request, 'No se puede generar venta porque todos los productos han sido rechazados.')
+            return redirect('ventas:solicitud_detail', pk=pk)
+            
         try:
             with transaction.atomic():
                 # Actualizar estado
@@ -81,7 +86,7 @@ def aceptar_solicitud(request, pk):
                 )
                 
                 # Crear detalles de venta
-                for detalle_solicitud in solicitud.detalles.all():
+                for detalle_solicitud in productos_validos:
                     DetalleVenta.objects.create(
                         venta=venta,
                         producto=detalle_solicitud.producto,
@@ -100,6 +105,34 @@ def aceptar_solicitud(request, pk):
                 return redirect('ventas:venta_detail', pk=venta.pk)
         except Exception as e:
             messages.error(request, f'Error al aceptar solicitud: {str(e)}')
+            
+    return redirect('ventas:solicitud_detail', pk=pk)
+
+@login_required
+def estado_detalle(request, pk, detalle_id, estado):
+    solicitud = get_object_or_404(SolicitudCompra, pk=pk)
+    detalle = get_object_or_404(DetalleSolicitudCompra, pk=detalle_id, solicitud=solicitud)
+    
+    is_agricultor = False
+    try:
+        if request.user.userprofile.rol == 'agricultor':
+            is_agricultor = True
+    except Exception:
+        pass
+        
+    if not is_agricultor:
+        messages.error(request, 'Solo los agricultores pueden gestionar productos de la solicitud.')
+        return redirect('ventas:solicitud_detail', pk=pk)
+        
+    if request.method == 'POST':
+        if solicitud.estado != 'pendiente':
+            messages.warning(request, 'No se pueden modificar productos de una solicitud procesada.')
+            return redirect('ventas:solicitud_detail', pk=pk)
+            
+        if estado in ['aceptado', 'rechazado', 'pendiente']:
+            detalle.estado = estado
+            detalle.save()
+            messages.success(request, f'Producto marcado como {estado}.')
             
     return redirect('ventas:solicitud_detail', pk=pk)
 

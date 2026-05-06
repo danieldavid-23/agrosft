@@ -129,9 +129,17 @@
 
                 <!-- Footer de la Card (Acciones emergentes) -->
                 <div class="card-footer bg-white border-0 p-3 pt-0 rounded-bottom-4 text-center">
-                    <a href="{% url 'inventario:detalle' producto.id %}" class="btn btn-primary d-block w-100 rounded-pill fw-bold shadow-sm">
+                    <a href="{% url 'inventario:detalle' producto.id %}" class="btn btn-primary d-block w-100 rounded-pill fw-bold shadow-sm mb-2">
                         Ver Detalles <i class="fas fa-arrow-right ms-2 fs-7"></i>
                     </a>
+                    
+                    <form action="{% url 'ventas:carrito_agregar' producto.id %}" method="post" class="w-100">
+                        {% csrf_token %}
+                        <input type="hidden" name="cantidad" value="1">
+                        <button type="submit" class="btn btn-outline-success d-block w-100 rounded-pill fw-bold shadow-sm">
+                            <i class="fas fa-cart-plus me-1"></i> Añadir al carrito
+                        </button>
+                    </form>
                     
                     {% if rol == 'agricultor' and user.id == producto.agricultor_id %}
                     <div class="d-flex gap-2 mt-2 justify-content-center border-top border-light pt-2">

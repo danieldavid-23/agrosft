@@ -100,9 +100,16 @@
                 </div>
                 {% elif not producto.esta_agotado and producto.estado == 'aprobado' %}
                 <div class="card-footer bg-white border-top p-4 d-grid">
-                    <button class="btn btn-success btn-lg py-3 rounded-pill shadow fw-bold fs-5 text-uppercase" onclick="comprarProducto('{{ producto.id }}')">
-                        <i class="fas fa-shopping-basket me-2"></i> Solicitar Compra
-                    </button>
+                    <form action="{% url 'ventas:carrito_agregar' producto.id %}" method="post" class="d-grid gap-2">
+                        {% csrf_token %}
+                        <div class="d-flex align-items-center mb-3">
+                            <label for="cantidad" class="form-label me-3 fw-bold mb-0 text-nowrap">Cantidad:</label>
+                            <input type="number" name="cantidad" id="cantidad" class="form-control" value="1" min="1" max="{{ producto.stock }}">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg py-3 rounded-pill shadow fw-bold fs-5 text-uppercase">
+                            <i class="fas fa-cart-plus me-2"></i> Añadir al Carrito
+                        </button>
+                    </form>
                     <p class="text-center text-muted small mt-3 mb-0"><i class="fas fa-shield-alt text-success me-1"></i> Compra segura. Coordinación directa de envío.</p>
                 </div>
                 {% endif %}
@@ -113,6 +120,34 @@
                 <h4 class="fw-bold mb-3 border-bottom pb-2">Descripción del Producto</h4>
                 <div class="text-muted lh-lg" style="font-size: 1.05rem;">
                     {{ producto.descripcion|linebreaks }}
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <h4 class="fw-bold mb-3 border-bottom pb-2">Productos relacionados</h4>
+                <div class="row g-3">
+                    {% if relacionados %}
+                        {% for p in relacionados %}
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-body p-4">
+                                    <h5 class="fw-bold mb-2">{{ p.nombre }}</h5>
+                                    <p class="text-muted mb-3">{{ p.descripcion|truncatechars:100 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-success fw-bold">${{ p.precio|floatformat:2 }}</span>
+                                        <a href="{% url 'inventario:detalle' p.id %}" class="btn btn-sm btn-outline-primary rounded-pill">Ver</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-secondary rounded-4 py-4 px-4 mb-0">
+                                No hay productos relacionados disponibles para esta categoría.
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 

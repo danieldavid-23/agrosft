@@ -9,7 +9,7 @@ class CategoriaAdmin(admin.ModelAdmin):
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'categoria', 'precio', 'stock', 'estado', 'agricultor_id', 'created_at']
+    list_display = ['nombre', 'categoria', 'precio', 'stock', 'estado', 'agricultor', 'created_at']
     list_filter = ['estado', 'categoria', 'eliminado']
     search_fields = ['nombre', 'descripcion']
     actions = ['aprobar_productos', 'rechazar_productos']

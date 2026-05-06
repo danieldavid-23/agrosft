@@ -18,7 +18,17 @@ def producto_detail(request, pk):
     rol = None
     if hasattr(request.user, 'userprofile'):
         rol = request.user.userprofile.rol
-    return render(request, 'inventario/producto_detail.html', {'producto': producto, 'rol': rol})
+
+    relacionados = Producto.objects.filter(
+        categoria=producto.categoria,
+        eliminado=False
+    ).exclude(pk=producto.pk)[:4]
+
+    return render(request, 'inventario/producto_detail.html', {
+        'producto': producto,
+        'rol': rol,
+        'relacionados': relacionados,
+    })
 
 @login_required
 def producto_create(request):

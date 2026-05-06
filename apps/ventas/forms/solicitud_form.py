@@ -11,6 +11,14 @@ class SolicitudCompraForm(forms.ModelForm):
             'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Observaciones adicionales'}),
         }
 
+class CheckoutSolicitudForm(forms.ModelForm):
+    class Meta:
+        model = SolicitudCompra
+        fields = ['observaciones']
+        widgets = {
+            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Observaciones adicionales'}),
+        }
+
 class DetalleSolicitudCompraForm(forms.ModelForm):
     class Meta:
         model = DetalleSolicitudCompra
@@ -26,5 +34,7 @@ DetalleSolicitudFormSet = inlineformset_factory(
     DetalleSolicitudCompra,
     form=DetalleSolicitudCompraForm,
     extra=1,
-    can_delete=True
+    can_delete=True,
+    min_num=1,
+    validate_min=True
 )

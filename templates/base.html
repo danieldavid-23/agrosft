@@ -248,6 +248,16 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'cultivos:cultivo_list' %}"><i class="fas fa-seedling me-1 d-lg-none"></i> Cultivos</a>
                         </li>
+                        <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center">
+                            <a class="btn btn-outline-success border-0 rounded-circle position-relative p-2" href="{% url 'ventas:carrito_detalle' %}" title="Carrito de Compras">
+                                <i class="fas fa-shopping-cart fs-5"></i>
+                                {% if request.session.carrito %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                    {{ request.session.carrito|length }}
+                                </span>
+                                {% endif %}
+                            </a>
+                        </li>
                         <li class="nav-item dropdown ms-lg-2 mt-2 mt-lg-0">
                             <a class="nav-link dropdown-toggle btn btn-light px-3 fw-bold rounded-pill" style="color: var(--text-main)" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user-circle text-success fs-5 me-1 align-middle"></i> {{ user.username }}
