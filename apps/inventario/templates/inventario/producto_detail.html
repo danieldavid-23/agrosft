@@ -123,6 +123,34 @@
                 </div>
             </div>
 
+            <div class="mb-5">
+                <h4 class="fw-bold mb-3 border-bottom pb-2">Productos relacionados</h4>
+                <div class="row g-3">
+                    {% if relacionados %}
+                        {% for p in relacionados %}
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-body p-4">
+                                    <h5 class="fw-bold mb-2">{{ p.nombre }}</h5>
+                                    <p class="text-muted mb-3">{{ p.descripcion|truncatechars:100 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-success fw-bold">${{ p.precio|floatformat:2 }}</span>
+                                        <a href="{% url 'inventario:detalle' p.id %}" class="btn btn-sm btn-outline-primary rounded-pill">Ver</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-secondary rounded-4 py-4 px-4 mb-0">
+                                No hay productos relacionados disponibles para esta categoría.
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Especificaciones Grid -->
             <div class="row g-4 mt-2">
                 <div class="col-md-6">

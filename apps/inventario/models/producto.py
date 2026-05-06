@@ -41,6 +41,14 @@ class Producto(models.Model):
         return self.nombre
     
     @property
+    def categoria_nombre(self):
+        return self.categoria.nombre if self.categoria else ''
+
+    @property
+    def imagen(self):
+        return None
+    
+    @property
     def esta_agotado(self):
         return self.stock == 0
     
