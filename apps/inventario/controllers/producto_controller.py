@@ -18,8 +18,8 @@ def listar_productos(request):
         'search': request.GET.get('q'),
     }
     
-    # Si es agricultor, filtrar por sus productos
-    if hasattr(request.user, 'userprofile') and request.user.userprofile.rol == 'agricultor' and request.GET.get('mis_productos'):
+    # Si es un usuario registrado, permitir filtrar por sus productos
+    if hasattr(request.user, 'userprofile') and request.user.userprofile.rol == 'usuario' and request.GET.get('mis_productos'):
         filters['agricultor'] = request.user
     
     result = service.listar_productos(page, filters)
@@ -50,9 +50,9 @@ def detalle_producto(request, producto_id):
 @login_required
 def crear_producto(request):
     """Controlador para crear producto (RF-11)"""
-    # Verificar rol (RF-11)
-    if not hasattr(request.user, 'userprofile') or request.user.userprofile.rol != 'agricultor':
-        messages.error(request, "Solo agricultores pueden crear productos")
+    # Verificar rol
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.rol != 'usuario':
+        messages.error(request, "Solo los usuarios registrados pueden crear productos")
         return redirect('inventario:listar')
     
     if request.method == 'POST':

@@ -46,7 +46,7 @@ def eliminar_del_carrito(request, producto_id):
     carrito.eliminar(producto_id=producto_id)
     messages.success(request, 'Producto eliminado del carrito.')
     return redirect('ventas:carrito_detalle')
-<<<<<<< HEAD
+
 
 from django.db import transaction
 from apps.ventas.forms.solicitud_form import CheckoutSolicitudForm
@@ -159,5 +159,3 @@ def checkout_venta_carrito(request):
         'form': form,
         'carrito': carrito
     })
-=======
->>>>>>> 00deb5effa133f591114c2e6891dfa3515da315b

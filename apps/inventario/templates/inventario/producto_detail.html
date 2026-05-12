@@ -87,7 +87,7 @@
                 </div>
                 
                 <!-- Botón de Acción Principal (Comprar / Gestionar) -->
-                {% if rol == 'agricultor' and user.id == producto.agricultor_id %}
+                {% if (rol == 'usuario' or rol == 'admin') and user.id == producto.agricultor_id %}
                 <div class="card-footer bg-light border-0 p-3 pt-0 rounded-bottom-4">
                     <div class="d-flex flex-column flex-sm-row gap-2 pt-3">
                         <a href="{% url 'inventario:editar' producto.id %}" class="btn btn-primary btn-lg flex-grow-1 rounded-pill fw-bold shadow-sm">
@@ -161,7 +161,7 @@
                                 <h5 class="fw-bold mb-0">Origen</h5>
                             </div>
                             <ul class="list-unstyled mb-0 text-muted">
-                                <li class="mb-2 d-flex align-items-start"><i class="fas fa-user-circle me-2 mt-1 px-1"></i> <div><strong>Agricultor ID:</strong> {{ producto.agricultor_id }}</div></li>
+                                <li class="mb-2 d-flex align-items-start"><i class="fas fa-user-circle me-2 mt-1 px-1"></i> <div><strong>Vendedor ID:</strong> {{ producto.agricultor_id }}</div></li>
                                 <li class="mb-2 d-flex align-items-start"><i class="fas fa-calendar-alt me-2 mt-1 px-1"></i> <div><strong>Publicado:</strong> {{ producto.created_at|date:"d M Y" }}</div></li>
                                 <li class="d-flex align-items-start"><i class="fas fa-sync-alt me-2 mt-1 px-1"></i> <div><strong>Actualizado:</strong> <span class="small">{{ producto.updated_at|date:"d/m/Y H:i" }}</span></div></li>
                             </ul>
@@ -182,7 +182,7 @@
                                 </li>
                                 <li class="d-flex align-items-start">
                                     <div class="bg-white rounded p-1 shadow-sm me-3 mt-1"><i class="fas fa-truck text-success"></i></div>
-                                    <div><strong>Envío:</strong><br/> <span class="small">A coordinar con el agricultor al confirmar compra.</span></div>
+                                    <div><strong>Envío:</strong><br/> <span class="small">A coordinar con el usuario vendedor al confirmar compra.</span></div>
                                 </li>
                             </ul>
                         </div>
@@ -229,7 +229,7 @@
 <script>
 function notificarStock(productoId) {
     // Implementar lógica de notificación
-    alert('¡Te notificaremos en cuanto el agricultor reponga su stock de este producto!');
+    alert('¡Te notificaremos en cuanto el vendedor reponga su stock de este producto!');
 }
 
 function comprarProducto(productoId) {

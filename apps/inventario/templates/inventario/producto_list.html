@@ -14,7 +14,7 @@
             <p class="text-muted fs-5 mb-0">Explora nuestra variedad de productos frescos directamente del campo</p>
         </div>
         <div class="col-md-4 text-md-end mt-4 mt-md-0">
-            {% if rol == 'agricultor' %}
+            {% if rol == 'usuario' or rol == 'admin' %}
             <a href="{% url 'inventario:crear' %}" class="btn btn-success btn-lg shadow-sm">
                 <i class="fas fa-plus-circle me-2"></i>Nuevo Producto
             </a>
@@ -141,7 +141,7 @@
                         </button>
                     </form>
                     
-                    {% if rol == 'agricultor' and user.id == producto.agricultor_id %}
+                    {% if rol == 'usuario' and user.id == producto.agricultor_id %}
                     <div class="d-flex gap-2 mt-2 justify-content-center border-top border-light pt-2">
                         <a href="{% url 'inventario:editar' producto.id %}" class="btn btn-sm btn-light text-primary flex-grow-1 rounded-pill">
                             <i class="fas fa-edit me-1"></i> Editar
@@ -164,7 +164,7 @@
                     </div>
                     <h3 class="fw-bold h4">No se encontraron productos</h3>
                     <p class="text-muted mx-auto" style="max-width: 400px;">Aún no hay productos disponibles o los filtros de búsqueda no arrojaron resultados.</p>
-                    {% if rol == 'agricultor' %}
+                    {% if rol == 'usuario' %}
                     <a href="{% url 'inventario:crear' %}" class="btn btn-success btn-lg mt-3 rounded-pill px-4 shadow-sm">
                         <i class="fas fa-plus-circle me-2"></i>Registrar Primer Producto
                     </a>

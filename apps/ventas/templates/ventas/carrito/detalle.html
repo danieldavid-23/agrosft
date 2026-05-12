@@ -34,7 +34,6 @@
                 <tr>
                     <td>{{ item.producto.nombre }}</td>
                     <td>${{ item.precio }}</td>
-<<<<<<< HEAD
                     <td style="width: 200px;">
                         <form action="{% url 'ventas:carrito_actualizar' item.producto.id %}" method="post" class="d-flex m-0">
                             {% csrf_token %}
@@ -48,24 +47,13 @@
                                 </button>
                             </div>
                             <noscript><button type="submit" class="btn btn-sm btn-primary ms-2">Actualizar</button></noscript>
-=======
-                    <td style="width: 250px;">
-                        <form action="{% url 'ventas:carrito_actualizar' item.producto.id %}" method="post" class="d-flex">
-                            {% csrf_token %}
-                            <input type="number" name="cantidad" value="{{ item.cantidad }}" min="1" max="{{ item.producto.stock }}" class="form-control form-control-sm me-2">
-                            <button type="submit" class="btn btn-sm btn-primary">Actualizar</button>
->>>>>>> 00deb5effa133f591114c2e6891dfa3515da315b
                         </form>
                     </td>
                     <td>${{ item.subtotal }}</td>
                     <td>
                         <form action="{% url 'ventas:carrito_eliminar' item.producto.id %}" method="post" class="d-inline">
                             {% csrf_token %}
-<<<<<<< HEAD
                             <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-=======
-                            <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
->>>>>>> 00deb5effa133f591114c2e6891dfa3515da315b
                         </form>
                     </td>
                 </tr>
@@ -74,17 +62,12 @@
             <tfoot>
                 <tr>
                     <th colspan="3" class="text-end">Total:</th>
-<<<<<<< HEAD
                     <th colspan="2" class="fs-4 text-success">${{ carrito.get_total_precio }}</th>
-=======
-                    <th colspan="2" class="fs-4">${{ carrito.get_total_precio }}</th>
->>>>>>> 00deb5effa133f591114c2e6891dfa3515da315b
                 </tr>
             </tfoot>
         </table>
     </div>
     <div class="d-flex justify-content-between mt-3">
-<<<<<<< HEAD
         <a href="{% url 'inventario:listar' %}" class="btn btn-secondary">Seguir Comprando</a>
         <div>
             <a href="{% url 'ventas:carrito_checkout' %}" class="btn btn-primary btn-lg me-2">Crear Solicitud de Compra</a>
@@ -94,14 +77,6 @@
     {% else %}
     <div class="alert alert-info mt-4">
         Tu carrito está vacío. <a href="{% url 'inventario:listar' %}" class="alert-link">Vuelve al inventario para agregar productos</a>.
-=======
-        <a href="javascript:history.back()" class="btn btn-secondary">Seguir Comprando</a>
-        <a href="#" class="btn btn-success btn-lg">Realizar Pedido</a>
-    </div>
-    {% else %}
-    <div class="alert alert-info mt-4">
-        Tu carrito está vacío. <a href="javascript:history.back()" class="alert-link">Vuelve para agregar productos</a>.
->>>>>>> 00deb5effa133f591114c2e6891dfa3515da315b
     </div>
     {% endif %}
 </div>

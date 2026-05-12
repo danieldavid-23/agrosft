@@ -9,8 +9,8 @@ from django.contrib.auth.models import User
 from apps.usuarios.models.profile_model import UserProfile
 
 def cambiar_rol_y_contrasena():
-    print("=== Cambiar Rol a Agricultor y Restablecer Contraseña ===")
-    email = input("Introduce tu correo electrónico (ej. danibaron456@gmail.com): ").strip()
+    print("=== Cambiar Rol a Usuario y Restablecer Contraseña ===")
+    email = input("Introduce tu correo electrónico: ").strip()
     
     try:
         # Buscar el usuario por correo
@@ -18,9 +18,9 @@ def cambiar_rol_y_contrasena():
         
         # 1. Cambiar el rol
         profile, created = UserProfile.objects.get_or_create(user=user)
-        profile.rol = 'agricultor'
+        profile.rol = 'usuario'
         profile.save()
-        print(f"\n✅ El rol del usuario '{user.username}' ha sido cambiado a 'agricultor'.")
+        print(f"\n✅ El rol del usuario '{user.username}' ha sido cambiado a 'usuario'.")
         
         # 2. Restablecer la contraseña
         print("\nComo no recuerdas tu contraseña, vamos a crear una nueva.")
