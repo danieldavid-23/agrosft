@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     # Tus apps - con el prefijo apps/
     'apps.usuarios',
     'apps.inventario',
-    'apps.cultivos',
     'apps.clientes',
     'apps.ventas',
 ]

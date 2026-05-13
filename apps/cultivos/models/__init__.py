@@ -1,1 +1,0 @@
-from .cultivo import Cultivo, UsoProductoCultivo

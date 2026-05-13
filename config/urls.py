@@ -21,7 +21,7 @@ urlpatterns = [
     path('inventario/', include('apps.inventario.urls')),
     path('clientes/', include('apps.clientes.urls')),
     path('ventas/', include('apps.ventas.urls')),
-    path('cultivos/', include('apps.cultivos.urls')),
+    # path('cultivos/', include('apps.cultivos.urls')),  # App no existe
     path('accounts/login/', RedirectView.as_view(url='/usuarios/login/', query_string=True)),
 ]
 
