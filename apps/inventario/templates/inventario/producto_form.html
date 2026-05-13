@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if accion == 'crear' %}Registrar Producto{% else %}Editar {{ producto.nombre }}{% endif %} - AGROST
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'inventario:listar' %}" class="text-decoration-none text-muted">Productos</a></li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">
+                        {% if accion == 'crear' %}Nuevo Registro{% else %}Edición{% endif %}
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <!-- Header Card Premium -->
+                <div class="bg-success text-white p-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            {% if accion == 'crear' %}
+                            <i class="fas fa-plus fa-lg"></i>
+                            {% else %}
+                            <i class="fas fa-edit fa-lg"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="mb-1 fw-bold">
+                                {% if accion == 'crear' %}Registrar Nuevo Producto{% else %}Editar: {{ producto.nombre }}{% endif %}
+                            </h3>
+                            <p class="mb-0 text-white-50 small">Completa la información requerida del producto agrícola</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger rounded-3 d-flex align-items-start gap-2 border-0 shadow-sm p-3 mb-4">
+                            <i class="fas fa-exclamation-circle mt-1"></i>
+                            <div>{{ form.non_field_errors }}</div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row g-4">
+                            <!-- Estado y Nombre en fila -->
+                            <div class="col-md-4">
+                                <label for="{{ form.estado.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase">
+                                    Estado <span class="text-danger">*</span>
+                                </label>
+                                {{ form.estado }}
+                                {% if form.estado.errors %}
+                                <div class="text-danger small mt-1 animate-fade-in"><i class="fas fa-info-circle me-1"></i>{{ form.estado.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-8">
+                                <label for="{{ form.nombre.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase">
+                                    Nombre del Producto <span class="text-danger">*</span>
+                                </label>
+                                {{ form.nombre }}
+                                {% if form.nombre.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.nombre.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text small text-muted"><i class="fas fa-font me-1"></i>Mín. 3, máx. 200 caracteres</div>
+                            </div>
+
+                            <!-- Categoría (Full width) -->
+                            <div class="col-12">
+                                <label for="{{ form.categoria.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase">
+                                    Categoría <span class="text-danger">*</span>
+                                </label>
+                                {{ form.categoria }}
+                                {% if form.categoria.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.categoria.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Precio, Stock y Alerta -->
+                            <div class="col-12"><hr class="text-muted opacity-25 my-2"></div>
+                            
+                            <div class="col-md-4">
+                                <label for="{{ form.precio.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase">
+                                    Precio <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 fw-bold text-success">$</span>
+                                    {{ form.precio }}
+                                </div>
+                                {% if form.precio.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.precio.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="{{ form.stock.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase">
+                                    Unidades <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-box"></i></span>
+                                    {{ form.stock }}
+                                </div>
+                                {% if form.stock.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.stock.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="{{ form.stock_minimo.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase" title="Te notificaremos cuando el stock baje de este número">
+                                    Alerta Stock <i class="fas fa-question-circle small text-warning ms-1"></i>
+                                </label>
+                                {{ form.stock_minimo }}
+                                {% if form.stock_minimo.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.stock_minimo.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12"><hr class="text-muted opacity-25 my-2"></div>
+
+                            <!-- Imagen del producto -->
+                            <div class="col-12">
+                                <label for="id_imagen" class="form-label text-muted small fw-bold text-uppercase d-flex align-items-center gap-2">
+                                    <i class="fas fa-camera"></i> Imagen del Producto
+                                </label>
+                                <div class="p-4 border border-dashed rounded-3 bg-light text-center" style="border-style: dashed !important; border-width: 2px !important;">
+                                    <input type="file" name="imagen" class="form-control" id="id_imagen" accept="image/*">
+                                    <div class="form-text mt-3 mb-0">
+                                        <span class="badge bg-secondary me-1">JPG</span> 
+                                        <span class="badge bg-secondary me-1">PNG</span>
+                                        Tamaño máximo sugerido: 2MB
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="col-12">
+                                <label for="{{ form.descripcion.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase">
+                                    Descripción Detallada
+                                </label>
+                                {{ form.descripcion }}
+                                {% if form.descripcion.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.descripcion.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text text-muted">Añade detalles sobre el origen, cuidados, o características especiales.</div>
+                            </div>
+                        </div>
+
+                        <!-- Advertencia Pendiente -->
+                        {% if accion == 'crear' %}
+                        <div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 mt-4 mb-0 d-flex gap-3 align-items-center rounded-3">
+                            <i class="fas fa-user-shield fs-4 text-warning"></i>
+                            <div>
+                                <h6 class="alert-heading fw-bold mb-1">Revisión Requerida</h6>
+                                <p class="mb-0 small">Los productos nuevos estarán en estado "Pendiente" hasta que un administrador verifique la publicación y los estandares de calidad.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Botones Grandes -->
+                        <div class="d-flex flex-column flex-sm-row gap-3 mt-5 pt-4 border-top">
+                            <a href="{% if producto %}{% url 'inventario:detalle' producto.id %}{% else %}{% url 'inventario:listar' %}{% endif %}" 
+                               class="btn btn-light btn-lg px-4 fw-bold order-2 order-sm-1 flex-grow-1 text-secondary">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm fw-bold order-1 order-sm-2 flex-grow-1">
+                                {% if accion == 'crear' %}
+                                <i class="fas fa-check-circle me-2"></i>Publicar Producto
+                                {% else %}
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos adicionales para inputs dentro del card */
+    .form-control, .form-select {
+        padding: 0.8rem 1rem;
+        font-size: 1rem;
+    }
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}

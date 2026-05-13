@@ -1,0 +1,15 @@
+<h1>{{ producto.nombre }}</h1>
+<p>{{ producto.descripcion }}</p>
+<p>Precio: ${{ producto.precio }}</p>
+
+<hr>
+
+<h3>Productos relacionados</h3>
+
+{% for p in relacionados %}
+<div>
+    <h4>{{ p.nombre }}</h4>
+    <p>${{ p.precio }}</p>
+    <a href="{% url 'inventario:detalle' p.id %}">Ver</a>
+</div>
+{% endfor %}

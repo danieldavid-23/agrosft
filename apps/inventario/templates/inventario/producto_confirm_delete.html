@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Producto - AGROST{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Confirmar Eliminación
+                    </h4>
+                </div>
+
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                    
+                    <h5 class="mb-3">¿Estás seguro que deseas eliminar este producto?</h5>
+                    
+                    <div class="bg-light p-3 rounded mb-4">
+                        <h4 class="text-success mb-2">{{ producto.nombre }}</h4>
+                        <p class="text-muted mb-2">{{ producto.descripcion|truncatechars:100 }}</p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <span class="badge bg-info">${{ producto.precio|floatformat:2 }}</span>
+                            <span class="badge bg-secondary">{{ producto.categoria_nombre }}</span>
+                            <span class="badge {% if producto.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                Stock: {{ producto.stock }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+                        <ul class="text-start mt-2 mb-0">
+                            <li>El producto no aparecerá en búsquedas ni listados</li>
+                            <li>No estará disponible para nuevas ventas</li>
+                            <li>El historial de ventas anteriores se mantendrá</li>
+                        </ul>
+                    </div>
+
+                    {% if producto.tiene_pedidos_activos %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-ban me-2"></i>
+                        <strong>No se puede eliminar:</strong> Este producto tiene pedidos activos.
+                        <br>
+                        <small>Finaliza las transacciones pendientes antes de eliminar.</small>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer bg-transparent">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'inventario:detalle' producto.id %}" 
+                            class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Volver al Producto
+                        </a>
+                        
+                        {% if not producto.tiene_pedidos_activos %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Sí, Eliminar Producto
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
