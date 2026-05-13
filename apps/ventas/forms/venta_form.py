@@ -5,3 +5,8 @@ class VentaForm(forms.ModelForm):
     class Meta:
         model = Venta
         fields = ['cliente', 'total']
+
+class CheckoutVentaForm(forms.ModelForm):
+    class Meta:
+        model = Venta
+        fields = []

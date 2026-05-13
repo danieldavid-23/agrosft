@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from ..models import SolicitudCompra, Venta, DetalleVenta
+from ..models import SolicitudCompra, Venta, DetalleVenta, DetalleSolicitudCompra
 from ..forms.solicitud_form import SolicitudCompraForm, DetalleSolicitudFormSet
 
 @login_required
@@ -50,21 +50,26 @@ def detalle_solicitud(request, pk):
 def aceptar_solicitud(request, pk):
     solicitud = get_object_or_404(SolicitudCompra, pk=pk)
     
-    # Verificar que el usuario sea agricultor
-    is_agricultor = False
+    # Verificar que el usuario tenga el rol de usuario
+    is_usuario = False
     try:
-        if request.user.userprofile.rol == 'agricultor':
-            is_agricultor = True
+        if request.user.userprofile.rol == 'usuario':
+            is_usuario = True
     except Exception:
         pass
         
-    if not is_agricultor:
-        messages.error(request, 'Solo los agricultores pueden aceptar solicitudes.')
+    if not is_usuario:
+        messages.error(request, 'Solo los usuarios registrados pueden aceptar solicitudes.')
         return redirect('ventas:solicitud_detail', pk=pk)
     
     if request.method == 'POST':
         if solicitud.estado != 'pendiente':
             messages.warning(request, 'Solo se pueden aceptar solicitudes pendientes.')
+            return redirect('ventas:solicitud_detail', pk=pk)
+            
+        productos_validos = solicitud.detalles.exclude(estado='rechazado')
+        if not productos_validos.exists():
+            messages.warning(request, 'No se puede generar venta porque todos los productos han sido rechazados.')
             return redirect('ventas:solicitud_detail', pk=pk)
             
         try:
@@ -81,7 +86,7 @@ def aceptar_solicitud(request, pk):
                 )
                 
                 # Crear detalles de venta
-                for detalle_solicitud in solicitud.detalles.all():
+                for detalle_solicitud in productos_validos:
                     DetalleVenta.objects.create(
                         venta=venta,
                         producto=detalle_solicitud.producto,
@@ -104,19 +109,47 @@ def aceptar_solicitud(request, pk):
     return redirect('ventas:solicitud_detail', pk=pk)
 
 @login_required
-def rechazar_solicitud(request, pk):
+def estado_detalle(request, pk, detalle_id, estado):
     solicitud = get_object_or_404(SolicitudCompra, pk=pk)
+    detalle = get_object_or_404(DetalleSolicitudCompra, pk=detalle_id, solicitud=solicitud)
     
-    # Verificar que el usuario sea agricultor
-    is_agricultor = False
+    is_usuario = False
     try:
-        if request.user.userprofile.rol == 'agricultor':
-            is_agricultor = True
+        if request.user.userprofile.rol == 'usuario':
+            is_usuario = True
     except Exception:
         pass
         
-    if not is_agricultor:
-        messages.error(request, 'Solo los agricultores pueden rechazar solicitudes.')
+    if not is_usuario:
+        messages.error(request, 'Solo los usuarios registrados pueden gestionar productos de la solicitud.')
+        return redirect('ventas:solicitud_detail', pk=pk)
+        
+    if request.method == 'POST':
+        if solicitud.estado != 'pendiente':
+            messages.warning(request, 'No se pueden modificar productos de una solicitud procesada.')
+            return redirect('ventas:solicitud_detail', pk=pk)
+            
+        if estado in ['aceptado', 'rechazado', 'pendiente']:
+            detalle.estado = estado
+            detalle.save()
+            messages.success(request, f'Producto marcado como {estado}.')
+            
+    return redirect('ventas:solicitud_detail', pk=pk)
+
+@login_required
+def rechazar_solicitud(request, pk):
+    solicitud = get_object_or_404(SolicitudCompra, pk=pk)
+    
+    # Verificar que el usuario tenga el rol de usuario
+    is_usuario = False
+    try:
+        if request.user.userprofile.rol == 'usuario':
+            is_usuario = True
+    except Exception:
+        pass
+        
+    if not is_usuario:
+        messages.error(request, 'Solo los usuarios registrados pueden rechazar solicitudes.')
         return redirect('ventas:solicitud_detail', pk=pk)
         
     if request.method == 'POST':
@@ -129,16 +162,16 @@ def rechazar_solicitud(request, pk):
 def marcar_vendido(request, pk):
     solicitud = get_object_or_404(SolicitudCompra, pk=pk)
     
-    # Verificar que el usuario sea agricultor
-    is_agricultor = False
+    # Verificar que el usuario tenga el rol de usuario
+    is_usuario = False
     try:
-        if request.user.userprofile.rol == 'agricultor':
-            is_agricultor = True
+        if request.user.userprofile.rol == 'usuario':
+            is_usuario = True
     except Exception:
         pass
         
-    if not is_agricultor:
-        messages.error(request, 'Solo los agricultores pueden marcar solicitudes como vendidas.')
+    if not is_usuario:
+        messages.error(request, 'Solo los usuarios registrados pueden marcar solicitudes como vendidas.')
         return redirect('ventas:solicitud_detail', pk=pk)
     
     if request.method == 'POST':

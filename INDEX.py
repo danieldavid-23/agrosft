@@ -118,12 +118,9 @@ def cargar_avatar_default():
     try:
         with urllib.request.urlopen(url, timeout=4) as r:
             data = r.read()
-        try:
-            import cairosvg
-            png = cairosvg.svg2png(bytestring=data, output_width=88, output_height=88)
-            img = Image.open(io.BytesIO(png)).convert("RGBA")
-        except Exception:
-            img = Image.new("RGBA", (88, 88), "#1a5c30")
+        import cairosvg
+        png = cairosvg.svg2png(bytestring=data, output_width=88, output_height=88)
+        img = Image.open(io.BytesIO(png)).convert("RGBA")
     except Exception:
         img = Image.new("RGBA", (88, 88), "#1a5c30")
     state["foto"] = img

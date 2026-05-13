@@ -21,12 +21,19 @@ class SolicitudCompra(models.Model):
         return f"Solicitud {self.id} - {self.cliente.nombre_completo} ({self.get_estado_display()})"
     
     def total_estimado(self):
-        return sum(detalle.subtotal() for detalle in self.detalles.all())
+        return sum(detalle.subtotal() for detalle in self.detalles.exclude(estado='rechazado'))
 
 class DetalleSolicitudCompra(models.Model):
+    ESTADO_CHOICES = (
+        ('pendiente', 'Pendiente'),
+        ('aceptado', 'Aceptado'),
+        ('rechazado', 'Rechazado'),
+    )
+
     solicitud = models.ForeignKey(SolicitudCompra, on_delete=models.CASCADE, related_name='detalles')
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     
     def __str__(self):
         return f"{self.producto.nombre} x {self.cantidad}"

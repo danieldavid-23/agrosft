@@ -18,10 +18,25 @@ def producto_detail(request, pk):
     rol = None
     if hasattr(request.user, 'userprofile'):
         rol = request.user.userprofile.rol
-    return render(request, 'inventario/producto_detail.html', {'producto': producto, 'rol': rol})
+
+    relacionados = Producto.objects.filter(
+        categoria=producto.categoria,
+        eliminado=False
+    ).exclude(pk=producto.pk)[:4]
+
+    return render(request, 'inventario/producto_detail.html', {
+        'producto': producto,
+        'rol': rol,
+        'relacionados': relacionados,
+    })
 
 @login_required
 def producto_create(request):
+    # Verificar que el usuario tenga un rol válido (usuario o admin)
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.rol not in ['usuario', 'admin']:
+        messages.error(request, 'No tienes permiso para realizar esta acción.')
+        return redirect('inventario:listar')
+        
     if request.method == 'POST':
         form = ProductoForm(request.POST)
         if form.is_valid():
