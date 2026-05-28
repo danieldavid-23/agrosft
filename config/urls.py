@@ -1,29 +1,34 @@
-from django.contrib import admin
+"""
+URL configuration for agrosft project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/4.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
 from django.shortcuts import redirect
-from django.views.generic import RedirectView
+from django.contrib import admin
 
 def home_redirect(request):
-    if request.user.is_authenticated:
-        # Si está autenticado, verificar si aceptó términos
-        from apps.usuarios.services.terminos_service import TerminosService
-        if TerminosService.usuario_debe_aceptar_terminos(request.user):
-            return redirect('usuarios:aceptar-terminos')
-        return redirect('inventario:listar')  # Redirige a productos
-    return redirect('usuarios:login')
+    """Redirigir a la página de login en lugar de registro"""
+    return redirect('usuarios:login')  # Cambiado de 'usuarios:registro' a 'usuarios:login'
 
 urlpatterns = [
+    path('', home_redirect, name='home'),  # Mantener la redirección pero al login
+    path('usuarios/', include('apps.usuarios.urls', namespace='usuarios')),
+    path('inventario/', include('apps.inventario.urls', namespace='inventario')),
+    path('clientes/', include('apps.clientes.urls', namespace='clientes')),
+    path('ventas/', include('apps.ventas.urls', namespace='ventas')),
+    # Eliminamos todas las rutas que dependen de componentes del sistema
+    # path('admin/', admin.site.urls),
     path('admin/', admin.site.urls),
-    path('', home_redirect, name='home'),
-    path('usuarios/', include('apps.usuarios.urls')),
-    path('inventario/', include('apps.inventario.urls')),
-    path('clientes/', include('apps.clientes.urls')),
-    path('ventas/', include('apps.ventas.urls')),
-    # path('cultivos/', include('apps.cultivos.urls')),  # App no existe
-    path('accounts/login/', RedirectView.as_view(url='/usuarios/login/', query_string=True)),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

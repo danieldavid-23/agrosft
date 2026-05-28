@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Movimientos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Historial de Transacciones</h2>
+
+    {% if movimientos %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Tipo</th>
+                        <th>Calificación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movimiento in movimientos %}
+                    <tr>
+                        <td>{{ movimiento.fecha_movimiento|date:"d/m/Y H:i" }}</td>
+                        <td>{{ movimiento.id_producto_usuario.id_producto.nombre }}</td>
+                        <td>{{ movimiento.cantidad }}</td>
+                        <td>
+                            <span class="badge badge-{% if movimiento.id_movimiento.id_tipo_movimiento.tipo == 'venta' %}danger{% else %}success{% endif %}">
+                                {{ movimiento.id_movimiento.id_tipo_movimiento.tipo|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if movimiento.calificacion %}
+                                <span class="text-warning">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= movimiento.calificacion %}
+                                            <i class="fas fa-star"></i>
+                                        {% elif forloop.counter <= movimiento.calificacion|add:"0.5" %}
+                                            <i class="fas fa-star-half-alt"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    ({{ movimiento.calificacion }})
+                                </span>
+                            {% else %}
+                                <span class="text-muted">Sin calificar</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not movimiento.calificacion %}
+                                <a href="{% url 'ventas:calificar_transaccion' movimiento.id_movimiento_usuario %}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-star"></i> Calificar
+                                </a>
+                            {% else %}
+                                <span class="badge badge-success">Calificado</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <p>No tienes transacciones registradas aún.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -23,11 +23,11 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.username.id_for_label }}">Usuario:</label>
-                            {{ form.username }}
-                            {% if form.username.errors %}
+                            <label for="{{ form.nombres.id_for_label }}">Nombres:</label>
+                            {{ form.nombres }}
+                            {% if form.nombres.errors %}
                                 <div class="text-danger small">
-                                    {% for error in form.username.errors %}
+                                    {% for error in form.nombres.errors %}
                                         {{ error }}
                                     {% endfor %}
                                 </div>
@@ -35,11 +35,11 @@
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.email.id_for_label }}">Email:</label>
-                            {{ form.email }}
-                            {% if form.email.errors %}
+                            <label for="{{ form.apellidos.id_for_label }}">Apellidos:</label>
+                            {{ form.apellidos }}
+                            {% if form.apellidos.errors %}
                                 <div class="text-danger small">
-                                    {% for error in form.email.errors %}
+                                    {% for error in form.apellidos.errors %}
                                         {{ error }}
                                     {% endfor %}
                                 </div>
@@ -49,11 +49,11 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.first_name.id_for_label }}">Nombre:</label>
-                            {{ form.first_name }}
-                            {% if form.first_name.errors %}
+                            <label for="{{ form.telefono.id_for_label }}">Teléfono:</label>
+                            {{ form.telefono }}
+                            {% if form.telefono.errors %}
                                 <div class="text-danger small">
-                                    {% for error in form.first_name.errors %}
+                                    {% for error in form.telefono.errors %}
                                         {{ error }}
                                     {% endfor %}
                                 </div>
@@ -61,11 +61,11 @@
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.last_name.id_for_label }}">Apellido:</label>
-                            {{ form.last_name }}
-                            {% if form.last_name.errors %}
+                            <label for="{{ form.correo.id_for_label }}">Correo Electrónico:</label>
+                            {{ form.correo }}
+                            {% if form.correo.errors %}
                                 <div class="text-danger small">
-                                    {% for error in form.last_name.errors %}
+                                    {% for error in form.correo.errors %}
                                         {{ error }}
                                     {% endfor %}
                                 </div>
@@ -127,26 +127,63 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Validación estricta para el campo de username (solo alfanumérico y guion bajo)
-        const usernameInput = document.getElementById('id_username');
-        if (usernameInput) {
-            usernameInput.addEventListener('input', function() {
-                this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '');
-            });
+        // Validación en tiempo real de las contraseñas
+        const password1 = document.getElementById('id_password1');
+        const password2 = document.getElementById('id_password2');
+        
+        if (password1 && password2) {
+            // Crear elemento de retroalimentación visual
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.id = 'password-match-feedback';
+            feedbackDiv.className = 'mt-2 small';
+            feedbackDiv.style.display = 'none';
+            password2.parentNode.appendChild(feedbackDiv);
+            
+            function checkPasswordMatch() {
+                const p1 = password1.value;
+                const p2 = password2.value;
+                
+                if (p2.length === 0) {
+                    feedbackDiv.style.display = 'none';
+                    return;
+                }
+                
+                feedbackDiv.style.display = 'block';
+                
+                if (p1 === p2) {
+                    feedbackDiv.className = 'mt-2 small text-success';
+                    feedbackDiv.innerHTML = '<i class="fas fa-check-circle me-1"></i>Las contraseñas coinciden';
+                } else {
+                    feedbackDiv.className = 'mt-2 small text-danger';
+                    feedbackDiv.innerHTML = '<i class="fas fa-times-circle me-1"></i>Las contraseñas no coinciden';
+                }
+            }
+            
+            // Validar mientras el usuario escribe
+            password1.addEventListener('input', checkPasswordMatch);
+            password2.addEventListener('input', checkPasswordMatch);
         }
         
         // Validación estricta para nombre y apellido (solo letras)
-        const nameInputs = [document.getElementById('id_first_name'), document.getElementById('id_last_name')];
+        const nameInputs = [document.getElementById('id_nombres'), document.getElementById('id_apellidos')];
         nameInputs.forEach(input => {
             if(input) {
                 input.addEventListener('input', function() {
-                    // Remover números y símbolos especiales como guiones, dejar letras
+                    // Remover números y símbolos especiales, dejar solo letras
                     this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '');
                     // Evitar espacios al inicio
                     this.value = this.value.replace(/^\s+/, '');
                 });
             }
         });
+        
+        // Validación para teléfono (solo números)
+        const telefonoInput = document.getElementById('id_telefono');
+        if (telefonoInput) {
+            telefonoInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
     });
 </script>
 {% endblock %}

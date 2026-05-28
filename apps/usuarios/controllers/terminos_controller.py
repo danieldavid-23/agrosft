@@ -1,9 +1,19 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
 from core.controllers.base_controller import BaseController
 from apps.usuarios.services.terminos_service import TerminosService
+
+class CustomLoginRequiredMixin:
+    """Custom mixin that works with the custom user model"""
+    login_url = '/usuarios/login/'
+    permission_denied_message = 'Debe iniciar sesión para acceder a esta página.'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not hasattr(request, 'user') or not request.user.is_authenticated:
+            return redirect(self.login_url)
+        return super().dispatch(request, *args, **kwargs)
+
 
 class TerminosView(BaseController, View):  # ← CAMBIA EL ORDEN: BaseController primero
     """Vista para mostrar los términos y condiciones"""
@@ -12,7 +22,7 @@ class TerminosView(BaseController, View):  # ← CAMBIA EL ORDEN: BaseController
         terminos = TerminosService.obtener_terminos_activos()
         
         ya_acepto = False
-        if request.user.is_authenticated:
+        if hasattr(request, 'user') and request.user.is_authenticated:
             ya_acepto = not TerminosService.usuario_debe_aceptar_terminos(request.user)
         
         context = {
@@ -27,9 +37,9 @@ class TerminosView(BaseController, View):  # ← CAMBIA EL ORDEN: BaseController
         return render(request, 'usuarios/terminos.html', context)
 
 
-class AceptarTerminosView(LoginRequiredMixin, BaseController, View):  # ← BaseController antes que View
+class AceptarTerminosView(CustomLoginRequiredMixin, BaseController, View):  # ← Replaced LoginRequiredMixin
     """Vista para procesar la aceptación de términos"""
-    login_url = '/admin/login/'
+    login_url = '/usuarios/login/'
     
     def get(self, request):
         terminos = TerminosService.obtener_terminos_activos()
@@ -61,9 +71,9 @@ class AceptarTerminosView(LoginRequiredMixin, BaseController, View):  # ← Base
             return redirect('usuarios:terminos')
 
 
-class HistorialTerminosView(LoginRequiredMixin, BaseController, View):  # ← BaseController antes que View
+class HistorialTerminosView(CustomLoginRequiredMixin, BaseController, View):  # ← Replaced LoginRequiredMixin
     """Vista para mostrar el historial de aceptaciones"""
-    login_url = '/admin/login/'
+    login_url = '/usuarios/login/'
     
     def get(self, request):
         historial = TerminosService.obtener_historial_usuario(request.user)

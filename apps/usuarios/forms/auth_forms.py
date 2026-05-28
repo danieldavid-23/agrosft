@@ -1,151 +1,135 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-import re
-from ..models import UserProfile
+from apps.usuarios.models.profile_model import Tblusuarios
+from django.contrib.auth.hashers import make_password
 
-class RegistroForm(UserCreationForm):
-    """Formulario para registro de nuevos usuarios"""
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email', 'oninput': "this.value = this.value.replace(/\\s/g, '')"}))
-    first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre', 'oninput': "this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\\s]/g, ''); this.value = this.value.replace(/^\\s+/, '')"}))
-    last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellido', 'oninput': "this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\\s]/g, ''); this.value = this.value.replace(/^\\s+/, '')"}))
-    
+
+class CustomUserCreationForm(UserCreationForm):
+    correo = forms.EmailField(required=True, label='Correo Electrónico')
+    nombres = forms.CharField(max_length=255, required=True, label='Nombres')  # Ajustado al tamaño real
+    apellidos = forms.CharField(max_length=255, required=True, label='Apellidos')
+    telefono = forms.CharField(max_length=20, required=False, label='Teléfono')
+
     class Meta:
-        model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Agregar clases CSS a los campos
-        self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Nombre de usuario', 'oninput': "this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '')"})
-        self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Contraseña'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirmar contraseña'})
-    
-    def clean_first_name(self):
-        first_name = self.cleaned_data.get('first_name', '')
-        if not first_name or not first_name.strip():
-            raise ValidationError("Este campo no puede estar vacío ni contener solo espacios.")
-        return first_name.strip()
+        model = Tblusuarios
+        fields = ("correo", "nombres", "apellidos", "telefono", "password1", "password2")
 
-    def clean_last_name(self):
-        last_name = self.cleaned_data.get('last_name', '')
-        if not last_name or not last_name.strip():
-            raise ValidationError("Este campo no puede estar vacío ni contener solo espacios.")
-        return last_name.strip()
-
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).exists():
-            raise ValidationError("Este email ya está registrado")
-        if email and not email.strip():
-            raise ValidationError("El email no puede contener solo espacios.")
-        return email
-    
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        if not username or not username.strip():
-            raise ValidationError("El usuario no puede estar vacío ni contener solo espacios.")
-        if not re.match(r'^[a-zA-Z0-9_]+$', username):
-            raise ValidationError("El usuario solo puede contener letras, números y guión bajo (sin espacios)")
-        return username
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.correo = self.cleaned_data["correo"]
+        user.nombres = self.cleaned_data["nombres"]
+        user.apellidos = self.cleaned_data["apellidos"]
+        user.telefono = self.cleaned_data["telefono"]
         
+        if commit:
+            user.save()
+        return user
+
+
+class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar manualmente los campos
+    """Formulario para registrar usuarios en la tabla tblusuarios"""
+    nombres = forms.CharField(max_length=255, required=True, label='Nombres', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    apellidos = forms.CharField(max_length=255, required=True, label='Apellidos', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    telefono = forms.CharField(max_length=20, required=True, label='Teléfono', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    correo = forms.EmailField(required=True, label='Correo Electrónico', widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    password2 = forms.CharField(label='Confirmar Contraseña', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
     def clean(self):
+        """Validación general del formulario"""
         cleaned_data = super().clean()
-        # Ensure passwords don't consist only of spaces.
-        p1 = self.data.get('password1', '')
-        p2 = self.data.get('password2', '')
-        if p1 and not p1.strip():
-            self.add_error('password1', "La contraseña no puede estar formada solo por espacios.")
-        if p2 and not p2.strip():
-            self.add_error('password2', "La contraseña no puede estar formada solo por espacios.")
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        
+        # Validar que las contraseñas coincidan
+        if password1 and password2:
+            if password1 != password2:
+                self.add_error('password2', "Las contraseñas no coinciden. Por favor, verifica que ambas sean iguales.")
+        
+        # Validar longitud mínima de la contraseña
+        if password1 and len(password1) < 8:
+            self.add_error('password1', "La contraseña debe tener al menos 8 caracteres.")
+        
         return cleaned_data
+
+    def clean_password2(self):
+        """Validación adicional de password2"""
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+        
+        if password1 and password2 and password1 == password2:
+            # Si coinciden, retornamos password2
+            return password2
+        return password2
+
+    def clean_correo(self):
+        correo = self.cleaned_data.get('correo')
+        if correo:
+            if Tblusuarios.objects.filter(correo=correo).exists():
+                raise forms.ValidationError('Este correo electrónico ya está registrado.')
+        return correo
+
+    def save(self, commit=True):
+        user = Tblusuarios(
+            correo=self.cleaned_data['correo'],
+            nombres=self.cleaned_data['nombres'],
+            apellidos=self.cleaned_data['apellidos'],
+            contraseña=make_password(self.cleaned_data['password1']),
+            is_active=True,
+        )
+        if 'telefono' in self.cleaned_data and self.cleaned_data['telefono']:
+            user.telefono = self.cleaned_data['telefono']
+
+        if commit:
+            user.save()
+        return user
 
 
 class LoginForm(forms.Form):
-    """Formulario para inicio de sesión"""
-    username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Usuario o Email', 'oninput': "this.value = this.value.replace(/\\s/g, '')"}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña'}))
-    
+    username = forms.CharField(label='Correo electrónico', max_length=255)  # Ajustado al tamaño real
+    password = forms.CharField(label='Contraseña', widget=forms.PasswordInput)
+
     def clean(self):
         cleaned_data = super().clean()
-        username = self.data.get('username', '')
+        # Ensure password doesn't consist only of spaces.
         password = self.data.get('password', '')
-        
-        # Validación de espacios vacíos
-        if not username or not username.strip():
-            self.add_error('username', "El usuario no puede estar vacío ni contener solo espacios.")
-        if not password or not password.strip():
-            self.add_error('password', "La contraseña no puede estar vacía ni contener solo espacios.")
-            
-        username = cleaned_data.get('username')
-        password = cleaned_data.get('password')
-        
-        # Si hay errores en 'username' o 'password', detenemos la validación aquí
-        if self.errors:
-            return cleaned_data
-        
-        if username and password:
-            # Verificar si es email o username
-            from django.contrib.auth import authenticate
-            user = authenticate(username=username, password=password)
-            if not user:
-                # Intentar con email
-                try:
-                    user_obj = User.objects.get(email=username)
-                    user = authenticate(username=user_obj.username, password=password)
-                except User.DoesNotExist:
-                    pass
-            
-            if not user:
-                raise ValidationError("Usuario o contraseña incorrectos")
-            
-            if not user.is_active:
-                raise ValidationError("Esta cuenta está desactivada")
-            
-            self.user = user
-        
+        if password and not password.strip():
+            self.add_error('password', "La contraseña no puede estar formada solo por espacios.")
         return cleaned_data
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = Tblusuarios  # Changed to use the custom user model
+        fields = ['nombres', 'apellidos', 'telefono', 'correo']  # Removidos campos que no existen en la tabla real
+        widgets = {
+            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellidos': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+
+class TblusuariosForm(forms.ModelForm):
+    class Meta:
+        model = Tblusuarios
+        fields = ['nombres', 'apellidos', 'telefono', 'correo']
+        widgets = {
+            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellidos': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
 
 
 class PerfilForm(UserChangeForm):
     """Formulario para editar perfil de usuario"""
     password = None  # Ocultar campo de contraseña
-    profile_picture = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
-    
+
     class Meta:
-        model = User
-        fields = ('username', 'email', 'first_name', 'last_name')
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({'class': 'form-control'})
-        self.fields['email'].widget.attrs.update({'class': 'form-control'})
-        self.fields['first_name'].widget.attrs.update({'class': 'form-control'})
-        self.fields['last_name'].widget.attrs.update({'class': 'form-control'})
-        
-        # Hacer username de solo lectura
-        self.fields['username'].disabled = True
-        
-        # Inicializar profile_picture si existe
-        if self.instance and hasattr(self.instance, 'userprofile'):
-            self.fields['profile_picture'].initial = self.instance.userprofile.profile_picture
-    
-    def save(self, commit=True):
-        user = super().save(commit=commit)
-        profile_picture = self.cleaned_data.get('profile_picture')
-        if profile_picture:
-            profile, created = UserProfile.objects.get_or_create(user=user)
-            profile.profile_picture = profile_picture
-            if commit:
-                profile.save()
-        return user
-    
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        username = self.cleaned_data.get('username')
-        
-        # Verificar si el email ya existe (excepto para este usuario)
-        if User.objects.exclude(username=username).filter(email=email).exists():
-            raise ValidationError("Este email ya está en uso")
-        return email
+        model = Tblusuarios  # Changed to custom user model
+        fields = ('nombres', 'apellidos', 'telefono', 'correo')  # Removidos campos que no existen en la tabla real
+
+
+# Alias para mantener compatibilidad con el controller
+RegistroForm = RegistroTblusuariosForm

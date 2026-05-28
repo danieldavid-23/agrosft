@@ -1,5 +1,3 @@
-from .categoria import Categoria
-from .producto import Producto
-from .historial import HistorialProducto
+from .producto import Categoria, Producto, ProductoUsuario, Estado, TipoMovimiento, Calificacion
 
-__all__ = ['Categoria', 'Producto', 'HistorialProducto']
+__all__ = ['Categoria', 'Producto', 'ProductoUsuario', 'Estado', 'TipoMovimiento', 'Calificacion']

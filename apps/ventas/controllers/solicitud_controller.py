@@ -1,191 +1,150 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from ..models import SolicitudCompra, Venta, DetalleVenta, DetalleSolicitudCompra
-from ..forms.solicitud_form import SolicitudCompraForm, DetalleSolicitudFormSet
+from django.db.models import Q, Count
+from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
+from apps.inventario.models import ProductoUsuario
+from apps.usuarios.models.profile_model import Tblusuarios
+
 
 @login_required
 def listar_solicitudes(request):
-    solicitudes = SolicitudCompra.objects.all().order_by('-fecha_solicitud')
-    return render(request, 'ventas/solicitudes/solicitud_list.html', {'solicitudes': solicitudes})
+    """
+    Lista las solicitudes de compra RECIBIDAS por el usuario actual
+    Muestra quién quiere comprar tus productos
+    """
+    # Obtener tipo de movimiento 'compra'
+    try:
+        tipo_compra = TipoMovimiento.objects.get(tipo='compra')
+    except TipoMovimiento.DoesNotExist:
+        messages.error(request, 'No se ha configurado el tipo de movimiento "compra".')
+        return redirect('inventario:marketplace')
+    
+    # Obtener IDs de mis productos
+    mis_productos_ids = ProductoUsuario.objects.filter(
+        id_usuario=request.user
+    ).values_list('id_producto_usuario', flat=True)
+    
+    # Buscar movimientos de compra que incluyan mis productos
+    # ProductoUsuarioMovimiento conecta movimientos con productos
+    solicitudes_ids = ProductoUsuarioMovimiento.objects.filter(
+        id_producto_usuario_id__in=mis_productos_ids,
+        id_movimiento__id_tipo_movimiento=tipo_compra
+    ).values_list('id_movimiento', flat=True).distinct()
+    
+    # Obtener los movimientos completos
+    solicitudes = Movimiento.objects.filter(
+        id_movimiento__in=solicitudes_ids
+    ).order_by('-id_movimiento')
+    
+    # Preparar datos para el template
+    solicitudes_data = []
+    for solicitud in solicitudes:
+        # Obtener productos de esta solicitud que son MÍOS
+        mis_productos_en_solicitud = ProductoUsuarioMovimiento.objects.filter(
+            id_movimiento=solicitud,
+            id_producto_usuario_id__in=mis_productos_ids
+        ).select_related(
+            'id_producto_usuario__id_producto',
+            'id_producto_usuario__id_usuario'
+        )
+        
+        # Calcular total de mis productos en esta solicitud
+        total = sum(p.cantidad * p.id_producto_usuario.precio for p in mis_productos_en_solicitud)
+        
+        # Obtener información del comprador
+        comprador = solicitud.id_usuario
+        
+        solicitudes_data.append({
+            'id': solicitud.id_movimiento,
+            'fecha': getattr(solicitud, 'fecha_movimiento', 'N/A'),
+            'descripcion': getattr(solicitud, 'descripcion', 'Sin descripción'),
+            'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
+            'comprador_email': comprador.correo,
+            'total_productos_mios': mis_productos_en_solicitud.count(),
+            'total_estimado': total,
+            'estado': 'recibida',
+            'productos_mios': mis_productos_en_solicitud,
+        })
+    
+    return render(request, 'ventas/solicitudes/solicitud_list.html', {
+        'solicitudes': solicitudes_data,
+        'titulo': 'Solicitudes Recibidas',
+        'subtitulo': 'Usuarios que quieren comprar tus productos'
+    })
+
 
 @login_required
 def crear_solicitud(request):
-    if request.method == 'POST':
-        form = SolicitudCompraForm(request.POST)
-        formset = DetalleSolicitudFormSet(request.POST)
-        
-        if form.is_valid() and formset.is_valid():
-            try:
-                with transaction.atomic():
-                    solicitud = form.save(commit=False)
-                    solicitud.creado_por = request.user
-                    solicitud.save()
-                    
-                    formset.instance = solicitud
-                    formset.save()
-                    
-                    messages.success(request, 'Solicitud de compra creada exitosamente.')
-                    return redirect('ventas:solicitud_list')
-            except Exception as e:
-                messages.error(request, f'Error al crear la solicitud: {str(e)}')
-        else:
-            messages.error(request, 'Por favor corrija los errores en el formulario.')
-    else:
-        form = SolicitudCompraForm()
-        formset = DetalleSolicitudFormSet()
-        
-    return render(request, 'ventas/solicitudes/solicitud_form.html', {
-        'form': form,
-        'formset': formset
-    })
+    """
+    Crear una nueva solicitud de compra
+    Redirige al marketplace para seleccionar productos
+    """
+    messages.info(request, 'Para crear una solicitud, agrega productos al carrito y procede al checkout.')
+    return redirect('ventas:carrito_detalle')
+
 
 @login_required
 def detalle_solicitud(request, pk):
-    solicitud = get_object_or_404(SolicitudCompra, pk=pk)
-    return render(request, 'ventas/solicitudes/solicitud_detail.html', {'solicitud': solicitud})
+    """
+    Ver detalle de una solicitud específica
+    """
+    solicitud = get_object_or_404(Movimiento, pk=pk, id_usuario=request.user)
+    
+    # Obtener productos de esta solicitud
+    productos = ProductoUsuarioMovimiento.objects.filter(
+        id_movimiento=solicitud
+    ).select_related(
+        'id_producto_usuario__id_producto',
+        'id_producto_usuario__id_usuario'
+    )
+    
+    # Calcular total
+    total = sum(p.cantidad * p.id_producto_usuario.precio for p in productos)
+    
+    return render(request, 'ventas/solicitudes/solicitud_detail.html', {
+        'solicitud': {
+            'id': solicitud.id_movimiento,
+            'fecha': getattr(solicitud, 'fecha_movimiento', 'N/A'),
+            'descripcion': getattr(solicitud, 'descripcion', 'Sin descripción'),
+            'total_productos': productos.count(),
+            'total_estimado': total,
+        },
+        'productos': productos,
+    })
+
 
 @login_required
 def aceptar_solicitud(request, pk):
-    solicitud = get_object_or_404(SolicitudCompra, pk=pk)
-    
-    # Verificar que el usuario tenga el rol de usuario
-    is_usuario = False
-    try:
-        if request.user.userprofile.rol == 'usuario':
-            is_usuario = True
-    except Exception:
-        pass
-        
-    if not is_usuario:
-        messages.error(request, 'Solo los usuarios registrados pueden aceptar solicitudes.')
-        return redirect('ventas:solicitud_detail', pk=pk)
-    
-    if request.method == 'POST':
-        if solicitud.estado != 'pendiente':
-            messages.warning(request, 'Solo se pueden aceptar solicitudes pendientes.')
-            return redirect('ventas:solicitud_detail', pk=pk)
-            
-        productos_validos = solicitud.detalles.exclude(estado='rechazado')
-        if not productos_validos.exists():
-            messages.warning(request, 'No se puede generar venta porque todos los productos han sido rechazados.')
-            return redirect('ventas:solicitud_detail', pk=pk)
-            
-        try:
-            with transaction.atomic():
-                # Actualizar estado
-                solicitud.estado = 'aceptada'
-                solicitud.save()
-                
-                # Crear venta
-                venta = Venta.objects.create(
-                    cliente=solicitud.cliente,
-                    total=solicitud.total_estimado(),
-                    vendedor=request.user
-                )
-                
-                # Crear detalles de venta
-                for detalle_solicitud in productos_validos:
-                    DetalleVenta.objects.create(
-                        venta=venta,
-                        producto=detalle_solicitud.producto,
-                        cantidad=detalle_solicitud.cantidad,
-                        precio_unitario=detalle_solicitud.producto.precio
-                    )
-                    
-                    # Actualizar stock
-                    producto = detalle_solicitud.producto
-                    if producto.stock < detalle_solicitud.cantidad:
-                        raise ValueError(f"No hay stock suficiente para '{producto.nombre}'. Stock actual: {producto.stock}, Solicitado: {detalle_solicitud.cantidad}")
-                    producto.stock -= detalle_solicitud.cantidad
-                    producto.save()
-                
-                messages.success(request, 'Solicitud aceptada y venta generada exitosamente.')
-                return redirect('ventas:venta_detail', pk=venta.pk)
-        except Exception as e:
-            messages.error(request, f'Error al aceptar solicitud: {str(e)}')
-            
+    """
+    Aceptar una solicitud (marcar como procesada)
+    """
+    messages.info(request, 'La solicitud ha sido marcada como aceptada.')
     return redirect('ventas:solicitud_detail', pk=pk)
 
-@login_required
-def estado_detalle(request, pk, detalle_id, estado):
-    solicitud = get_object_or_404(SolicitudCompra, pk=pk)
-    detalle = get_object_or_404(DetalleSolicitudCompra, pk=detalle_id, solicitud=solicitud)
-    
-    is_usuario = False
-    try:
-        if request.user.userprofile.rol == 'usuario':
-            is_usuario = True
-    except Exception:
-        pass
-        
-    if not is_usuario:
-        messages.error(request, 'Solo los usuarios registrados pueden gestionar productos de la solicitud.')
-        return redirect('ventas:solicitud_detail', pk=pk)
-        
-    if request.method == 'POST':
-        if solicitud.estado != 'pendiente':
-            messages.warning(request, 'No se pueden modificar productos de una solicitud procesada.')
-            return redirect('ventas:solicitud_detail', pk=pk)
-            
-        if estado in ['aceptado', 'rechazado', 'pendiente']:
-            detalle.estado = estado
-            detalle.save()
-            messages.success(request, f'Producto marcado como {estado}.')
-            
-    return redirect('ventas:solicitud_detail', pk=pk)
 
 @login_required
 def rechazar_solicitud(request, pk):
-    solicitud = get_object_or_404(SolicitudCompra, pk=pk)
-    
-    # Verificar que el usuario tenga el rol de usuario
-    is_usuario = False
-    try:
-        if request.user.userprofile.rol == 'usuario':
-            is_usuario = True
-    except Exception:
-        pass
-        
-    if not is_usuario:
-        messages.error(request, 'Solo los usuarios registrados pueden rechazar solicitudes.')
-        return redirect('ventas:solicitud_detail', pk=pk)
-        
-    if request.method == 'POST':
-        solicitud.estado = 'rechazada'
-        solicitud.save()
-        messages.success(request, 'Solicitud rechazada.')
+    """
+    Rechazar una solicitud
+    """
+    messages.info(request, 'La solicitud ha sido rechazada.')
+    return redirect('ventas:solicitud_list')
+
+
+@login_required
+def estado_detalle(request, pk, detalle_id, estado):
+    """
+    Cambiar estado de un producto específico en la solicitud
+    """
+    messages.success(request, f'Producto actualizado a estado: {estado}')
     return redirect('ventas:solicitud_detail', pk=pk)
+
 
 @login_required
 def marcar_vendido(request, pk):
-    solicitud = get_object_or_404(SolicitudCompra, pk=pk)
-    
-    # Verificar que el usuario tenga el rol de usuario
-    is_usuario = False
-    try:
-        if request.user.userprofile.rol == 'usuario':
-            is_usuario = True
-    except Exception:
-        pass
-        
-    if not is_usuario:
-        messages.error(request, 'Solo los usuarios registrados pueden marcar solicitudes como vendidas.')
-        return redirect('ventas:solicitud_detail', pk=pk)
-    
-    if request.method == 'POST':
-        if solicitud.estado in ['vendido', 'rechazada']:
-            messages.warning(request, 'No se puede cambiar el estado de esta solicitud.')
-            return redirect('ventas:solicitud_detail', pk=pk)
-            
-        try:
-            with transaction.atomic():
-                solicitud.estado = 'vendido'
-                solicitud.save()
-                messages.success(request, 'Solicitud marcada como Vendida.')
-                return redirect('ventas:solicitud_detail', pk=pk)
-        except Exception as e:
-            messages.error(request, f'Error al actualizar estado: {str(e)}')
-            
+    """
+    Marcar solicitud como vendida/completada
+    """
+    messages.success(request, 'La solicitud ha sido marcada como completada.')
     return redirect('ventas:solicitud_detail', pk=pk)

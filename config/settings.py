@@ -30,35 +30,57 @@ sys.path.insert(0, str(BASE_DIR))
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-wgo$zxz%pk=t3&d(k5msdm4vrr7s19kmwpiu=k-c!==znd@ihg'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    import warnings
+    warnings.warn("SECRET_KEY not set in environment, using insecure default for development only!")
+    SECRET_KEY = 'django-insecure-dev-only-change-in-production-!@#$%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+# Configuración de hosts permitidos
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# Session configuration
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 1800  # 30 minutos en segundos
 
 # Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    # Tus apps - con el prefijo apps/
+    'django.contrib.admin',         # Added Django admin
+    'django.contrib.contenttypes',  # Needed for some Django functionality
+    'django.contrib.auth',          # Needed for LoginRequiredMixin and other auth features
+    'django.contrib.sessions',      # Needed for sessions
+    'django.contrib.messages',      # Needed for messages
+    'django.contrib.staticfiles',   # Needed for static files
+    
     'apps.usuarios',
-    'apps.inventario',
+    'apps.inventario', 
     'apps.clientes',
     'apps.ventas',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',  # Added for session support
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',  # Added for auth support
+    'django.contrib.messages.middleware.MessageMiddleware',  # Added for messages support
+    # Usaremos un middleware personalizado para manejo de sesión si es necesario
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -71,9 +93,11 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',  # Para manejo de archivos media
+                'django.contrib.messages.context_processors.messages',  # Added for messages
+                'django.contrib.auth.context_processors.auth',  # Added for auth context
             ],
         },
     },
@@ -81,18 +105,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# Authentication backends - Usamos nuestro backend personalizado
+AUTHENTICATION_BACKENDS = [
+    'apps.usuarios.backends.TblusuariosAuthBackend',  # Updated path
+]
+
+# Usamos nuestro modelo de usuario personalizado
+# This is tricky: the model is in apps.usuarios.models, but we need to use the app label
+# The app label is defined in apps/usuarios/apps.py as 'usuarios' (the label attribute)
+AUTH_USER_MODEL = 'usuarios.Tblusuarios'  # Using the label defined in AppConfig
+
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',  # Cambiado a mysql
+        'NAME': os.environ.get('DB_NAME', 'agrosft'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),  # Tu contraseña de MySQL
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -106,29 +149,93 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-MEDIA_URL = 'media/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Configuración de caché - usar caché en memoria para reemplazar funcionalidad de sesiones
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+# Configuración de sesiones - usar sesiones en caché en lugar de base de datos
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+
+# URLs de autenticación personalizada
 LOGIN_URL = 'usuarios:login'
-LOGIN_REDIRECT_URL = 'inventario:listar'
+LOGIN_REDIRECT_URL = 'inventario:marketplace'  # Redirigir al marketplace después del login
 LOGOUT_REDIRECT_URL = 'usuarios:login'
 
-# Configuración para envío de correos (Recuperación de contraseña)
-if os.environ.get('USE_SMTP_EMAIL', 'False') == 'True':
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
-else:
-    # En desarrollo, imprimimos en consola. Para producción, usar backend SMTP.
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = 'soporte@agrosft.com'
+
+# Email backend
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'soporte@agrosft.com'
+
+# Eliminar todas las migraciones, incluyendo las de Django
+MIGRATION_MODULES = {
+    # Deshabilitar migraciones para todas las apps personalizadas
+    'usuarios': None,
+    'inventario': None,
+    'clientes': None,
+    'ventas': None,
+    # Deshabilitar migraciones para apps de Django
+    'admin': None,
+    'auth': None,
+    'contenttypes': None,
+    'sessions': None,
+    'messages': None,
+    'staticfiles': None,
+}
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'agrosft.log',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'apps': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

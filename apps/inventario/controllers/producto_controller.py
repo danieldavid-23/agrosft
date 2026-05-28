@@ -1,156 +1,385 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from ..services.producto_service import ProductoService
-from ..forms.producto_form import ProductoForm
-from ..models import Categoria
+from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.utils import timezone
+from django.core.cache import cache
+from apps.inventario.models import Categoria, Producto, ProductoUsuario, Estado
+from apps.inventario.forms.producto_form import ProductoForm
+from apps.inventario.repositories.producto_repository import ProductoRepository
+from apps.usuarios.models.profile_model import Tblusuarios
+from core.utils.helpers import EstadoProducto
+import logging
 
-service = ProductoService()
+logger = logging.getLogger(__name__)
+
+
+def get_categorias_cached():
+    """Obtiene categorías con caché de 1 hora"""
+    cache_key = 'categorias_activas'
+    categorias = cache.get(cache_key)
+    if categorias is None:
+        categorias = list(Categoria.objects.filter(activo=True))
+        cache.set(cache_key, categorias, 3600)  # 1 hora
+    return categorias
+
+
+def get_estados_cached():
+    """Obtiene estados con caché de 1 hora"""
+    cache_key = 'estados_producto'
+    estados = cache.get(cache_key)
+    if estados is None:
+        estados = list(Estado.objects.all())
+        cache.set(cache_key, estados, 3600)  # 1 hora
+    return estados
+
 
 @login_required
 def listar_productos(request):
-    """Controlador para listar productos (RF-15)"""
-    page = request.GET.get('page', 1)
-    filters = {
-        'estado': request.GET.get('estado', 'aprobado'),
-        'categoria_id': request.GET.get('categoria'),
-        'search': request.GET.get('q'),
+    """
+    Vista del INVENTARIO PERSONAL - Muestra SOLO los productos del usuario actual
+    Con botones de Editar y Eliminar
+    """
+    # Obtener SOLO los productos del usuario actual
+    productos = ProductoUsuario.objects.filter(
+        id_usuario=request.user
+    ).select_related(
+        'id_producto__id_categoria',
+        'id_usuario',
+        'id_estado'
+    ).order_by('-id_producto_usuario')
+
+    # Paginar resultados
+    paginator = Paginator(productos, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Preparar datos de paginación para el template
+    pagination = {
+        'has_prev': page_obj.has_previous(),
+        'has_next': page_obj.has_next(),
+        'page': page_obj.number,
     }
-    
-    # Si es un usuario registrado, permitir filtrar por sus productos
-    if hasattr(request.user, 'userprofile') and request.user.userprofile.rol == 'usuario' and request.GET.get('mis_productos'):
-        filters['agricultor'] = request.user
-    
-    result = service.listar_productos(page, filters)
-    
-    context = {
-        'productos': result['items'],
-        'categorias': Categoria.objects.filter(activo=True),
-        'pagination': {
-            'page': result['page'],
-            'has_next': result['has_next'],
-            'has_prev': result['has_prev'],
+
+    # Transformar productos para que sean compatibles con el template
+    productos_transformados = []
+    for pu in page_obj:
+        producto_data = {
+            'id': pu.id_producto_usuario,
+            'nombre': pu.id_producto.nombre,
+            'descripcion': pu.id_producto.descripcion or '',
+            'precio': pu.precio,
+            'stock': pu.obtener_stock(),  # Usa el método helper del modelo
+            'stock_minimo': pu.id_producto.stock_minimo,
+            'estado': pu.id_estado.estado,
+            'categoria_nombre': pu.id_producto.id_categoria.nombre,
+            'agricultor_id': pu.id_usuario.id_users,
+            'esta_agotado': pu.cantidad == 0,  # Comparación directa con Decimal
+            'imagen': None,
+            'es_mi_producto': True,  # Marcador para el template
         }
-    }
-    
-    return render(request, 'inventario/producto_list.html', context)
+        productos_transformados.append(producto_data)
+
+    return render(request, 'inventario/producto_list.html', {
+        'productos': productos_transformados,
+        'pagination': pagination,
+        'vista': 'inventario',  # Identificador para el template
+        'titulo': 'Mi Inventario',
+        'subtitulo': 'Gestiona tus productos registrados'
+    })
+
 
 @login_required
-def detalle_producto(request, producto_id):
-    """Controlador para ver detalle de producto"""
-    producto = service.obtener_producto(producto_id)
+def marketplace(request):
+    """
+    Vista del INICIO/MARKETPLACE - Muestra productos de OTROS usuarios
+    Con botones de Agregar al carrito y Ver Detalle
+    """
+    # Obtener productos de OTROS usuarios (excluyendo los del usuario actual)
+    productos = ProductoUsuario.objects.exclude(
+        id_usuario=request.user
+    ).select_related(
+        'id_producto__id_categoria',
+        'id_usuario',
+        'id_estado'
+    ).order_by('-id_producto_usuario')
     
-    if not producto:
-        messages.error(request, "Producto no encontrado")
-        return redirect('inventario:listar')
-    
-    return render(request, 'inventario/producto_detail.html', {'producto': producto})
+    # Debug: Ver cuántos productos hay en total y cuántos son del usuario
+    total_productos = ProductoUsuario.objects.count()
+    mis_productos = ProductoUsuario.objects.filter(id_usuario=request.user).count()
+    otros_productos = productos.count()
+    logger.info(f"Marketplace - Total: {total_productos}, Míos: {mis_productos}, De otros: {otros_productos}")
+
+    # Paginar resultados
+    paginator = Paginator(productos, 12)  # 12 productos por página para el marketplace
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Preparar datos de paginación para el template
+    pagination = {
+        'has_prev': page_obj.has_previous(),
+        'has_next': page_obj.has_next(),
+        'page': page_obj.number,
+    }
+
+    # Transformar productos para que sean compatibles con el template
+    productos_transformados = []
+    for pu in page_obj:
+        producto_data = {
+            'id': pu.id_producto_usuario,
+            'nombre': pu.id_producto.nombre,
+            'descripcion': pu.id_producto.descripcion or '',
+            'precio': pu.precio,
+            'stock': pu.obtener_stock(),  # Usa el método helper del modelo
+            'stock_minimo': pu.id_producto.stock_minimo,
+            'estado': pu.id_estado.estado,
+            'categoria_nombre': pu.id_producto.id_categoria.nombre,
+            'agricultor_id': pu.id_usuario.id_users,
+            'agricultor_nombre': f"{pu.id_usuario.nombres} {pu.id_usuario.apellidos}",
+            'esta_agotado': pu.cantidad == 0,  # Comparación directa con Decimal
+            'imagen': None,
+            'es_mi_producto': False,  # Marcador para el template
+        }
+        productos_transformados.append(producto_data)
+
+    return render(request, 'inventario/marketplace.html', {
+        'productos': productos_transformados,
+        'pagination': pagination,
+        'vista': 'marketplace',  # Identificador para el template
+        'titulo': 'Marketplace',
+        'subtitulo': 'Productos disponibles de otros agricultores'
+    })
+
+# Eliminado, ya que se está usando la vista genérica de Django
 
 @login_required
 def crear_producto(request):
-    """Controlador para crear producto (RF-11)"""
-    # Verificar rol
-    if not hasattr(request.user, 'userprofile') or request.user.userprofile.rol != 'usuario':
-        messages.error(request, "Solo los usuarios registrados pueden crear productos")
-        return redirect('inventario:listar')
-    
     if request.method == 'POST':
         form = ProductoForm(request.POST)
         if form.is_valid():
-            try:
-                producto = service.crear_producto(
-                    data=form.cleaned_data,
-                    usuario=request.user
-                )
-                messages.success(request, "Producto creado exitosamente. Pendiente de aprobación.")
-                return redirect('inventario:detalle', producto_id=producto.id)
-            except Exception as e:
-                messages.error(request, f"Error al crear producto: {str(e)}")
+            # Verificar si el producto ya existe en el catálogo maestro
+            nombre_producto = form.cleaned_data['nombre']
+            descripcion = form.cleaned_data['descripcion']
+            id_categoria = form.cleaned_data['id_categoria']
+            
+            # Obtener stock_minimo del formulario o usar valor por defecto
+            stock_minimo = form.cleaned_data.get('stock_minimo', 5)
+            if stock_minimo is None:
+                stock_minimo = 5
+            
+            # Buscar si ya existe un producto con el mismo nombre
+            producto_existente, created = Producto.objects.get_or_create(
+                nombre=nombre_producto,
+                defaults={
+                    'descripcion': descripcion,
+                    'id_categoria': id_categoria,
+                    'cantidad': 0,  # Valor predeterminado
+                    'stock_minimo': stock_minimo,
+                    'estado': EstadoProducto.PENDIENTE.lower()  # Valor predeterminado
+                }
+            )
+            
+            # Si el producto ya existe y es admin, actualizar stock_minimo
+            if not created and (request.user.is_staff or request.user.is_superuser):
+                producto_existente.stock_minimo = stock_minimo
+                producto_existente.save()
+            
+            # Crear la relación específica del usuario con el producto (producto_usuario)
+            producto_usuario = ProductoUsuario()
+            producto_usuario.id_producto = producto_existente
+            # Corrección: usar directamente request.user, que ya es un objeto Tblusuarios
+            producto_usuario.id_usuario = request.user
+            # NOTA: cantidad ahora es DecimalField, no necesita conversión a string
+            producto_usuario.cantidad = form.cleaned_data['cantidad']
+            producto_usuario.precio = form.cleaned_data['precio']
+            producto_usuario.id_estado = Estado.objects.get(estado=EstadoProducto.PENDIENTE)  # Estado inicial
+            producto_usuario.save()
+            
+            logger.info(f"Product created by user {request.user.pk}: {producto_existente.nombre}")
+            messages.success(request, '¡Producto creado exitosamente!')
+            return redirect('inventario:listar')
     else:
         form = ProductoForm()
-    
-    return render(request, 'inventario/producto_form.html', {'form': form, 'accion': 'crear'})
 
-@login_required
-def editar_producto(request, producto_id):
-    """Controlador para editar producto (RF-12)"""
-    producto = service.obtener_producto(producto_id)
+    categorias = get_categorias_cached()
+    estados = get_estados_cached()
     
-    if not producto:
-        messages.error(request, "Producto no encontrado")
-        return redirect('inventario:listar')
-    
-    # Verificar permisos (RF-12)
-    if producto.agricultor != request.user:
-        messages.error(request, "No tienes permiso para editar este producto")
-        return redirect('inventario:detalle', producto_id=producto_id)
-    
-    if request.method == 'POST':
-        form = ProductoForm(request.POST)
-        if form.is_valid():
-            try:
-                producto_actualizado = service.actualizar_producto(
-                    producto_id=producto_id,
-                    data=form.cleaned_data,
-                    usuario=request.user
-                )
-                messages.success(request, "Producto actualizado exitosamente")
-                return redirect('inventario:detalle', producto_id=producto_actualizado.id)
-            except Exception as e:
-                messages.error(request, f"Error al actualizar: {str(e)}")
-    else:
-        # Cargar datos actuales
-        initial_data = {
-            'nombre': producto.nombre,
-            'descripcion': producto.descripcion,
-            'categoria': producto.categoria_id,
-            'precio': producto.precio,
-            'stock': producto.stock,
-            'stock_minimo': producto.stock_minimo,
-        }
-        form = ProductoForm(initial=initial_data)
-    
-    return render(request, 'inventario/producto_form.html', {
-        'form': form, 
-        'accion': 'editar',
-        'producto': producto
+    return render(request, 'inventario/crear_producto.html', {
+        'form': form,
+        'categorias': categorias,
+        'estados': estados
     })
 
 @login_required
-def eliminar_producto(request, producto_id):
-    """Controlador para eliminar producto (RF-13)"""
-    producto = service.obtener_producto(producto_id)
+def editar_producto(request, pk):
+    producto_usuario = get_object_or_404(
+        ProductoUsuario.objects.select_related('id_producto', 'id_usuario'),
+        id_producto_usuario=pk
+    )
     
-    if not producto:
-        messages.error(request, "Producto no encontrado")
+    # Verificar que el usuario sea el dueño o admin
+    if producto_usuario.id_usuario != request.user and not request.user.is_staff:
+        messages.error(request, 'No tienes permiso para editar este producto.')
         return redirect('inventario:listar')
     
-    # Verificar permisos
-    if producto.agricultor_id != request.user.id:
-        messages.error(request, "No tienes permiso para eliminar este producto")
-        return redirect('inventario:detalle', producto_id=producto_id)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST)  # Eliminar instance= que no es válido para forms.Form
+        if form.is_valid():
+            with transaction.atomic():
+                # Actualizar campos del producto maestro (tblproducto)
+                producto = producto_usuario.id_producto
+                producto.nombre = form.cleaned_data['nombre']
+                producto.descripcion = form.cleaned_data['descripcion']
+                producto.id_categoria = form.cleaned_data['id_categoria']
+                
+                # TODOS los usuarios pueden editar stock_minimo
+                stock_minimo_value = form.cleaned_data.get('stock_minimo')
+                if stock_minimo_value is not None:
+                    producto.stock_minimo = stock_minimo_value
+                
+                producto.save()
+                logger.info(f"Producto maestro actualizado: {producto.nombre}, stock_minimo: {producto.stock_minimo}")
+                
+                # Actualizar campos específicos del usuario (tblproductos_has_tblusuarios)
+                # NOTA: cantidad ahora es DecimalField, no necesita conversión a string
+                producto_usuario.cantidad = form.cleaned_data['cantidad']
+                producto_usuario.precio = form.cleaned_data['precio']
+                
+                # Solo el administrador puede cambiar el estado
+                if request.user.is_staff or request.user.is_superuser:
+                    producto_usuario.id_estado = form.cleaned_data['id_estado']
+                
+                producto_usuario.save()
+                logger.info(f"ProductoUsuario actualizado: cantidad={producto_usuario.cantidad}, precio={producto_usuario.precio}")
+                
+                messages.success(request, '¡Producto actualizado exitosamente!')
+                return redirect('inventario:listar')
+        else:
+            # Log de errores de validación para debugging
+            logger.error(f"Errores de validación del formulario: {form.errors}")
+            messages.error(request, f'Error al validar el formulario: {form.errors}')
+    else:
+        # Preparar datos para el formulario
+        initial_data = {
+            'nombre': producto_usuario.id_producto.nombre,
+            'descripcion': producto_usuario.id_producto.descripcion,
+            'id_categoria': producto_usuario.id_producto.id_categoria,
+            'stock_minimo': producto_usuario.id_producto.stock_minimo,
+            'cantidad': producto_usuario.cantidad,  # Ahora es Decimal, no necesita conversión
+            'precio': producto_usuario.precio,
+            'id_estado': producto_usuario.id_estado,
+        }
+        form = ProductoForm(initial=initial_data)
+        # TODOS los usuarios pueden editar stock_minimo (sin restricciones)
+
+    categorias = get_categorias_cached()
+    estados = get_estados_cached()
+    
+    # Usar producto_form.html que ya existe
+    return render(request, 'inventario/producto_form.html', {
+        'form': form,
+        'producto_usuario': producto_usuario,
+        'producto': producto_usuario.id_producto,  # El template usa producto.nombre
+        'categorias': categorias,
+        'estados': estados,
+        'titulo': 'Editar Producto',
+        'accion': 'editar'
+    })
+
+@login_required
+def eliminar_producto(request, pk):
+    producto_usuario = get_object_or_404(
+        ProductoUsuario.objects.select_related('id_producto'),
+        id_producto_usuario=pk
+    )
+    
+    # Verificar que el usuario sea el dueño o admin
+    if producto_usuario.id_usuario != request.user and not request.user.is_staff:
+        messages.error(request, 'No tienes permiso para eliminar este producto.')
+        return redirect('inventario:listar')
     
     if request.method == 'POST':
-        try:
-            service.eliminar_producto(producto_id, request.user.id)
-            messages.success(request, "Producto eliminado exitosamente")
-            return redirect('inventario:listar')
-        except Exception as e:
-            messages.error(request, f"Error al eliminar: {str(e)}")
+        # Soft delete: marcar como eliminado en lugar de borrar
+        producto = producto_usuario.id_producto
+        producto.eliminado = True
+        producto.fecha_eliminacion = timezone.now()
+        producto.eliminado_por_id = request.user.id_users
+        producto.save()
+        
+        logger.info(f"Product {pk} soft-deleted by user {request.user.pk}")
+        messages.success(request, '¡Producto eliminado exitosamente!')
+        return redirect('inventario:listar')
     
-    return render(request, 'inventario/producto_confirm_delete.html', {'producto': producto})
+    return render(request, 'inventario/eliminar_producto.html', {
+        'producto_usuario': producto_usuario
+    })
 
-# API endpoints para AJAX
+# Nuevas funcionalidades para aprobar y rechazar productos
 @login_required
+def aprobar_producto(request, producto_id):
+    producto_usuario = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)
+    
+    if not request.user.is_staff:
+        logger.warning(f"Permission denied: user {request.user.pk} attempted to approve product {producto_id}")
+        messages.error(request, 'No tienes permiso para aprobar este producto.')
+        return redirect('inventario:listar')
+    
+    # Cambiar el estado en el modelo ProductoUsuario
+    estado_aprobado = Estado.objects.get(estado=EstadoProducto.APROBADO)
+    producto_usuario.id_estado = estado_aprobado
+    producto_usuario.save()
+    
+    # Registrar en historial
+    ProductoRepository.log_action(
+        producto_id=producto_usuario.id_producto_usuario,
+        user_id=request.user.id_users,  # Usar id_users para el modelo Tblusuarios
+        action='aprobacion'
+    )
+    
+    logger.info(f"Product {producto_id} approved by user {request.user.pk}")
+    messages.success(request, 'Producto aprobado exitosamente.')
+    return redirect('inventario:listar')
+
+
+@login_required
+def rechazar_producto(request, producto_id):
+    producto_usuario = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)
+    
+    if not request.user.is_staff:
+        logger.warning(f"Permission denied: user {request.user.pk} attempted to reject product {producto_id}")
+        messages.error(request, 'No tienes permiso para rechazar este producto.')
+        return redirect('inventario:listar')
+    
+    # Cambiar el estado en el modelo ProductoUsuario
+    estado_rechazado = Estado.objects.get(estado=EstadoProducto.RECHAZADO)
+    producto_usuario.id_estado = estado_rechazado
+    producto_usuario.save()
+    
+    # Registrar en historial
+    ProductoRepository.log_action(
+        producto_id=producto_usuario.id_producto_usuario,
+        user_id=request.user.id_users,  # Usar id_users para el modelo Tblusuarios
+        action='rechazo'
+    )
+    
+    logger.info(f"Product {producto_id} rejected by user {request.user.pk}")
+    messages.success(request, 'Producto rechazado exitosamente.')
+    return redirect('inventario:listar')
+
+
 def api_verificar_stock(request, producto_id):
-    """API para verificar stock en tiempo real"""
-    producto = service.obtener_producto(producto_id)
-    if producto:
-        return JsonResponse({
-            'success': True,
-            'stock': producto.stock,
-            'agotado': producto.esta_agotado,
-            'precio': producto.precio
-        })
-    return JsonResponse({'success': False, 'error': 'Producto no encontrado'})
+    """API endpoint para verificar el stock de un producto"""
+    from django.http import JsonResponse
+    producto = get_object_or_404(Producto, id_producto=producto_id)
+    
+    data = {
+        'producto_id': producto.id_producto,
+        'nombre': producto.nombre,
+        'stock': producto.cantidad,  # Cambiado de 'stock' a 'cantidad'
+        'disponible': producto.cantidad > 0,  # Cambiado de 'stock' a 'cantidad'
+        'stock_minimo': producto.stock_minimo,
+        'agotado': producto.cantidad == 0,  # Cambiado de 'stock' a 'cantidad'
+    }
+    
+    return JsonResponse(data)

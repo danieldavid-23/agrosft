@@ -1,0 +1,56 @@
+                        <tr>
+                            <th scope="row">{{ producto.id_producto_usuario }}</th>
+                            <td>{{ producto.id_producto.nombre }}</td>
+                            <td>{{ producto.id_producto.id_categoria.nombre }}</td>
+                            <td>
+                                <span class="badge {% if producto.id_producto.cantidad <= producto.id_producto.stock_minimo %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                    {{ producto.cantidad }}
+                                </span>
+                            </td>
+                            <td>${{ producto.precio|floatformat:2 }}</td>
+                            <td>
+                                {% if producto.id_estado.estado == 'pendiente' %}
+                                    <span class="badge bg-secondary">Pendiente</span>
+                                {% elif producto.id_estado.estado == 'aprobado' %}
+                                    <span class="badge bg-success">Aprobado</span>
+                                {% elif producto.id_estado.estado == 'rechazado' %}
+                                    <span class="badge bg-danger">Rechazado</span>
+                                {% elif producto.id_estado.estado == 'eliminado' %}
+                                    <span class="badge bg-dark">Eliminado</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ producto.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if producto.id_producto_usuario %}
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'inventario:detalle' producto.id_producto_usuario %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if producto.id_usuario.id_users == user.id_users or user.is_staff %}
+                                    <a href="{% url 'inventario:editar' producto.id_producto_usuario %}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'inventario:eliminar' producto.id_producto_usuario %}" 
+                                       class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if user.is_staff %}
+                                        {% if producto.id_estado.estado == 'pendiente' %}
+                                        <a href="{% url 'inventario:aprobar' producto.id_producto_usuario %}" 
+                                           class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{% url 'inventario:rechazar' producto.id_producto_usuario %}" 
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>

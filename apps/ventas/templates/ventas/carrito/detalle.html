@@ -32,16 +32,16 @@
             <tbody>
                 {% for item in carrito %}
                 <tr>
-                    <td>{{ item.producto.nombre }}</td>
+                    <td>{{ item.producto.id_producto.nombre }}</td>
                     <td>${{ item.precio }}</td>
                     <td style="width: 200px;">
-                        <form action="{% url 'ventas:carrito_actualizar' item.producto.id %}" method="post" class="d-flex m-0">
+                        <form action="{% url 'ventas:carrito_actualizar' item.producto.id_producto_usuario %}" method="post" class="d-flex m-0">
                             {% csrf_token %}
                             <div class="input-group input-group-sm">
                                 <button type="button" class="btn btn-outline-secondary" onclick="this.parentNode.querySelector('input[type=number]').stepDown(); this.form.submit();">
                                     <i class="fas fa-minus"></i>
                                 </button>
-                                <input type="number" name="cantidad" value="{{ item.cantidad }}" min="1" max="{{ item.producto.stock }}" class="form-control text-center fw-bold px-0" onchange="this.form.submit()">
+                                <input type="number" name="cantidad" value="{{ item.cantidad }}" min="1" max="{{ item.producto.cantidad }}" class="form-control text-center fw-bold px-0" onchange="this.form.submit()">
                                 <button type="button" class="btn btn-outline-secondary" onclick="this.parentNode.querySelector('input[type=number]').stepUp(); this.form.submit();">
                                     <i class="fas fa-plus"></i>
                                 </button>
@@ -51,7 +51,7 @@
                     </td>
                     <td>${{ item.subtotal }}</td>
                     <td>
-                        <form action="{% url 'ventas:carrito_eliminar' item.producto.id %}" method="post" class="d-inline">
+                        <form action="{% url 'ventas:carrito_eliminar' item.producto.id_producto_usuario %}" method="post" class="d-inline">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                         </form>
@@ -68,7 +68,7 @@
         </table>
     </div>
     <div class="d-flex justify-content-between mt-3">
-        <a href="{% url 'inventario:listar' %}" class="btn btn-secondary">Seguir Comprando</a>
+        <a href="{% url 'inventario:marketplace' %}" class="btn btn-secondary">Seguir Comprando</a>
         <div>
             <a href="{% url 'ventas:carrito_checkout' %}" class="btn btn-primary btn-lg me-2">Crear Solicitud de Compra</a>
             <a href="{% url 'ventas:carrito_checkout_venta' %}" class="btn btn-success btn-lg">Realizar Venta Directa</a>
@@ -76,7 +76,7 @@
     </div>
     {% else %}
     <div class="alert alert-info mt-4">
-        Tu carrito está vacío. <a href="{% url 'inventario:listar' %}" class="alert-link">Vuelve al inventario para agregar productos</a>.
+        Tu carrito está vacío. <a href="{% url 'inventario:marketplace' %}" class="alert-link">Vuelve al marketplace para agregar productos</a>.
     </div>
     {% endif %}
 </div>

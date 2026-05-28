@@ -1,6 +1,9 @@
 from ..repositories.producto_repository import ProductoRepository
 from ..dtos.producto_dto import ProductoDTO, ProductoCreateDTO, ProductoUpdateDTO
 from django.core.exceptions import ValidationError
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ProductoService:
     
@@ -30,8 +33,12 @@ class ProductoService:
     def crear_producto(self, data, usuario):
         """Crea un nuevo producto (RF-11)"""
         # Validar datos
-        dto = ProductoCreateDTO(**data)
-        dto.validate()
+        try:
+            dto = ProductoCreateDTO(**data)
+            dto.validate()
+        except (ValidationError, TypeError) as e:
+            logger.warning(f"Validation failed when creating product for user {getattr(usuario, 'id', usuario)}: {str(e)}")
+            raise
         
         # Preparar datos para el repositorio
         producto_data = {
@@ -39,14 +46,19 @@ class ProductoService:
             'descripcion': dto.descripcion,
             'categoria_id': dto.categoria_id,
             'precio': dto.precio,
-            'stock': dto.stock,
+            'cantidad': dto.cantidad,  # Cambiado de stock a cantidad
             'stock_minimo': dto.stock_minimo,
             'agricultor': usuario,
             'estado': 'pendiente'  # RF-11b
         }
         
         # Crear producto
-        producto = self.repository.create(producto_data, usuario.id)
+        try:
+            producto = self.repository.create(producto_data, usuario.id)
+        except Exception as e:
+            logger.error(f"Error creating product for user {getattr(usuario, 'id', usuario)}: {str(e)}", exc_info=True)
+            raise
+        logger.info(f"Product '{dto.nombre}' created via service by user {getattr(usuario, 'id', usuario)}")
         return ProductoDTO.from_model(producto)
     
     def actualizar_producto(self, producto_id, data, usuario):
@@ -54,6 +66,7 @@ class ProductoService:
         # Verificar que el producto existe
         producto = self.repository.get_by_id(producto_id)
         if not producto:
+            logger.warning(f"Update failed: product {producto_id} not found (requested by user {getattr(usuario, 'id', usuario)})")
             raise ValidationError("Producto no encontrado")
         
         # Verificar permisos (RF-12)
@@ -63,23 +76,32 @@ class ProductoService:
             pass
         
         # Validar datos
-        dto = ProductoUpdateDTO(**data)
-        dto.validate()
+        try:
+            dto = ProductoUpdateDTO(**data)
+            dto.validate()
+        except (ValidationError, TypeError) as e:
+            logger.warning(f"Validation failed when updating product {producto_id}: {str(e)}")
+            raise
         
         # Preparar datos para actualizar (solo campos proporcionados)
         producto_data = {}
-        for field in ['nombre', 'descripcion', 'categoria_id', 'precio', 'stock', 'stock_minimo']:
+        for field in ['nombre', 'descripcion', 'categoria_id', 'precio', 'cantidad', 'stock_minimo']:  # Cambiado de stock a cantidad
             if hasattr(dto, field) and getattr(dto, field) is not None:
                 producto_data[field] = getattr(dto, field)
         
         # Actualizar producto
-        producto_actualizado = self.repository.update(producto_id, producto_data, usuario.id)
+        try:
+            producto_actualizado = self.repository.update(producto_id, producto_data, usuario.id)
+        except Exception as e:
+            logger.error(f"Error updating product {producto_id}: {str(e)}", exc_info=True)
+            raise
         return ProductoDTO.from_model(producto_actualizado)
     
     def eliminar_producto(self, producto_id, usuario):
         """Elimina un producto (RF-13)"""
         producto = self.repository.get_by_id(producto_id)
         if not producto:
+            logger.warning(f"Delete failed: product {producto_id} not found (requested by user {getattr(usuario, 'id', usuario)})")
             raise ValidationError("Producto no encontrado")
         
         # Verificar si tiene pedidos activos (RF-13b)
@@ -87,7 +109,13 @@ class ProductoService:
         # if self.tiene_pedidos_activos(producto_id):
         #     raise ValidationError("No se puede eliminar: tiene pedidos activos")
         
-        return self.repository.delete(producto_id, usuario.id)
+        try:
+            result = self.repository.delete(producto_id, user=usuario)
+        except Exception as e:
+            logger.error(f"Error deleting product {producto_id}: {str(e)}", exc_info=True)
+            raise
+        logger.info(f"Product {producto_id} deleted via service by user {getattr(usuario, 'id', usuario)}")
+        return result
     
     def aprobar_producto(self, producto_id, usuario, aprobado=True):
         """Aprueba o rechaza un producto"""
