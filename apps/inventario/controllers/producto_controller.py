@@ -300,19 +300,18 @@ def eliminar_producto(request, pk):
         return redirect('inventario:listar')
     
     if request.method == 'POST':
-        # Soft delete: marcar como eliminado en lugar de borrar
-        producto = producto_usuario.id_producto
-        producto.eliminado = True
-        producto.fecha_eliminacion = timezone.now()
-        producto.eliminado_por_id = request.user.id_users
-        producto.save()
+        # Eliminación física del ProductoUsuario (la publicación del usuario)
+        # El producto maestro (catálogo) se mantiene para otros usuarios
+        producto_nombre = producto_usuario.id_producto.nombre
+        producto_usuario.delete()
         
-        logger.info(f"Product {pk} soft-deleted by user {request.user.pk}")
+        logger.info(f"ProductoUsuario {pk} eliminado: {producto_nombre} por user {request.user.pk}")
         messages.success(request, '¡Producto eliminado exitosamente!')
         return redirect('inventario:listar')
     
-    return render(request, 'inventario/eliminar_producto.html', {
-        'producto_usuario': producto_usuario
+    return render(request, 'inventario/producto_confirm_delete.html', {
+        'producto_usuario': producto_usuario,
+        'producto': producto_usuario.id_producto
     })
 
 # Nuevas funcionalidades para aprobar y rechazar productos

@@ -55,6 +55,17 @@ def listar_solicitudes(request):
         # Obtener información del comprador
         comprador = solicitud.id_usuario
         
+        # Determinar estado real basado en el tipo de movimiento
+        tipo_movimiento = solicitud.id_tipo_movimiento.tipo
+        if tipo_movimiento == 'venta':
+            estado = 'aceptada'
+        elif tipo_movimiento == 'rechazada':
+            estado = 'rechazada'
+        elif tipo_movimiento == 'vendida':
+            estado = 'vendida'
+        else:
+            estado = 'recibida'
+        
         solicitudes_data.append({
             'id': solicitud.id_movimiento,
             'fecha': getattr(solicitud, 'fecha_movimiento', 'N/A'),
@@ -63,7 +74,7 @@ def listar_solicitudes(request):
             'comprador_email': comprador.correo,
             'total_productos_mios': mis_productos_en_solicitud.count(),
             'total_estimado': total,
-            'estado': 'recibida',
+            'estado': estado,
             'productos_mios': mis_productos_en_solicitud,
         })
     
@@ -102,6 +113,20 @@ def detalle_solicitud(request, pk):
     # Calcular total
     total = sum(p.cantidad * p.id_producto_usuario.precio for p in productos)
     
+    # Determinar estado real basado en el tipo de movimiento
+    tipo_movimiento = solicitud.id_tipo_movimiento.tipo
+    if tipo_movimiento == 'venta':
+        estado = 'aceptada'
+    elif tipo_movimiento == 'rechazada':
+        estado = 'rechazada'
+    elif tipo_movimiento == 'vendida':
+        estado = 'vendida'
+    else:
+        estado = 'recibida'
+    
+    # Obtener información del comprador
+    comprador = solicitud.id_usuario
+    
     return render(request, 'ventas/solicitudes/solicitud_detail.html', {
         'solicitud': {
             'id': solicitud.id_movimiento,
@@ -109,6 +134,9 @@ def detalle_solicitud(request, pk):
             'descripcion': getattr(solicitud, 'descripcion', 'Sin descripción'),
             'total_productos': productos.count(),
             'total_estimado': total,
+            'estado': estado,
+            'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
+            'comprador_email': comprador.correo,
         },
         'productos': productos,
     })
@@ -117,9 +145,35 @@ def detalle_solicitud(request, pk):
 @login_required
 def aceptar_solicitud(request, pk):
     """
-    Aceptar una solicitud (marcar como procesada)
+    Aceptar una solicitud (crear venta con estado 'en proceso')
     """
-    messages.info(request, 'La solicitud ha sido marcada como aceptada.')
+    # Obtener la solicitud original de compra
+    tipo_compra = get_object_or_404(TipoMovimiento, tipo='compra')
+    solicitud_original = get_object_or_404(Movimiento, pk=pk, id_tipo_movimiento=tipo_compra)
+    
+    # Verificar que el usuario actual es el vendedor de al menos un producto en la solicitud
+    productos_vendedor = ProductoUsuario.objects.filter(
+        id_usuario=request.user,
+        id_producto_usuario__in=solicitud_original.detalles.values_list('id_producto_usuario_id', flat=True)
+    )
+    
+    if not productos_vendedor.exists():
+        messages.error(request, 'No tienes permiso para aceptar esta solicitud.')
+        return redirect('ventas:solicitud_list')
+    
+    try:
+        from django.db import transaction
+        with transaction.atomic():
+            # Cambiar el tipo de movimiento de 'compra' a 'venta' para indicar que está en proceso
+            tipo_venta = TipoMovimiento.objects.get_or_create(tipo='venta')[0]
+            solicitud_original.id_tipo_movimiento = tipo_venta
+            solicitud_original.save()
+            
+            messages.success(request, f'¡Solicitud #{pk} aceptada y transferida al módulo de ventas con estado "en proceso"!')
+            
+    except Exception as e:
+        messages.error(request, f'Error al aceptar la solicitud: {str(e)}')
+    
     return redirect('ventas:solicitud_detail', pk=pk)
 
 
@@ -128,7 +182,31 @@ def rechazar_solicitud(request, pk):
     """
     Rechazar una solicitud
     """
-    messages.info(request, 'La solicitud ha sido rechazada.')
+    # Obtener la solicitud original de compra
+    tipo_compra = get_object_or_404(TipoMovimiento, tipo='compra')
+    solicitud_original = get_object_or_404(Movimiento, pk=pk, id_tipo_movimiento=tipo_compra)
+    
+    # Verificar que el usuario actual es el vendedor de al menos un producto en la solicitud
+    productos_vendedor = ProductoUsuario.objects.filter(
+        id_usuario=request.user,
+        id_producto_usuario__in=solicitud_original.detalles.values_list('id_producto_usuario_id', flat=True)
+    )
+    
+    if not productos_vendedor.exists():
+        messages.error(request, 'No tienes permiso para rechazar esta solicitud.')
+        return redirect('ventas:solicitud_list')
+    
+    try:
+        # Marcar la solicitud como rechazada cambiando su tipo a 'rechazada'
+        tipo_rechazada = TipoMovimiento.objects.get_or_create(tipo='rechazada')[0]
+        solicitud_original.id_tipo_movimiento = tipo_rechazada
+        solicitud_original.save()
+        
+        messages.success(request, f'¡Solicitud #{pk} rechazada!')
+        
+    except Exception as e:
+        messages.error(request, f'Error al rechazar la solicitud: {str(e)}')
+        
     return redirect('ventas:solicitud_list')
 
 
@@ -146,5 +224,29 @@ def marcar_vendido(request, pk):
     """
     Marcar solicitud como vendida/completada
     """
-    messages.success(request, 'La solicitud ha sido marcada como completada.')
+    # Obtener la solicitud
+    tipo_venta = get_object_or_404(TipoMovimiento, tipo='venta')
+    solicitud_venta = get_object_or_404(Movimiento, pk=pk, id_tipo_movimiento=tipo_venta)
+    
+    # Verificar que el usuario actual es el vendedor de al menos un producto en la solicitud
+    productos_vendedor = ProductoUsuario.objects.filter(
+        id_usuario=request.user,
+        id_producto_usuario__in=solicitud_venta.detalles.values_list('id_producto_usuario_id', flat=True)
+    )
+    
+    if not productos_vendedor.exists():
+        messages.error(request, 'No tienes permiso para marcar como vendida esta solicitud.')
+        return redirect('ventas:solicitud_list')
+    
+    try:
+        # Cambiar el tipo de movimiento a 'vendida' para indicar que está completada
+        tipo_vendida = TipoMovimiento.objects.get_or_create(tipo='vendida')[0]
+        solicitud_venta.id_tipo_movimiento = tipo_vendida
+        solicitud_venta.save()
+        
+        messages.success(request, f'¡Solicitud #{pk} marcada como vendida!')
+        
+    except Exception as e:
+        messages.error(request, f'Error al marcar como vendida la solicitud: {str(e)}')
+    
     return redirect('ventas:solicitud_detail', pk=pk)

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from apps.inventario.models import ProductoUsuario  # Cambiado de Producto a ProductoUsuario
 from apps.ventas.services.carrito_service import Carrito
 from core.utils.helpers import safe_int
@@ -58,29 +59,69 @@ def eliminar_del_carrito(request, producto_id):
     return redirect('ventas:carrito_detalle')
 
 
-# NOTA: Estas importaciones dependen de modelos que NO existen en la BD actual
-# from django.db import transaction
-# from django.db.models import F
-# from apps.ventas.forms.solicitud_form import CheckoutSolicitudForm
-# from apps.clientes.models import Cliente
-# from apps.ventas.models.solicitud import DetalleSolicitudCompra
+from django.db import transaction
+from django.db.models import F
+from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 
+@login_required
 def checkout_carrito(request):
     """
-    Checkout del carrito - TEMPORALMENTE DESHABILITADO
-    Las tablas necesarias no existen en la base de datos actual
+    Checkout del carrito - Procesa la solicitud de compra
     """
-    messages.info(request, 'El checkout estará disponible próximamente.')
-    return redirect('ventas:carrito_detalle')
+    carrito = Carrito(request)
+    
+    if len(carrito) == 0:
+        messages.error(request, 'No hay productos en el carrito.')
+        return redirect('ventas:carrito_detalle')
+    
+    try:
+        with transaction.atomic():
+            # Crear movimiento de tipo compra
+            tipo_compra, created = TipoMovimiento.objects.get_or_create(
+                tipo='compra'
+            )
+            
+            movimiento = Movimiento.objects.create(
+                id_tipo_movimiento=tipo_compra,
+                id_usuario=request.user
+            )
+            
+            # Crear detalles del movimiento para cada producto en el carrito
+            for item in carrito:
+                producto_usuario = item['producto']
+                cantidad = item['cantidad']
+                
+                # Verificar disponibilidad de stock
+                if producto_usuario.cantidad < cantidad:
+                    messages.error(request, f'No hay suficiente stock disponible para {producto_usuario.id_producto.nombre}.')
+                    raise Exception(f'Stock insuficiente para {producto_usuario.id_producto.nombre}')
+                
+                # Crear detalle del movimiento
+                ProductoUsuarioMovimiento.objects.create(
+                    id_movimiento=movimiento,
+                    id_producto_usuario=producto_usuario,
+                    cantidad=cantidad
+                )
+                
+                # Actualizar stock (restar la cantidad solicitada)
+                producto_usuario.cantidad = F('cantidad') - cantidad
+                producto_usuario.save()
+            
+            # Limpiar el carrito después del checkout exitoso
+            carrito.limpiar()
+            
+            messages.success(request, f'¡Solicitud de compra #{movimiento.id_movimiento} creada exitosamente!')
+            return redirect('ventas:solicitud_list')
+            
+    except Exception as e:
+        messages.error(request, f'Error al procesar la solicitud de compra: {str(e)}')
+        return redirect('ventas:carrito_detalle')
 
-# from apps.ventas.models.venta import Venta, DetalleVenta
-# from apps.ventas.forms.venta_form import CheckoutVentaForm
-# from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 
+@login_required
 def checkout_venta_carrito(request):
     """
     Checkout de venta - TEMPORALMENTE DESHABILITADO
-    Las tablas necesarias no existen en la base de datos actual
     """
-    messages.info(request, 'El checkout estará disponible próximamente.')
+    messages.info(request, 'El checkout de venta estará disponible próximamente.')
     return redirect('ventas:carrito_detalle')

@@ -102,9 +102,82 @@
             </div>
 
             <div class="mt-3">
-                <a href="{% url 'ventas:solicitud_list' %}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-2"></i> Volver a Solicitudes
-                </a>
+                <!-- Acciones para el vendedor -->
+                <div class="d-flex flex-wrap gap-2">
+                    {% if solicitud.estado != 'aceptada' and solicitud.estado != 'rechazada' and solicitud.estado != 'vendida' %}
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#aceptarModal">
+                            <i class="fas fa-check me-2"></i> Aceptar Solicitud
+                        </button>
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rechazarModal">
+                            <i class="fas fa-times me-2"></i> Rechazar Solicitud
+                        </button>
+                    {% elif solicitud.estado == 'aceptada' %}
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#vendidoModal">
+                            <i class="fas fa-check-circle me-2"></i> Marcar como Vendido
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'ventas:solicitud_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Volver a Solicitudes
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Modal para aceptar solicitud -->
+            <div class="modal fade" id="aceptarModal" tabindex="-1" aria-labelledby="aceptarModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="aceptarModalLabel">Aceptar Solicitud</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            ¿Estás seguro de que deseas aceptar esta solicitud de compra? Se transferirá al módulo de ventas con estado "en proceso".
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <a href="{% url 'ventas:solicitud_aceptar' solicitud.id %}" class="btn btn-success">Aceptar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal para rechazar solicitud -->
+            <div class="modal fade" id="rechazarModal" tabindex="-1" aria-labelledby="rechazarModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="rechazarModalLabel">Rechazar Solicitud</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            ¿Estás seguro de que deseas rechazar esta solicitud de compra?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <a href="{% url 'ventas:solicitud_rechazar' solicitud.id %}" class="btn btn-danger">Rechazar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal para marcar como vendido -->
+            <div class="modal fade" id="vendidoModal" tabindex="-1" aria-labelledby="vendidoModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="vendidoModalLabel">Marcar como Vendido</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            ¿Estás seguro de que deseas marcar esta solicitud como vendida? Esta acción cambiará el estado de la venta a "vendido".
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <a href="{% url 'ventas:solicitud_marcar_vendido' solicitud.id %}" class="btn btn-primary">Marcar como Vendido</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -169,7 +169,7 @@
 
                         <!-- Botones Grandes -->
                         <div class="d-flex flex-column flex-sm-row gap-3 mt-5 pt-4 border-top">
-                            <a href="{% if producto_usuario %}{% url 'inventario:detalle' producto_usuario.id_producto_usuario %}{% else %}{% url 'inventario:listar' %}{% endif %}" 
+                            <a href="{% url 'inventario:listar' %}" 
                                class="btn btn-light btn-lg px-4 fw-bold order-2 order-sm-1 flex-grow-1 text-secondary">
                                 Cancelar
                             </a>
