@@ -1,5 +1,5 @@
 from decimal import Decimal
-from apps.inventario.models import Producto
+from apps.inventario.models import ProductoUsuario  # Cambiado de Producto a ProductoUsuario
 
 class Carrito:
     def __init__(self, request):
@@ -10,7 +10,7 @@ class Carrito:
         self.carrito = carrito
 
     def agregar(self, producto, cantidad=1):
-        producto_id = str(producto.id)
+        producto_id = str(producto.id_producto_usuario)  # Usar id_producto_usuario de ProductoUsuario
         if producto_id not in self.carrito:
             self.carrito[producto_id] = {
                 'cantidad': 0,
@@ -44,11 +44,12 @@ class Carrito:
 
     def __iter__(self):
         producto_ids = self.carrito.keys()
-        productos = Producto.objects.filter(id__in=producto_ids)
+        # Filtrar productos de la tabla ProductoUsuario en lugar de Producto
+        productos = ProductoUsuario.objects.filter(id_producto_usuario__in=producto_ids)
         carrito = self.carrito.copy()
         
         for producto in productos:
-            carrito[str(producto.id)]['producto'] = producto
+            carrito[str(producto.id_producto_usuario)]['producto'] = producto
 
         for item in carrito.values():
             item['precio'] = Decimal(item['precio'])

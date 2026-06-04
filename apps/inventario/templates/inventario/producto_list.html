@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Productos - AGROST{% endblock %}
+{% block title %}{{ titulo|default:'Mi Inventario' }} - AGROST{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -9,16 +9,14 @@
     <div class="row align-items-center mb-5">
         <div class="col-md-8">
             <h1 class="display-6 fw-bold mb-2">
-                <i class="fas fa-boxes text-success me-2"></i>Productos Agrícolas
+                <i class="fas fa-boxes text-success me-2"></i>{{ titulo|default:'Mi Inventario' }}
             </h1>
-            <p class="text-muted fs-5 mb-0">Explora nuestra variedad de productos frescos directamente del campo</p>
+            <p class="text-muted fs-5 mb-0">{{ subtitulo|default:'Gestiona tus productos registrados' }}</p>
         </div>
         <div class="col-md-4 text-md-end mt-4 mt-md-0">
-            {% if rol == 'agricultor' %}
             <a href="{% url 'inventario:crear' %}" class="btn btn-success btn-lg shadow-sm">
                 <i class="fas fa-plus-circle me-2"></i>Nuevo Producto
             </a>
-            {% endif %}
         </div>
     </div>
 
@@ -127,30 +125,16 @@
                     </div>
                 </div>
 
-                <!-- Footer de la Card (Acciones emergentes) -->
+                <!-- Footer de la Card (Acciones: SOLO Editar y Eliminar) -->
                 <div class="card-footer bg-white border-0 p-3 pt-0 rounded-bottom-4 text-center">
-                    <a href="{% url 'inventario:detalle' producto.id %}" class="btn btn-primary d-block w-100 rounded-pill fw-bold shadow-sm mb-2">
-                        Ver Detalles <i class="fas fa-arrow-right ms-2 fs-7"></i>
-                    </a>
-                    
-                    <form action="{% url 'ventas:carrito_agregar' producto.id %}" method="post" class="w-100">
-                        {% csrf_token %}
-                        <input type="hidden" name="cantidad" value="1">
-                        <button type="submit" class="btn btn-outline-success d-block w-100 rounded-pill fw-bold shadow-sm">
-                            <i class="fas fa-cart-plus me-1"></i> Añadir al carrito
-                        </button>
-                    </form>
-                    
-                    {% if rol == 'agricultor' and user.id == producto.agricultor_id %}
-                    <div class="d-flex gap-2 mt-2 justify-content-center border-top border-light pt-2">
-                        <a href="{% url 'inventario:editar' producto.id %}" class="btn btn-sm btn-light text-primary flex-grow-1 rounded-pill">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{% url 'inventario:editar' producto.id %}" class="btn btn-sm btn-outline-primary flex-grow-1 rounded-pill fw-bold">
                             <i class="fas fa-edit me-1"></i> Editar
                         </a>
-                        <a href="{% url 'inventario:eliminar' producto.id %}" class="btn btn-sm btn-light text-danger flex-grow-1 rounded-pill">
+                        <a href="{% url 'inventario:eliminar' producto.id %}" class="btn btn-sm btn-outline-danger flex-grow-1 rounded-pill fw-bold">
                             <i class="fas fa-trash me-1"></i> Eliminar
                         </a>
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -164,7 +148,7 @@
                     </div>
                     <h3 class="fw-bold h4">No se encontraron productos</h3>
                     <p class="text-muted mx-auto" style="max-width: 400px;">Aún no hay productos disponibles o los filtros de búsqueda no arrojaron resultados.</p>
-                    {% if rol == 'agricultor' %}
+                    {% if rol == 'usuario' %}
                     <a href="{% url 'inventario:crear' %}" class="btn btn-success btn-lg mt-3 rounded-pill px-4 shadow-sm">
                         <i class="fas fa-plus-circle me-2"></i>Registrar Primer Producto
                     </a>

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historial de Clientes - AGROSFT{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Encabezado -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-8">
+            <h1 class="display-6 fw-bold mb-2">
+                <i class="fas fa-users text-primary me-2"></i>Historial de Clientes
+            </h1>
+            <p class="text-muted fs-5 mb-0">Clientes con compras realizadas o procesos activos</p>
+        </div>
+    </div>
+
+    <!-- Resumen de Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 bg-primary bg-opacity-10">
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h2 class="fw-bold text-primary mb-0">{{ clientes|length }}</h2>
+                    <small class="text-muted">Total de clientes activos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 bg-success bg-opacity-10">
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
+                    <h2 class="fw-bold text-success mb-0">{{ clientes|length }}</h2>
+                    <small class="text-muted">Clientes compradores</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 bg-warning bg-opacity-10">
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-store fa-3x text-warning mb-3"></i>
+                    <h2 class="fw-bold text-warning mb-0">{{ clientes|length }}</h2>
+                    <small class="text-muted">Clientes vendedores</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            {% if clientes %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nombre Completo</th>
+                            <th scope="col" class="text-center">Movimientos</th>
+                            <th scope="col" class="text-center">Compras</th>
+                            <th scope="col" class="text-center">Ventas</th>
+                            <th scope="col" class="text-center">Estado</th>
+                            <th scope="col" class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes %}
+                        <tr>
+                            <td>{{ cliente.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                        <i class="fas fa-user text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold d-block">{{ cliente.nombre }}</span>
+                                        <small class="text-muted">{{ cliente.correo }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">{{ cliente.total_movimientos }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success">{{ cliente.total_compras }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning text-dark">{{ cliente.total_ventas }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if cliente.total_movimientos > 0 %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Activo
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'clientes:cliente_detail' cliente.id %}" 
+                                       class="btn btn-sm btn-outline-primary" title="Ver historial">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <!-- Estado Vacío -->
+            <div class="text-center py-5">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px;">
+                    <i class="fas fa-users fa-3x text-secondary"></i>
+                </div>
+                <h3 class="fw-bold h4">No hay clientes registrados</h3>
+                <p class="text-muted mx-auto" style="max-width: 400px;">Aún no hay clientes con compras o procesos activos en el sistema.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

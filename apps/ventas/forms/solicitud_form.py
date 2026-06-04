@@ -5,9 +5,9 @@ from apps.ventas.models.solicitud import SolicitudCompra, DetalleSolicitudCompra
 class SolicitudCompraForm(forms.ModelForm):
     class Meta:
         model = SolicitudCompra
-        fields = ['cliente', 'observaciones']
+        fields = ['cliente_id', 'observaciones']
         widgets = {
-            'cliente': forms.Select(attrs={'class': 'form-select'}),
+            'cliente_id': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'ID del cliente'}),
             'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Observaciones adicionales'}),
         }
 
@@ -22,9 +22,9 @@ class CheckoutSolicitudForm(forms.ModelForm):
 class DetalleSolicitudCompraForm(forms.ModelForm):
     class Meta:
         model = DetalleSolicitudCompra
-        fields = ['producto', 'cantidad']
+        fields = ['producto_id', 'cantidad']  # Cambiado de 'producto' a 'producto_id'
         widgets = {
-            'producto': forms.Select(attrs={'class': 'form-select producto-select'}),
+            'producto_id': forms.NumberInput(attrs={'class': 'form-control producto-id-input', 'placeholder': 'ID del producto'}),
             'cantidad': forms.NumberInput(attrs={'class': 'form-control cantidad-input', 'min': '1'}),
         }
 

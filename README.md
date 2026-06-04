@@ -8,7 +8,6 @@ Sistema de información para la gestión de actividades agrícolas.
 
 ## Estructura del Proyecto
 
-- **DB/**: Base de datos y migraciones
 - **apps/**: Aplicaciones Django
 - **config/**: Configuración del proyecto
 - **core/**: Funcionalidades principales
@@ -19,12 +18,4 @@ Sistema de información para la gestión de actividades agrícolas.
 ```bash
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver
 ```
-
-## Contribuidores
-
-- Daniel David
-- Samuel Pérez
-- Melissa 
-

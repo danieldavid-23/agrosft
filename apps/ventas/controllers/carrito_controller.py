@@ -1,7 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from apps.inventario.models import Producto
+from django.contrib.auth.decorators import login_required
+from apps.inventario.models import ProductoUsuario  # Cambiado de Producto a ProductoUsuario
 from apps.ventas.services.carrito_service import Carrito
+from core.utils.helpers import safe_int
+import logging
+
+logger = logging.getLogger(__name__)
 
 def detalle_carrito(request):
     carrito = Carrito(request)
@@ -9,17 +14,21 @@ def detalle_carrito(request):
 
 def agregar_al_carrito(request, producto_id):
     carrito = Carrito(request)
-    producto = get_object_or_404(Producto, id=producto_id)
+    producto = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)  # Cambiado para usar ProductoUsuario
     
     cantidad = 1
     if request.method == 'POST':
         cantidad = int(request.POST.get('cantidad', 1))
         
-    if cantidad > producto.stock:
-        messages.error(request, f'Solo hay {producto.stock} unidades disponibles de {producto.nombre}.')
+    # Convertir cantidad disponible a entero ya que está almacenada como string
+    cantidad_disponible = safe_int(producto.cantidad)  # Cambiado de stock a cantidad
+    
+    if cantidad > cantidad_disponible:
+        messages.error(request, f'Solo hay {cantidad_disponible} unidades disponibles de {producto.id_producto.nombre}.')
     else:
         carrito.agregar(producto=producto, cantidad=cantidad)
-        messages.success(request, f'{producto.nombre} añadido al carrito.')
+        logger.info(f"User {request.user.pk} added product {producto_id} to cart")
+        messages.success(request, f'{producto.id_producto.nombre} añadido al carrito.')
         
     # Obtener la URL desde donde se hizo la petición (Referer) para volver a esa página si es posible
     # o ir al detalle del carrito por defecto
@@ -32,9 +41,11 @@ def actualizar_carrito(request, producto_id):
     carrito = Carrito(request)
     if request.method == 'POST':
         cantidad = int(request.POST.get('cantidad', 1))
-        producto = get_object_or_404(Producto, id=producto_id)
-        if cantidad > producto.stock:
-            messages.error(request, f'Solo hay {producto.stock} unidades disponibles de {producto.nombre}.')
+        producto = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)  # Cambiado para usar ProductoUsuario
+        cantidad_disponible = safe_int(producto.cantidad)  # Cambiado de stock a cantidad
+        
+        if cantidad > cantidad_disponible:
+            messages.error(request, f'Solo hay {cantidad_disponible} unidades disponibles de {producto.id_producto.nombre}.')
         else:
             carrito.actualizar(producto_id=producto_id, cantidad=cantidad)
             messages.success(request, f'Cantidad actualizada correctamente.')
@@ -46,118 +57,71 @@ def eliminar_del_carrito(request, producto_id):
     carrito.eliminar(producto_id=producto_id)
     messages.success(request, 'Producto eliminado del carrito.')
     return redirect('ventas:carrito_detalle')
-<<<<<<< HEAD
+
 
 from django.db import transaction
-from apps.ventas.forms.solicitud_form import CheckoutSolicitudForm
-from apps.clientes.models import Cliente
-from apps.ventas.models.solicitud import DetalleSolicitudCompra
+from django.db.models import F
+from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 
+@login_required
 def checkout_carrito(request):
+    """
+    Checkout del carrito - Procesa la solicitud de compra
+    """
     carrito = Carrito(request)
+    
     if len(carrito) == 0:
-        messages.error(request, 'No puedes procesar un carrito vacío.')
+        messages.error(request, 'No hay productos en el carrito.')
+        return redirect('ventas:carrito_detalle')
+    
+    try:
+        with transaction.atomic():
+            # Crear movimiento de tipo compra
+            tipo_compra, created = TipoMovimiento.objects.get_or_create(
+                tipo='compra'
+            )
+            
+            movimiento = Movimiento.objects.create(
+                id_tipo_movimiento=tipo_compra,
+                id_usuario=request.user
+            )
+            
+            # Crear detalles del movimiento para cada producto en el carrito
+            for item in carrito:
+                producto_usuario = item['producto']
+                cantidad = item['cantidad']
+                
+                # Verificar disponibilidad de stock
+                if producto_usuario.cantidad < cantidad:
+                    messages.error(request, f'No hay suficiente stock disponible para {producto_usuario.id_producto.nombre}.')
+                    raise Exception(f'Stock insuficiente para {producto_usuario.id_producto.nombre}')
+                
+                # Crear detalle del movimiento
+                ProductoUsuarioMovimiento.objects.create(
+                    id_movimiento=movimiento,
+                    id_producto_usuario=producto_usuario,
+                    cantidad=cantidad
+                )
+                
+                # Actualizar stock (restar la cantidad solicitada)
+                producto_usuario.cantidad = F('cantidad') - cantidad
+                producto_usuario.save()
+            
+            # Limpiar el carrito después del checkout exitoso
+            carrito.limpiar()
+            
+            messages.success(request, f'¡Solicitud de compra #{movimiento.id_movimiento} creada exitosamente!')
+            return redirect('ventas:solicitud_list')
+            
+    except Exception as e:
+        messages.error(request, f'Error al procesar la solicitud de compra: {str(e)}')
         return redirect('ventas:carrito_detalle')
 
-    if request.method == 'POST':
-        form = CheckoutSolicitudForm(request.POST)
-        if form.is_valid():
-            try:
-                items = list(carrito)
-                with transaction.atomic():
-                    solicitud = form.save(commit=False)
-                    
-                    # Auto-assign or create client for current user
-                    cliente, created = Cliente.objects.get_or_create(
-                        user=request.user,
-                        defaults={'nombre_completo': request.user.get_full_name() or request.user.username}
-                    )
-                    solicitud.cliente = cliente
-                    solicitud.creado_por = request.user if request.user.is_authenticated else None
-                    solicitud.save()
 
-                    for item in items:
-                        DetalleSolicitudCompra.objects.create(
-                            solicitud=solicitud,
-                            producto=item['producto'],
-                            cantidad=item['cantidad']
-                        )
-
-                    carrito.limpiar()
-                    messages.success(request, '¡Pedido (Solicitud de Compra) realizado exitosamente!')
-                    return redirect('ventas:solicitud_detail', pk=solicitud.pk)
-            except Exception as e:
-                messages.error(request, f'Error al procesar el pedido: {str(e)}')
-        else:
-            messages.error(request, 'Por favor corrija los errores en el formulario.')
-    else:
-        form = CheckoutSolicitudForm()
-
-    return render(request, 'ventas/carrito/checkout.html', {
-        'form': form,
-        'carrito': carrito
-    })
-
-from apps.ventas.models.venta import Venta, DetalleVenta
-from apps.ventas.forms.venta_form import CheckoutVentaForm
-
+@login_required
 def checkout_venta_carrito(request):
-    carrito = Carrito(request)
-    if len(carrito) == 0:
-        messages.error(request, 'No puedes procesar un carrito vacío.')
-        return redirect('ventas:carrito_detalle')
-
-    if request.method == 'POST':
-        form = CheckoutVentaForm(request.POST)
-        if form.is_valid():
-            try:
-                items = list(carrito)
-                with transaction.atomic():
-                    # Verificar stock primero
-                    for item in items:
-                        producto = item['producto']
-                        if producto.stock < item['cantidad']:
-                            raise ValueError(f"No hay stock suficiente para '{producto.nombre}'. Stock actual: {producto.stock}, Solicitado: {item['cantidad']}")
-
-                    venta = form.save(commit=False)
-                    
-                    # Auto-assign or create client for current user
-                    cliente, created = Cliente.objects.get_or_create(
-                        user=request.user,
-                        defaults={'nombre_completo': request.user.get_full_name() or request.user.username}
-                    )
-                    venta.cliente = cliente
-                    venta.total = carrito.get_total_precio()
-                    venta.vendedor = request.user if request.user.is_authenticated else None
-                    venta.save()
-
-                    for item in items:
-                        producto = item['producto']
-                        DetalleVenta.objects.create(
-                            venta=venta,
-                            producto=producto,
-                            cantidad=item['cantidad'],
-                            precio_unitario=producto.precio
-                        )
-                        # Actualizar stock
-                        producto.stock -= item['cantidad']
-                        producto.save()
-
-                    carrito.limpiar()
-                    messages.success(request, '¡Venta directa registrada exitosamente!')
-                    return redirect('ventas:venta_detail', pk=venta.pk)
-            except ValueError as e:
-                messages.error(request, str(e))
-            except Exception as e:
-                messages.error(request, f'Error al procesar la venta: {str(e)}')
-        else:
-            messages.error(request, 'Por favor corrija los errores en el formulario.')
-    else:
-        form = CheckoutVentaForm()
-
-    return render(request, 'ventas/carrito/checkout_venta.html', {
-        'form': form,
-        'carrito': carrito
-    })
-=======
->>>>>>> 00deb5effa133f591114c2e6891dfa3515da315b
+    """
+    Checkout de venta - TEMPORALMENTE DESHABILITADO
+    """
+    messages.info(request, 'El checkout de venta estará disponible próximamente.')
+    return redirect('ventas:carrito_detalle')

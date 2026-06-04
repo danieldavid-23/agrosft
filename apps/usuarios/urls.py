@@ -13,7 +13,8 @@ from apps.usuarios.controllers.auth_controller import (
     UserPasswordResetView,
     UserPasswordResetDoneView,
     UserPasswordResetConfirmView,
-    UserPasswordResetCompleteView
+    UserPasswordResetCompleteView,
+    GoogleAuthView
 )
 
 app_name = 'usuarios'
@@ -30,6 +31,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('perfil/', PerfilView.as_view(), name='perfil'),
     path('cambiar-password/', CambiarPasswordView.as_view(), name='cambiar_password'),
+    path('auth/google/', GoogleAuthView.as_view(), name='google_auth'),
     
     # Recuperación de contraseña
     path('password-reset/', UserPasswordResetView.as_view(), name='password_reset'),

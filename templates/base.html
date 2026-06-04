@@ -231,10 +231,10 @@
                 <ul class="navbar-nav ms-auto align-items-center">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'home' %}"><i class="fas fa-home me-1 d-lg-none"></i> Inicio</a>
+                            <a class="nav-link" href="{% url 'inventario:marketplace' %}"><i class="fas fa-store me-1 d-lg-none"></i> Inicio</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'inventario:listar' %}"><i class="fas fa-box-open me-1 d-lg-none"></i> Inventario</a>
+                            <a class="nav-link" href="{% url 'inventario:listar' %}"><i class="fas fa-box-open me-1 d-lg-none"></i> Mi Inventario</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'clientes:cliente_list' %}"><i class="fas fa-users me-1 d-lg-none"></i> Clientes</a>
@@ -245,9 +245,7 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'ventas:solicitud_list' %}"><i class="fas fa-clipboard-list me-1 d-lg-none"></i> Solicitudes</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cultivos:cultivo_list' %}"><i class="fas fa-seedling me-1 d-lg-none"></i> Cultivos</a>
-                        </li>
+
                         <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center">
                             <a class="btn btn-outline-success border-0 rounded-circle position-relative p-2" href="{% url 'ventas:carrito_detalle' %}" title="Carrito de Compras">
                                 <i class="fas fa-shopping-cart fs-5"></i>

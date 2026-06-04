@@ -1,15 +1,106 @@
-<h1>{{ producto.nombre }}</h1>
-<p>{{ producto.descripcion }}</p>
-<p>Precio: ${{ producto.precio }}</p>
+{% extends 'base.html' %}
+{% load static %}
 
-<hr>
+{% block title %}Detalle del Producto - {{ producto.id_producto.nombre }}{% endblock %}
 
-<h3>Productos relacionados</h3>
-
-{% for p in relacionados %}
-<div>
-    <h4>{{ p.nombre }}</h4>
-    <p>${{ p.precio }}</p>
-    <a href="{% url 'inventario:detalle' p.id %}">Ver</a>
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-success text-white rounded-top-4">
+                    <h2 class="mb-0">{{ producto.id_producto.nombre }}</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Categoría:</h5>
+                            <p class="mb-0">{{ producto.id_producto.id_categoria.nombre }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Estado:</h5>
+                            <p class="mb-0">
+                                <span class="badge bg-{% if producto.id_estado.estado == 'aprobado' %}success{% elif producto.id_estado.estado == 'pendiente' %}secondary{% elif producto.id_estado.estado == 'rechazado' %}danger{% else %}dark{% endif %}">
+                                    {{ producto.id_estado.estado|capfirst }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Precio:</h5>
+                            <p class="mb-0 fw-bold text-success">${{ producto.precio|floatformat:2 }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Cantidad Disponible:</h5>
+                            <p class="mb--0">
+                                <span class="badge {% if producto.cantidad <= producto.id_producto.stock_minimo %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                    {{ producto.cantidad }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <h5>Descripción:</h5>
+                    <p>{{ producto.id_producto.descripcion }}</p>
+                    
+                    <h5>Fecha de Creación:</h5>
+                    <p>{{ producto.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'inventario:listar' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Volver a la lista
+                        </a>
+                        {% if producto.id_usuario.id_users == user.id_users or user.is_staff %}
+                        <a href="{% url 'inventario:editar' producto.id_producto_usuario %}" class="btn btn-primary ms-2">
+                            <i class="fas fa-edit me-2"></i>Editar
+                        </a>
+                        <a href="{% url 'inventario:eliminar' producto.id_producto_usuario %}" class="btn btn-danger ms-2">
+                            <i class="fas fa-trash me-2"></i>Eliminar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-light rounded-top-4">
+                    <h4 class="mb-0">Información del Vendedor</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Nombre:</strong> {{ producto.id_usuario.nombres }} {{ producto.id_usuario.apellidos }}</p>
+                    <p><strong>Correo:</strong> {{ producto.id_usuario.correo }}</p>
+                    <p><strong>Teléfono:</strong> {{ producto.id_usuario.telefono }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Productos relacionados -->
+    <div class="mt-5">
+        <h3 class="mb-4">Productos Relacionados</h3>
+        <div class="row">
+            {% for p in relacionados|slice:":4" %}
+            <div class="col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ p.id_producto.nombre }}</h5>
+                        <p class="card-text">${{ p.precio|floatformat:2 }}</p>
+                        {% if p.id_producto_usuario %}
+                        <a href="{% url 'inventario:detalle' p.id_producto_usuario %}" class="btn btn-sm btn-outline-primary">Ver detalles</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-muted">No hay productos relacionados disponibles.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
-{% endfor %}
+{% endblock %}
