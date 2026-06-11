@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import BaseUserManager
 import uuid
 from datetime import datetime
 
 
-class TblusuariosManager(models.Manager):
+class TblusuariosManager(BaseUserManager):
     def create_user(self, correo, nombres, apellidos, password=None, **extra_fields):
         if not correo:
             raise ValueError('El correo es obligatorio')
@@ -121,8 +122,8 @@ class Tblusuarios(models.Model):
 
     @property
     def is_authenticated(self):
-        """Verifica si el usuario está autenticado"""
-        return self.is_active
+        """Verifica si el usuario está autenticado - siempre True para objetos usuario"""
+        return True
 
     def has_perm(self, perm, obj=None):
         """Verifica si el usuario tiene un permiso específico"""
@@ -217,7 +218,7 @@ class UserProfile(models.Model):
     """
     id_perfil = models.AutoField(primary_key=True, db_column='id_perfil')
     id_usuario = models.IntegerField(db_column='id_usuario')  # Referencia directa como ID
-    imagen_perfil = models.CharField(max_length=255, db_column='imagen_perfil', blank=True, null=True)
+    imagen_perfil = models.ImageField(db_column='imagen_perfil', blank=True, null=True, upload_to='profile_pictures/')
     biografia = models.TextField(db_column='biografia', blank=True, null=True)
     sitio_web = models.URLField(db_column='sitio_web', blank=True, null=True)
     telefono_contacto = models.CharField(max_length=20, db_column='telefono_contacto', blank=True, null=True)
@@ -236,6 +237,35 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"Perfil de {self.id_usuario}"
+
+    @classmethod
+    def get_or_create_for_user(cls, user):
+        """Obtiene o crea el perfil de un usuario"""
+        try:
+            profile = cls.objects.get(id_usuario=user.id_users)
+        except cls.DoesNotExist:
+            try:
+                profile = cls.objects.create(
+                    id_usuario=user.id_users,
+                    idioma_preferido='es',
+                    zona_horaria='America/Bogota'
+                )
+            except Exception:
+                # Si la tabla no existe o hay error, retornar None
+                return None
+        except Exception:
+            # Cualquier otro error (tabla no existe, etc.)
+            return None
+        return profile
+
+    def get_imagen_url(self):
+        """Retorna la URL de la imagen de perfil o None"""
+        if self.imagen_perfil:
+            try:
+                return self.imagen_perfil.url
+            except ValueError:
+                return None
+        return None
 
 
 # Crear una clase temporal para simular un usuario si no existe la tabla

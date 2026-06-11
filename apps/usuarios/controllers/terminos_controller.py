@@ -65,7 +65,7 @@ class AceptarTerminosView(CustomLoginRequiredMixin, BaseController, View):  # â†
         
         if exito:
             messages.success(request, mensaje)
-            return redirect('home')
+            return redirect('inventario:marketplace')
         else:
             messages.error(request, mensaje)
             return redirect('usuarios:terminos')

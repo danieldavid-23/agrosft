@@ -1,67 +1,353 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Iniciar Sesión{% endblock %}
+{% block title %}Iniciar Sesión - AgroSFT{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card mt-5">
-            <div class="card-header bg-success text-white">
-                <h3 class="text-center">Iniciar Sesión - AgroSFT</h3>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
+<style>
+    .login-wrapper {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+    .login-container {
+        display: flex;
+        max-width: 950px;
+        width: 100%;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.1);
+        background: #ffffff;
+    }
+    .login-hero {
+        flex: 1;
+        background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 50%, #0f172a 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    .login-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+        animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-20px, -20px); }
+    }
+    .login-hero i.hero-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+    }
+    .login-hero h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 0.75rem;
+        position: relative;
+        z-index: 1;
+    }
+    .login-hero p {
+        font-size: 1rem;
+        opacity: 0.85;
+        text-align: center;
+        max-width: 280px;
+        line-height: 1.6;
+        position: relative;
+        z-index: 1;
+    }
+    .login-form-side {
+        flex: 1;
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .login-form-side h3 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+    .login-form-side .subtitle {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+    }
+    .form-group-modern {
+        margin-bottom: 1.25rem;
+    }
+    .form-group-modern label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    .input-icon-wrapper {
+        position: relative;
+    }
+    .input-icon-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        transition: color 0.2s;
+    }
+    .input-icon-wrapper input {
+        width: 100%;
+        padding: 14px 16px 14px 46px;
+        border: 2px solid var(--border-color);
+        border-radius: 14px;
+        font-size: 0.95rem;
+        color: var(--text-main);
+        background: #f8fafc;
+        transition: all 0.3s ease;
+    }
+    .input-icon-wrapper input:focus {
+        border-color: var(--primary-color);
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+    .input-icon-wrapper input:focus + i,
+    .input-icon-wrapper input:focus ~ i {
+        color: var(--primary-color);
+    }
+    .toggle-password {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.95rem;
+        padding: 0;
+        transition: color 0.2s;
+    }
+    .toggle-password:hover { color: var(--primary-color); }
+    .btn-login {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 14px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        letter-spacing: 0.3px;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    }
+    .btn-login:active { transform: translateY(0); }
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+        gap: 1rem;
+    }
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border-color);
+    }
+    .divider span {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .btn-google {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 14px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-main);
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .btn-google:hover {
+        border-color: #dadce0;
+        background: #f8f9fa;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .login-links {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+    .login-links a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+    .login-links a:hover { color: var(--primary-dark); }
+    .login-links p { margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
+
+    /* Error state */
+    .alert-modern {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        padding: 14px 18px;
+        color: #991b1b;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.25rem;
+    }
+    .alert-modern i { font-size: 1.1rem; }
+
+    @media (max-width: 768px) {
+        .login-hero { display: none; }
+        .login-form-side { padding: 2rem 1.5rem; }
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-container">
+        <!-- Lado decorativo -->
+        <div class="login-hero">
+            <i class="fas fa-seedling hero-icon"></i>
+            <h2>AgroSFT</h2>
+            <p>Gestión agrícola inteligente. Conecta, vende y administra tus productos de forma sencilla.</p>
+        </div>
+
+        <!-- Lado del formulario -->
+        <div class="login-form-side">
+            <h3>Bienvenido de nuevo</h3>
+            <p class="subtitle">Ingresa tus credenciales para acceder a tu cuenta</p>
+
+            {% if form.non_field_errors %}
+                <div class="alert-modern">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="form-group-modern">
+                    <label for="id_username">Correo electrónico</label>
+                    <div class="input-icon-wrapper">
+                        <input type="text" name="username" id="id_username" 
+                               value="{{ form.username.value|default:'' }}" 
+                               placeholder="tucorreo@ejemplo.com" autocomplete="email" required>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    {% if form.username.errors %}
+                        <small class="text-danger mt-1 d-block">
+                            {% for error in form.username.errors %}{{ error }}{% endfor %}
+                        </small>
                     {% endif %}
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}">Usuario o Email:</label>
-                        {{ form.username }}
-                        {% if form.username.errors %}
-                            <div class="text-danger small">
-                                {% for error in form.username.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+                </div>
+
+                <div class="form-group-modern">
+                    <label for="id_password">Contraseña</label>
+                    <div class="input-icon-wrapper">
+                        <input type="password" name="password" id="id_password" 
+                               placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
+                        <i class="fas fa-lock"></i>
+                        <button type="button" class="toggle-password" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="eye-icon"></i>
+                        </button>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.password.id_for_label }}">Contraseña:</label>
-                        {{ form.password }}
-                        {% if form.password.errors %}
-                            <div class="text-danger small">
-                                {% for error in form.password.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-success">Iniciar Sesión</button>
-                    </div>
-                </form>
-                
-                <hr>
-                <p class="text-center mb-2">
-                    <a href="{% url 'usuarios:password_reset' %}" class="text-decoration-none" style="color: #198754;">¿Olvidaste tu contraseña?</a>
-                </p>
-                <p class="text-center mb-2">
-                    ¿No tienes cuenta? <a href="{% url 'usuarios:registro' %}">Regístrate aquí</a>
-                </p>
-                <p class="text-center">
-                    <a href="{% url 'usuarios:terminos' %}" class="text-muted small">Ver Términos y Condiciones</a>
-                </p>
+                    {% if form.password.errors %}
+                        <small class="text-danger mt-1 d-block">
+                            {% for error in form.password.errors %}{{ error }}{% endfor %}
+                        </small>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-end mb-3">
+                    <a href="{% url 'usuarios:password_reset' %}" style="font-size: 0.85rem; color: var(--primary-color); font-weight: 500; text-decoration: none;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>o continúa con</span>
+            </div>
+
+            <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn-google">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 48 48">
+                    <g>
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.5 24c0-1.61-.15-3.16-.42-4.69H24v9.09h12.75C36.18 31.06 33 34.85 28.74 37.66l7.73 6C41.01 39.85 46.5 32.74 46.5 24z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </g>
+                </svg>
+                Iniciar sesión con Google
+            </a>
+
+            <div class="login-links">
+                <p>¿No tienes cuenta? <a href="{% url 'usuarios:registro' %}">Regístrate aquí</a></p>
+                <p><a href="{% url 'usuarios:terminos' %}" style="font-weight: 400; font-size: 0.82rem;">Términos y Condiciones</a></p>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    function togglePassword() {
+        const input = document.getElementById('id_password');
+        const icon = document.getElementById('eye-icon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
 {% endblock %}

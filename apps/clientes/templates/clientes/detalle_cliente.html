@@ -11,7 +11,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{% url 'clientes:cliente_list' %}">Clientes</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ cliente.nombre_completo }}</li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ cliente.get_full_name }}</li>
                 </ol>
             </nav>
         </div>
@@ -30,7 +30,7 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="text-muted small fw-bold text-uppercase mb-1">Nombre Completo</label>
-                            <p class="fs-5 fw-bold">{{ cliente.nombre_completo }}</p>
+                            <p class="fs-5 fw-bold">{{ cliente.get_full_name }}</p>
                         </div>
                         <div class="col-md-6">
                             <label class="text-muted small fw-bold text-uppercase mb-1">Teléfono</label>
@@ -59,18 +59,13 @@
                         <div class="col-md-6">
                             <label class="text-muted small fw-bold text-uppercase mb-1">Fecha de Registro</label>
                             <p class="fs-5">
-                                <i class="fas fa-calendar-alt text-info me-2"></i>{{ cliente.fecha_registro|date:"d/m/Y H:i" }}
+                                <i class="fas fa-calendar-alt text-info me-2"></i>{{ cliente.fecha_creacion|date:"d/m/Y H:i" }}
                             </p>
                         </div>
                         <div class="col-md-6">
-                            <label class="text-muted small fw-bold text-uppercase mb-1">Usuario Asociado</label>
+                            <label class="text-muted small fw-bold text-uppercase mb-1">Correo Electrónico</label>
                             <p class="fs-5">
-                                <i class="fas fa-id-badge text-warning me-2"></i>
-                                {% if cliente.usuario %}
-                                    {{ cliente.usuario.get_full_name }}
-                                {% else %}
-                                    Sin usuario
-                                {% endif %}
+                                <i class="fas fa-envelope text-warning me-2"></i>{{ cliente.correo }}
                             </p>
                         </div>
                     </div>
@@ -109,13 +104,20 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="text-center">
-                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <i class="fas fa-shopping-cart fa-2x text-success"></i>
+                    <div class="text-center mb-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <i class="fas fa-shopping-cart text-success"></i>
                         </div>
-                        <h6 class="text-muted mb-1">Compras Realizadas</h6>
-                        <h2 class="fw-bold text-success mb-0">0</h2>
-                        <small class="text-muted">Sin historial de compras</small>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <span class="text-muted small d-block">Compras</span>
+                            <span class="fs-4 fw-bold text-success">{{ total_compras }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Ventas</span>
+                            <span class="fs-4 fw-bold text-warning">{{ total_ventas }}</span>
+                        </div>
                     </div>
                 </div>
             </div>

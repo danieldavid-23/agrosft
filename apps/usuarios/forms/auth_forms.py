@@ -122,13 +122,17 @@ class TblusuariosForm(forms.ModelForm):
         }
 
 
-class PerfilForm(UserChangeForm):
+class PerfilForm(forms.ModelForm):
     """Formulario para editar perfil de usuario"""
-    password = None  # Ocultar campo de contraseña
-
     class Meta:
-        model = Tblusuarios  # Changed to custom user model
-        fields = ('nombres', 'apellidos', 'telefono', 'correo')  # Removidos campos que no existen en la tabla real
+        model = Tblusuarios
+        fields = ('nombres', 'apellidos', 'telefono', 'correo')
+        widgets = {
+            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellidos': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
 
 
 # Alias para mantener compatibilidad con el controller

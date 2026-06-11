@@ -6,7 +6,7 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1"><i class="fas fa-file-invoice-dollar text-success me-2"></i>Historial de Ventas</h2>
+            <h2 class="mb-1"><i class="fas fa-file-invoice-dollar me-2" style="color: var(--primary-color)"></i>Historial de Ventas</h2>
             <p class="text-muted mb-0">Gestione y visualice las ventas registradas en el sistema.</p>
         </div>
     </div>
@@ -30,7 +30,7 @@
                             <td class="px-4 py-3 align-middle fw-bold text-muted">#{{ venta.id }}</td>
                             <td class="px-4 py-3 align-middle">{{ venta.cliente.nombre_completo }}</td>
                             <td class="px-4 py-3 align-middle">{{ venta.fecha_venta|date:"d/m/Y H:i" }}</td>
-                            <td class="px-4 py-3 align-middle text-end fw-semibold text-success">${{ venta.total }}</td>
+                            <td class="px-4 py-3 align-middle text-end fw-semibold" style="color: var(--secondary-color)">${{ venta.total }}</td>
                             <td class="px-4 py-3 align-middle text-end">
                                 <a href="{% url 'ventas:venta_detail' venta.id %}" class="btn btn-sm btn-outline-primary rounded-pill">
                                     <i class="fas fa-eye me-1"></i> Ver Detalles

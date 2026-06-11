@@ -68,7 +68,7 @@ def listar_solicitudes(request):
         
         solicitudes_data.append({
             'id': solicitud.id_movimiento,
-            'fecha': getattr(solicitud, 'fecha_movimiento', 'N/A'),
+            'fecha': solicitud.obtener_fecha(),
             'descripcion': getattr(solicitud, 'descripcion', 'Sin descripción'),
             'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
             'comprador_email': comprador.correo,
@@ -130,7 +130,7 @@ def detalle_solicitud(request, pk):
     return render(request, 'ventas/solicitudes/solicitud_detail.html', {
         'solicitud': {
             'id': solicitud.id_movimiento,
-            'fecha': getattr(solicitud, 'fecha_movimiento', 'N/A'),
+            'fecha': solicitud.obtener_fecha(),
             'descripcion': getattr(solicitud, 'descripcion', 'Sin descripción'),
             'total_productos': productos.count(),
             'total_estimado': total,

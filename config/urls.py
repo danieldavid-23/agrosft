@@ -28,6 +28,7 @@ urlpatterns = [
     path('inventario/', include('apps.inventario.urls', namespace='inventario')),
     path('clientes/', include('apps.clientes.urls', namespace='clientes')),
     path('ventas/', include('apps.ventas.urls', namespace='ventas')),
+    path('oauth/', include('social_django.urls', namespace='social')),  # Rutas de Google OAuth
     # Eliminamos todas las rutas que dependen de componentes del sistema
     # path('admin/', admin.site.urls),
     path('admin/', admin.site.urls),

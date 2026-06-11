@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Cargar variables de entorno (si existe el archivo .env)
 try:
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(BASE_DIR, '.env'))
+    load_dotenv(os.path.join(BASE_DIR, '.env'), override=True)
 except ImportError:
     pass
 
@@ -34,7 +34,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
     import warnings
     warnings.warn("SECRET_KEY not set in environment, using insecure default for development only!")
-    SECRET_KEY = 'django-insecure-dev-only-change-in-production-!@#$%'
+    SECRET_KEY = 'django-insecure-dev-only-change-in-production-!@#$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'apps.inventario', 
     'apps.clientes',
     'apps.ventas',
+    'social_django',  # Agregado para Google OAuth
 ]
 
 MIDDLEWARE = [
@@ -80,8 +81,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',  # Added for auth support
     'django.contrib.messages.middleware.MessageMiddleware',  # Added for messages support
-    # Usaremos un middleware personalizado para manejo de sesión si es necesario
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.NoCacheMiddleware',  # Previene caché tras cerrar sesión
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -98,6 +99,8 @@ TEMPLATES = [
                 'django.template.context_processors.media',  # Para manejo de archivos media
                 'django.contrib.messages.context_processors.messages',  # Added for messages
                 'django.contrib.auth.context_processors.auth',  # Added for auth context
+                'social_django.context_processors.backends',  # Agregado para social auth
+                'social_django.context_processors.login_redirect',  # Agregado para social auth
             ],
         },
     },
@@ -105,13 +108,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Authentication backends - Usamos nuestro backend personalizado
+# Authentication backends - Usamos nuestro backend personalizado y el backend de Google
 AUTHENTICATION_BACKENDS = [
-    'apps.usuarios.backends.TblusuariosAuthBackend',  # Updated path
+    'social_core.backends.google.GoogleOAuth2',  # Google OAuth2
+    'apps.usuarios.backends.TblusuariosAuthBackend',  # Backend personalizado para Tblusuarios
 ]
 
 # Usamos nuestro modelo de usuario personalizado
-# This is tricky: the model is in apps.usuarios.models, but we need to use the app label
 # The app label is defined in apps/usuarios/apps.py as 'usuarios' (the label attribute)
 AUTH_USER_MODEL = 'usuarios.Tblusuarios'  # Using the label defined in AppConfig
 
@@ -181,21 +184,33 @@ LOGOUT_REDIRECT_URL = 'usuarios:login'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'soporte@agrosft.com'
 
-# Eliminar todas las migraciones, incluyendo las de Django
+# Eliminar todas las migraciones para las apps personalizadas (ya que están gestionadas externamente)
 MIGRATION_MODULES = {
-    # Deshabilitar migraciones para todas las apps personalizadas
     'usuarios': None,
     'inventario': None,
     'clientes': None,
     'ventas': None,
-    # Deshabilitar migraciones para apps de Django
-    'admin': None,
-    'auth': None,
-    'contenttypes': None,
-    'sessions': None,
-    'messages': None,
-    'staticfiles': None,
+    # Habilitamos las migraciones de Django para que pueda crear sus tablas internas (django_content_type, auth_permission, etc.)
 }
+
+# Configuración de Google OAuth
+# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('GOOGLE_CLIENT_ID', '') #
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '') #
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile'] #
+# SOCIAL_AUTH_URL_NAMESPACE = 'social' #
+
+# Pipeline personalizado para gestionar la creación de usuarios Tblusuarios con campos personalizados
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'apps.usuarios.pipeline.create_user_custom',  # Custom pipeline step
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+)
 
 # Logging Configuration
 LOGGING = {

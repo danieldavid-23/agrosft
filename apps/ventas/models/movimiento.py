@@ -61,18 +61,18 @@ class Movimiento(models.Model):
         Obtiene la fecha del movimiento desde el primer detalle asociado.
         La fecha está en la tabla de detalles, no en esta tabla.
         """
-        primer_detalle = self.productousuariomovimiento_set.first()
+        primer_detalle = self.detalles.first()
         if primer_detalle:
             return primer_detalle.fecha_movimiento
         return None
     
     def obtener_total(self):
         """Calcula el total del movimiento sumando los subtotales de los detalles"""
-        return sum(detalle.cantidad * detalle.id_producto_usuario.precio for detalle in self.productousuariomovimiento_set.all())
+        return sum(detalle.cantidad * detalle.id_producto_usuario.precio for detalle in self.detalles.all())
     
     def obtener_detalles(self):
         """Retorna todos los detalles del movimiento con información del producto"""
-        return self.productousuariomovimiento_set.select_related(
+        return self.detalles.select_related(
             'id_producto_usuario',
             'id_producto_usuario__id_producto',
             'id_producto_usuario__id_usuario'

@@ -14,16 +14,16 @@ def listar_clientes(request):
     """
     # Obtener todos los usuarios que han realizado movimientos (compras/ventas)
     usuarios_con_movimientos = Tblusuarios.objects.filter(
-        movimientos_venta__isnull=False
+        movimientos__isnull=False
     ).distinct().annotate(
-        total_movimientos=Count('movimientos_venta'),
+        total_movimientos=Count('movimientos'),
         total_compras=Count(
-            'movimientos_venta',
-            filter=Q(movimientos_venta__id_tipo_movimiento__tipo='compra')
+            'movimientos',
+            filter=Q(movimientos__id_tipo_movimiento__tipo='compra')
         ),
         total_ventas=Count(
-            'movimientos_venta',
-            filter=Q(movimientos_venta__id_tipo_movimiento__tipo='venta')
+            'movimientos',
+            filter=Q(movimientos__id_tipo_movimiento__tipo='venta')
         )
     )
     

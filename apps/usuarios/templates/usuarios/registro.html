@@ -1,189 +1,436 @@
 {% extends 'base.html' %}
 
-{% block title %}Registro de Usuario{% endblock %}
+{% block title %}Registro de Usuario - AgroSFT{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card mt-5">
-            <div class="card-header bg-success text-white">
-                <h3 class="text-center">Registro de Usuario - AgroSFT</h3>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.nombres.id_for_label }}">Nombres:</label>
-                            {{ form.nombres }}
+<style>
+    .register-wrapper {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+    .register-card {
+        max-width: 680px;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    .register-header {
+        background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+        padding: 2.5rem 3rem;
+        color: white;
+        text-align: center;
+    }
+    .register-header i {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+    }
+    .register-header h2 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .register-header p {
+        opacity: 0.85;
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    .register-body {
+        padding: 2.5rem 3rem;
+    }
+    .form-group-modern {
+        margin-bottom: 1.25rem;
+    }
+    .form-group-modern label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    .input-icon-wrapper {
+        position: relative;
+    }
+    .input-icon-wrapper i.field-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        transition: color 0.2s;
+        pointer-events: none;
+    }
+    .input-icon-wrapper input {
+        width: 100%;
+        padding: 14px 16px 14px 46px;
+        border: 2px solid var(--border-color);
+        border-radius: 14px;
+        font-size: 0.95rem;
+        color: var(--text-main);
+        background: #f8fafc;
+        transition: all 0.3s ease;
+    }
+    .input-icon-wrapper input:focus {
+        border-color: var(--primary-color);
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+    .input-icon-wrapper input:focus ~ i.field-icon {
+        color: var(--primary-color);
+    }
+    .password-toggle {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.95rem;
+        padding: 0;
+    }
+    .password-toggle:hover { color: var(--primary-color); }
+    .alert-modern {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        padding: 14px 18px;
+        color: #991b1b;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1.25rem;
+    }
+    .btn-register {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 14px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    }
+    .btn-cancel {
+        width: 100%;
+        padding: 14px;
+        border: 2px solid var(--border-color);
+        border-radius: 14px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        background: white;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+    .btn-cancel:hover {
+        border-color: var(--text-muted);
+        color: var(--text-main);
+    }
+    .terms-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin: 1.5rem 0;
+    }
+    .terms-check input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-top: 2px;
+        accent-color: var(--primary-color);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .terms-check label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        cursor: pointer;
+    }
+    .terms-check label a {
+        color: var(--primary-color);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .terms-check label a:hover { text-decoration: underline; }
+    .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+    .login-link a {
+        color: var(--primary-color);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .login-link a:hover { text-decoration: underline; }
+    .password-strength {
+        margin-top: 8px;
+    }
+    .strength-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--border-color);
+        overflow: hidden;
+    }
+    .strength-bar-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.3s, background 0.3s;
+        width: 0%;
+    }
+    .strength-text {
+        font-size: 0.75rem;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    @media (max-width: 576px) {
+        .register-body { padding: 1.5rem; }
+        .register-header { padding: 2rem 1.5rem; }
+    }
+</style>
+
+<div class="register-wrapper">
+    <div class="register-card">
+        <div class="register-header">
+            <i class="fas fa-user-plus"></i>
+            <h2>Crear Cuenta</h2>
+            <p>Únete a AgroSFT y gestiona tus productos agrícolas</p>
+        </div>
+        <div class="register-body">
+            {% if form.non_field_errors %}
+                <div class="alert-modern">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group-modern">
+                            <label for="id_nombres">Nombres</label>
+                            <div class="input-icon-wrapper">
+                                <input type="text" name="nombres" id="id_nombres" 
+                                       value="{{ form.nombres.value|default:'' }}" placeholder="Tu nombre" required>
+                                <i class="fas fa-user field-icon"></i>
+                            </div>
                             {% if form.nombres.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.nombres.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                                <small class="text-danger mt-1 d-block">{% for e in form.nombres.errors %}{{ e }}{% endfor %}</small>
                             {% endif %}
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.apellidos.id_for_label }}">Apellidos:</label>
-                            {{ form.apellidos }}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-modern">
+                            <label for="id_apellidos">Apellidos</label>
+                            <div class="input-icon-wrapper">
+                                <input type="text" name="apellidos" id="id_apellidos" 
+                                       value="{{ form.apellidos.value|default:'' }}" placeholder="Tus apellidos" required>
+                                <i class="fas fa-user field-icon"></i>
+                            </div>
                             {% if form.apellidos.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.apellidos.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                                <small class="text-danger mt-1 d-block">{% for e in form.apellidos.errors %}{{ e }}{% endfor %}</small>
                             {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.telefono.id_for_label }}">Teléfono:</label>
-                            {{ form.telefono }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group-modern">
+                            <label for="id_telefono">Teléfono</label>
+                            <div class="input-icon-wrapper">
+                                <input type="text" name="telefono" id="id_telefono" 
+                                       value="{{ form.telefono.value|default:'' }}" placeholder="300 123 4567">
+                                <i class="fas fa-phone field-icon"></i>
+                            </div>
                             {% if form.telefono.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.telefono.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                                <small class="text-danger mt-1 d-block">{% for e in form.telefono.errors %}{{ e }}{% endfor %}</small>
                             {% endif %}
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.correo.id_for_label }}">Correo Electrónico:</label>
-                            {{ form.correo }}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-modern">
+                            <label for="id_correo">Correo electrónico</label>
+                            <div class="input-icon-wrapper">
+                                <input type="email" name="correo" id="id_correo" 
+                                       value="{{ form.correo.value|default:'' }}" placeholder="tucorreo@ejemplo.com" required>
+                                <i class="fas fa-envelope field-icon"></i>
+                            </div>
                             {% if form.correo.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.correo.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                                <small class="text-danger mt-1 d-block">{% for e in form.correo.errors %}{{ e }}{% endfor %}</small>
                             {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.password1.id_for_label }}">Contraseña:</label>
-                            {{ form.password1 }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group-modern">
+                            <label for="id_password1">Contraseña</label>
+                            <div class="input-icon-wrapper">
+                                <input type="password" name="password1" id="id_password1" placeholder="Mínimo 8 caracteres" required>
+                                <i class="fas fa-lock field-icon"></i>
+                                <button type="button" class="password-toggle" onclick="togglePw('id_password1', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength">
+                                <div class="strength-bar"><div class="strength-bar-fill" id="strength-fill"></div></div>
+                                <div class="strength-text" id="strength-text"></div>
+                            </div>
                             {% if form.password1.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.password1.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                                <small class="text-danger mt-1 d-block">{% for e in form.password1.errors %}{{ e }}{% endfor %}</small>
                             {% endif %}
-                            <small class="form-text text-muted">
-                                Mínimo 8 caracteres. No puede ser solo números.
-                            </small>
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.password2.id_for_label }}">Confirmar contraseña:</label>
-                            {{ form.password2 }}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group-modern">
+                            <label for="id_password2">Confirmar contraseña</label>
+                            <div class="input-icon-wrapper">
+                                <input type="password" name="password2" id="id_password2" placeholder="Repite tu contraseña" required>
+                                <i class="fas fa-lock field-icon"></i>
+                                <button type="button" class="password-toggle" onclick="togglePw('id_password2', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div id="password-match-feedback" style="margin-top:6px; font-size:0.8rem; display:none;"></div>
                             {% if form.password2.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.password2.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
+                                <small class="text-danger mt-1 d-block">{% for e in form.password2.errors %}{{ e }}{% endfor %}</small>
                             {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" name="acepto_terminos" id="acepto_terminos" required>
-                        <label class="form-check-label" for="acepto_terminos">
-                            He leído y acepto los 
-                            <a href="{% url 'usuarios:terminos' %}" target="_blank">Términos y Condiciones</a>
-                        </label>
+                </div>
+
+                <div class="terms-check">
+                    <input type="checkbox" name="acepto_terminos" id="acepto_terminos" required>
+                    <label for="acepto_terminos">
+                        He leído y acepto los <a href="{% url 'usuarios:terminos' %}" target="_blank">Términos y Condiciones</a>
+                    </label>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6 order-md-2">
+                        <button type="submit" class="btn-register">
+                            <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                        </button>
                     </div>
-                    
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-success btn-lg">Registrarse</button>
-                        <a href="{% url 'usuarios:login' %}" class="btn btn-secondary btn-lg">Cancelar</a>
+                    <div class="col-md-6 order-md-1">
+                        <a href="{% url 'usuarios:login' %}" class="btn-cancel">Ya tengo cuenta</a>
                     </div>
-                </form>
-                
-                <hr>
-                <p class="text-center">
-                    ¿Ya tienes cuenta? <a href="{% url 'usuarios:login' %}">Inicia sesión aquí</a>
-                </p>
+                </div>
+            </form>
+
+            <div class="login-link">
+                ¿Ya tienes cuenta? <a href="{% url 'usuarios:login' %}">Inicia sesión aquí</a>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Validación en tiempo real de las contraseñas
-        const password1 = document.getElementById('id_password1');
-        const password2 = document.getElementById('id_password2');
-        
-        if (password1 && password2) {
-            // Crear elemento de retroalimentación visual
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.id = 'password-match-feedback';
-            feedbackDiv.className = 'mt-2 small';
-            feedbackDiv.style.display = 'none';
-            password2.parentNode.appendChild(feedbackDiv);
-            
-            function checkPasswordMatch() {
-                const p1 = password1.value;
-                const p2 = password2.value;
-                
-                if (p2.length === 0) {
-                    feedbackDiv.style.display = 'none';
-                    return;
-                }
-                
-                feedbackDiv.style.display = 'block';
-                
-                if (p1 === p2) {
-                    feedbackDiv.className = 'mt-2 small text-success';
-                    feedbackDiv.innerHTML = '<i class="fas fa-check-circle me-1"></i>Las contraseñas coinciden';
-                } else {
-                    feedbackDiv.className = 'mt-2 small text-danger';
-                    feedbackDiv.innerHTML = '<i class="fas fa-times-circle me-1"></i>Las contraseñas no coinciden';
-                }
-            }
-            
-            // Validar mientras el usuario escribe
-            password1.addEventListener('input', checkPasswordMatch);
-            password2.addEventListener('input', checkPasswordMatch);
+    // Toggle password visibility
+    function togglePw(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
         }
-        
-        // Validación estricta para nombre y apellido (solo letras)
-        const nameInputs = [document.getElementById('id_nombres'), document.getElementById('id_apellidos')];
-        nameInputs.forEach(input => {
-            if(input) {
-                input.addEventListener('input', function() {
-                    // Remover números y símbolos especiales, dejar solo letras
-                    this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '');
-                    // Evitar espacios al inicio
-                    this.value = this.value.replace(/^\s+/, '');
-                });
+    }
+
+    // Password strength meter
+    const pw1 = document.getElementById('id_password1');
+    const pw2 = document.getElementById('id_password2');
+    const fill = document.getElementById('strength-fill');
+    const text = document.getElementById('strength-text');
+    const feedback = document.getElementById('password-match-feedback');
+
+    if (pw1) {
+        pw1.addEventListener('input', function() {
+            const val = this.value;
+            let strength = 0;
+            if (val.length >= 8) strength++;
+            if (/[A-Z]/.test(val)) strength++;
+            if (/[0-9]/.test(val)) strength++;
+            if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+            const colors = ['#dc2626', '#d97706', '#2563eb', '#1e3a8a'];
+            const labels = ['Débil', 'Regular', 'Buena', 'Fuerte'];
+            const widths = ['25%', '50%', '75%', '100%'];
+
+            if (val.length === 0) {
+                fill.style.width = '0%';
+                text.textContent = '';
+            } else {
+                const idx = Math.max(0, strength - 1);
+                fill.style.width = widths[idx];
+                fill.style.background = colors[idx];
+                text.textContent = labels[idx];
+                text.style.color = colors[idx];
             }
+            checkMatch();
         });
-        
-        // Validación para teléfono (solo números)
-        const telefonoInput = document.getElementById('id_telefono');
-        if (telefonoInput) {
-            telefonoInput.addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9]/g, '');
-            });
+    }
+
+    if (pw2) {
+        pw2.addEventListener('input', checkMatch);
+    }
+
+    function checkMatch() {
+        if (!pw1 || !pw2) return;
+        const p1 = pw1.value, p2 = pw2.value;
+        if (p2.length === 0) { feedback.style.display = 'none'; return; }
+        feedback.style.display = 'block';
+        if (p1 === p2) {
+            feedback.innerHTML = '<i class="fas fa-check-circle me-1"></i>Las contraseñas coinciden';
+            feedback.style.color = '#2563eb';
+        } else {
+            feedback.innerHTML = '<i class="fas fa-times-circle me-1"></i>Las contraseñas no coinciden';
+            feedback.style.color = '#ef4444';
         }
+    }
+
+    // Name validation (letters only)
+    ['id_nombres', 'id_apellidos'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', function() {
+            this.value = this.value.replace(/[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s]/g, '').replace(/^\s+/, '');
+        });
+    });
+
+    // Phone validation (numbers only)
+    const tel = document.getElementById('id_telefono');
+    if (tel) tel.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
     });
 </script>
 {% endblock %}

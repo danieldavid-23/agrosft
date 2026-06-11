@@ -9,7 +9,7 @@
     <div class="row align-items-center mb-5">
         <div class="col-md-8">
             <h1 class="display-6 fw-bold mb-2">
-                <i class="fas fa-boxes text-success me-2"></i>{{ titulo|default:'Mi Inventario' }}
+                <i class="fas fa-boxes me-2" style="color: var(--primary-color)"></i>{{ titulo|default:'Mi Inventario' }}
             </h1>
             <p class="text-muted fs-5 mb-0">{{ subtitulo|default:'Gestiona tus productos registrados' }}</p>
         </div>
@@ -114,7 +114,7 @@
                     <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top border-light">
                         <div>
                             <span class="small text-muted d-block mb-1">Precio</span>
-                            <span class="fs-4 fw-black text-success lh-1">${{ producto.precio|floatformat:2 }}</span>
+                            <span class="fs-4 fw-black lh-1" style="color: var(--secondary-color)">${{ producto.precio|floatformat:2 }}</span>
                         </div>
                         <div class="text-end">
                             <span class="small text-muted d-block mb-1">Disponibles</span>
@@ -174,7 +174,7 @@
                     {% endif %}
 
                     <li class="page-item active">
-                        <span class="page-link rounded-pill px-4 border-0 bg-success shadow-sm text-white fw-bold">Página {{ pagination.page }}</span>
+                        <span class="page-link rounded-pill px-4 border-0 shadow-sm text-white fw-bold" style="background-color: var(--primary-color)">Página {{ pagination.page }}</span>
                     </li>
 
                     {% if pagination.has_next %}
