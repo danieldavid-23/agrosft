@@ -15,6 +15,9 @@
         </div>
     </div>
 
+    {{ marketplace_json|json_script:"marketplace-data" }}
+    <div id="vue-marketplace"></div>
+    <script src="{% static 'dist/marketplace.js' %}"></script>
     <!-- Grid de Productos -->
     <div class="row g-4">
         {% for producto in productos %}
@@ -147,32 +150,4 @@
     </nav>
     {% endif %}
 </div>
-
-<style>
-.hover-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.15) !important;
-}
-.product-image {
-    width: 100%;
-    height: 220px;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-.hover-card:hover .product-image {
-    transform: scale(1.05);
-}
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-.bg-gradient-dark {
-    background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
-}
-</style>
 {% endblock %}

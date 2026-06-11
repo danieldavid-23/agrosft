@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.db.models import Q, Count
 from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 from apps.inventario.models import ProductoUsuario
 from apps.usuarios.models.profile_model import Tblusuarios
+import json
 
 
 @login_required
@@ -72,14 +74,33 @@ def listar_solicitudes(request):
             'descripcion': getattr(solicitud, 'descripcion', 'Sin descripción'),
             'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
             'comprador_email': comprador.correo,
+            'comprador_telefono': getattr(comprador, 'telefono', 'No proporcionado'),
             'total_productos_mios': mis_productos_en_solicitud.count(),
             'total_estimado': total,
             'estado': estado,
             'productos_mios': mis_productos_en_solicitud,
         })
     
+    from django.urls import reverse
+
+    solicitudes_json = json.dumps({
+        'initialSolicitudes': [{
+            **s,
+            'urls': {
+                'aceptar': reverse('ventas:solicitud_aceptar', args=[s['id']]),
+                'rechazar': reverse('ventas:solicitud_rechazar', args=[s['id']]),
+                'detalle': reverse('ventas:solicitud_detail', args=[s['id']]),
+            }
+        } for s in solicitudes_data],
+        'urls': {
+            'titulo': 'Solicitudes Recibidas',
+            'subtitulo': 'Usuarios que quieren comprar tus productos',
+        }
+    })
+
     return render(request, 'ventas/solicitudes/solicitud_list.html', {
         'solicitudes': solicitudes_data,
+        'solicitudes_json': solicitudes_json,
         'titulo': 'Solicitudes Recibidas',
         'subtitulo': 'Usuarios que quieren comprar tus productos'
     })
@@ -100,15 +121,25 @@ def detalle_solicitud(request, pk):
     """
     Ver detalle de una solicitud específica
     """
-    solicitud = get_object_or_404(Movimiento, pk=pk, id_usuario=request.user)
+    solicitud = get_object_or_404(Movimiento, pk=pk)
+    
+    # Obtener IDs de mis productos
+    mis_productos_ids = ProductoUsuario.objects.filter(
+        id_usuario=request.user
+    ).values_list('id_producto_usuario', flat=True)
     
     # Obtener productos de esta solicitud
     productos = ProductoUsuarioMovimiento.objects.filter(
-        id_movimiento=solicitud
+        id_movimiento=solicitud,
+        id_producto_usuario_id__in=mis_productos_ids
     ).select_related(
         'id_producto_usuario__id_producto',
         'id_producto_usuario__id_usuario'
     )
+    
+    if not productos.exists():
+        messages.error(request, 'No tienes permiso para ver esta solicitud.')
+        return redirect('ventas:solicitud_list')
     
     # Calcular total
     total = sum(p.cantidad * p.id_producto_usuario.precio for p in productos)
@@ -137,6 +168,7 @@ def detalle_solicitud(request, pk):
             'estado': estado,
             'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
             'comprador_email': comprador.correo,
+            'comprador_telefono': getattr(comprador, 'telefono', 'No proporcionado'),
         },
         'productos': productos,
     })
@@ -169,10 +201,16 @@ def aceptar_solicitud(request, pk):
             solicitud_original.id_tipo_movimiento = tipo_venta
             solicitud_original.save()
             
-            messages.success(request, f'¡Solicitud #{pk} aceptada y transferida al módulo de ventas con estado "en proceso"!')
+            msg = f'¡Solicitud #{pk} aceptada y transferida al módulo de ventas con estado "en proceso"!'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': msg, 'estado': 'aceptada'})
+            messages.success(request, msg)
             
     except Exception as e:
-        messages.error(request, f'Error al aceptar la solicitud: {str(e)}')
+        msg = f'Error al aceptar la solicitud: {str(e)}'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': msg})
+        messages.error(request, msg)
     
     return redirect('ventas:solicitud_detail', pk=pk)
 
@@ -193,7 +231,10 @@ def rechazar_solicitud(request, pk):
     )
     
     if not productos_vendedor.exists():
-        messages.error(request, 'No tienes permiso para rechazar esta solicitud.')
+        msg = 'No tienes permiso para rechazar esta solicitud.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': msg})
+        messages.error(request, msg)
         return redirect('ventas:solicitud_list')
     
     try:
@@ -202,10 +243,16 @@ def rechazar_solicitud(request, pk):
         solicitud_original.id_tipo_movimiento = tipo_rechazada
         solicitud_original.save()
         
-        messages.success(request, f'¡Solicitud #{pk} rechazada!')
+        msg = f'¡Solicitud #{pk} rechazada!'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': msg, 'estado': 'rechazada'})
+        messages.success(request, msg)
         
     except Exception as e:
-        messages.error(request, f'Error al rechazar la solicitud: {str(e)}')
+        msg = f'Error al rechazar la solicitud: {str(e)}'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': msg})
+        messages.error(request, msg)
         
     return redirect('ventas:solicitud_list')
 

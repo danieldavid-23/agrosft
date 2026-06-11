@@ -5,6 +5,9 @@
 
 {% block content %}
 <div class="container py-4">
+    {{ inventario_json|json_script:"inventario-data" }}
+    <div id="vue-inventario"></div>
+    <script src="{% static 'dist/inventario.js' %}"></script>
     <!-- Encabezado Premium -->
     <div class="row align-items-center mb-5">
         <div class="col-md-8">
@@ -190,33 +193,4 @@
     </div>
     {% endif %}
 </div>
-
-<!-- Estilos Específicos para la Lista -->
-<style>
-.hover-card {
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    top: 0;
-}
-.hover-card:hover {
-    top: -8px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-}
-.product-image-container {
-    height: 220px;
-}
-.product-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-.hover-card:hover .product-image {
-    transform: scale(1.05);
-}
-.bg-gradient-dark {
-    background: linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%);
-}
-.fs-7 { font-size: 0.85rem; }
-.fw-black { font-weight: 800; }
-</style>
 {% endblock %}
