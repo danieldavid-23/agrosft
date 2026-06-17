@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Usuarios - AgroSFT{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Encabezado -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-3 shadow-sm bg-white" style="border-left: 5px solid var(--primary-color);">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-dark"><i class="fas fa-users-cog me-2 text-primary"></i>Gestión de Usuarios</h1>
+            <p class="text-muted mb-0">Administra los accesos, roles y cuentas registradas en la plataforma.</p>
+        </div>
+        <div>
+            <a href="{% url 'usuarios:admin_usuario_crear' %}" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
+                <i class="fas fa-plus"></i> Registrar Nuevo Usuario
+            </a>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── FUNCIONALIDAD 4: Buscador y Filtros ── -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="" class="row g-2 align-items-end">
+                <!-- Barra de búsqueda -->
+                <div class="col-12 col-md-5">
+                    <label class="form-label small fw-semibold text-muted text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="fas fa-search me-1"></i> Buscar usuario
+                    </label>
+                    <div class="input-group">
+                        <input type="text" name="q" value="{{ query }}" class="form-control"
+                               placeholder="Nombre, apellido o correo..." autocomplete="off">
+                        {% if query %}
+                        <a href="{% url 'usuarios:admin_usuarios_list' %}" class="btn btn-outline-secondary" title="Limpiar búsqueda">
+                            <i class="fas fa-times"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Filtro rol -->
+                <div class="col-6 col-md-3">
+                    <label class="form-label small fw-semibold text-muted text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="fas fa-shield-halved me-1"></i> Rol
+                    </label>
+                    <select name="rol" class="form-select">
+                        <option value="todos" {% if filtro_rol == 'todos' %}selected{% endif %}>Todos los roles</option>
+                        <option value="usuarios" {% if filtro_rol == 'usuarios' %}selected{% endif %}>Clientes / Agricultores</option>
+                        <option value="staff" {% if filtro_rol == 'staff' %}selected{% endif %}>Staff (Admin)</option>
+                        <option value="superadmin" {% if filtro_rol == 'superadmin' %}selected{% endif %}>Superadmin</option>
+                    </select>
+                </div>
+                <!-- Filtro estado -->
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-semibold text-muted text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                        <i class="fas fa-toggle-on me-1"></i> Estado
+                    </label>
+                    <select name="estado" class="form-select">
+                        <option value="todos" {% if filtro_estado == 'todos' %}selected{% endif %}>Todos</option>
+                        <option value="activos" {% if filtro_estado == 'activos' %}selected{% endif %}>Activos</option>
+                        <option value="inactivos" {% if filtro_estado == 'inactivos' %}selected{% endif %}>Inactivos</option>
+                    </select>
+                </div>
+                <!-- Botón Filtrar -->
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Fin Búsqueda -->
+
+    <!-- Tabla de usuarios -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-semibold text-dark">
+                <i class="fas fa-list me-2 text-muted"></i>
+                Lista de Usuarios
+                <span class="badge bg-primary ms-2">{{ total }}</span>
+                {% if query %}<span class="badge bg-warning ms-1">Búsqueda: "{{ query }}"</span>{% endif %}
+            </h5>
+            <!-- Botones de descarga rápida -->
+            <a href="{% url 'usuarios:admin_reporte_usuarios_csv' %}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-file-csv me-1"></i> Exportar CSV
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase font-monospace" style="font-size: 0.75rem;">
+                    <tr>
+                        <th class="ps-4" style="width: 80px;">ID</th>
+                        <th>Nombres y Apellidos</th>
+                        <th>Contacto</th>
+                        <th>Roles</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4" style="width: 200px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td class="ps-4 font-monospace fw-bold text-muted">#{{ usuario.id_users }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-3"
+                                     style="width: 40px; height: 40px; font-size: 1.1rem; flex-shrink:0; background: {% if usuario.is_superuser %}linear-gradient(135deg, #d97706, #b45309){% elif usuario.is_staff %}linear-gradient(135deg, #2563eb, #1d4ed8){% else %}linear-gradient(135deg, #059669, #047857){% endif %};">
+                                    {{ usuario.nombres|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-dark">{{ usuario.get_full_name }}</div>
+                                    <div class="text-muted small">{{ usuario.correo }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small text-dark"><i class="fas fa-phone fa-fw text-muted me-1"></i>{{ usuario.telefono|default:"No registrado" }}</div>
+                            <div class="small text-muted"><i class="fas fa-calendar-alt fa-fw text-muted me-1"></i>Desde: {{ usuario.fecha_creacion|date:"d M Y" }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% if usuario.is_superuser %}
+                                <span class="badge bg-warning"><i class="fas fa-crown me-1"></i>Superadmin</span>
+                                {% endif %}
+                                {% if usuario.is_staff %}
+                                <span class="badge bg-primary"><i class="fas fa-shield-halved me-1"></i>Staff</span>
+                                {% endif %}
+                                {% if not usuario.is_staff and not usuario.is_superuser %}
+                                <span class="badge bg-secondary"><i class="fas fa-user me-1"></i>Cliente / Agricultor</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if usuario.is_active %}
+                            <span class="badge bg-success d-inline-flex align-items-center gap-1">
+                                <span class="spinner-grow spinner-grow-sm" role="status" style="width: 6px; height: 6px; animation-duration: 1.5s;"></span> Activo
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger d-inline-flex align-items-center gap-1">
+                                <span class="rounded-circle bg-white" style="width: 6px; height: 6px;"></span> Inactivo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-2">
+                                <a href="{% url 'usuarios:admin_usuario_editar' usuario.id_users %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if usuario.id_users != request.user.id_users %}
+                                <a href="{% url 'usuarios:admin_usuario_toggle_activo' usuario.id_users %}"
+                                   class="btn btn-sm {% if usuario.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+                                   title="{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}">
+                                    {% if usuario.is_active %}
+                                    <i class="fas fa-user-slash"></i>
+                                    {% else %}
+                                    <i class="fas fa-user-check"></i>
+                                    {% endif %}
+                                </a>
+                                {% else %}
+                                <button class="btn btn-sm btn-outline-secondary" disabled title="No puedes desactivar tu propia cuenta">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="fas fa-search text-muted fs-1 d-block mb-3"></i>
+                            <p class="text-muted mb-1">No se encontraron usuarios</p>
+                            {% if query %}<small class="text-muted">para la búsqueda "{{ query }}"</small>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

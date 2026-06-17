@@ -135,5 +135,54 @@ class PerfilForm(forms.ModelForm):
         }
 
 
+class AdminUsuarioForm(forms.ModelForm):
+    """Formulario para que un administrador cree o edite usuarios"""
+    password = forms.CharField(
+        label='Contraseña', 
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña (Dejar vacío para mantener actual en edición)'}), 
+        required=False
+    )
+
+    class Meta:
+        model = Tblusuarios
+        fields = ('nombres', 'apellidos', 'telefono', 'correo', 'is_active', 'is_staff', 'is_superuser')
+        widgets = {
+            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellidos': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_superuser': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean_correo(self):
+        correo = self.cleaned_data.get('correo')
+        if correo:
+            qs = Tblusuarios.objects.filter(correo=correo)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError('Este correo electrónico ya está registrado.')
+        return correo
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        # Si es creación, la contraseña es obligatoria
+        if not self.instance.pk and not password:
+            self.add_error('password', 'La contraseña es obligatoria al crear un nuevo usuario.')
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get('password')
+        if password:
+            user.set_password(password)
+        if commit:
+            user.save()
+        return user
+
+
 # Alias para mantener compatibilidad con el controller
-RegistroForm = RegistroTblusuariosForm
+RegistroForm = RegistroTblusuariosForm

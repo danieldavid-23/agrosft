@@ -12,9 +12,28 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 import sys
+import copy as _copy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# =============================================================
+# PARCHE DE COMPATIBILIDAD: Python 3.14 + Django 5.0
+# En Python 3.14, copy.copy(super()) ya no funciona.
+# Este parche corrige el metodo __copy__ de BaseContext.
+# =============================================================
+import sys as _sys
+if _sys.version_info >= (3, 13):
+    import django.template.context as _ctx
+
+    def _patched_copy(self):
+        duplicate = object.__new__(type(self))
+        duplicate.__dict__.update(self.__dict__)
+        duplicate.dicts = self.dicts[:]
+        return duplicate
+
+    _ctx.BaseContext.__copy__ = _patched_copy
+# =============================================================
 
 # Cargar variables de entorno (si existe el archivo .env)
 try:
@@ -194,10 +213,7 @@ MIGRATION_MODULES = {
 }
 
 # Configuración de Google OAuth
-# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('GOOGLE_CLIENT_ID', '') #
-# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '') #
-# SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile'] #
-# SOCIAL_AUTH_URL_NAMESPACE = 'social' #
+
 
 # Pipeline personalizado para gestionar la creación de usuarios Tblusuarios con campos personalizados
 SOCIAL_AUTH_PIPELINE = (

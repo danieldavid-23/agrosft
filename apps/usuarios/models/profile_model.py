@@ -13,6 +13,9 @@ class TblusuariosManager(BaseUserManager):
             raise ValueError('Los nombres son obligatorios')
         if not apellidos:
             raise ValueError('Los apellidos son obligatorios')
+
+        # Asegurar que telefono tenga valor (MySQL no permite NULL)
+        extra_fields.setdefault('telefono', '')
             
         user = self.model(
             correo=self.normalize_email(correo),
@@ -28,7 +31,6 @@ class TblusuariosManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
-        extra_fields.setdefault('rol', 'admin')
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser debe tener is_staff=True.')

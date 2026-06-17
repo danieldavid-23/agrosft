@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Registro de Auditoría - AgroSFT{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Encabezado -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-3 shadow-sm bg-white" style="border-left: 5px solid #4f46e5;">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-dark"><i class="fas fa-clipboard-list me-2 text-indigo" style="color: #4f46e5;"></i>Registro de Auditoría</h1>
+            <p class="text-muted mb-0">Historial completo de acciones y modificaciones realizadas por los administradores en el panel web.</p>
+        </div>
+        <div class="text-muted small">
+            <span class="badge bg-indigo bg-opacity-10 text-indigo border border-indigo border-opacity-25 px-3 py-2 fs-6" style="color: #4f46e5; background-color: rgba(79, 70, 229, 0.1); border-color: rgba(79, 70, 229, 0.25) !important;">
+                <i class="fas fa-shield-halved me-1"></i>Seguridad
+            </span>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if error_tabla %}
+    <!-- Caso: La tabla no existe en la base de datos MySQL (phpMyAdmin) -->
+    <div class="card border-0 shadow rounded-3 mb-4 overflow-hidden">
+        <div class="card-header bg-danger text-white p-3 d-flex align-items-center gap-2">
+            <i class="fas fa-exclamation-triangle fa-lg"></i>
+            <h5 class="mb-0 fw-bold">Tabla de Base de Datos no Encontrada</h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h4 class="fw-bold text-dark mb-3">La tabla <code>admin_audit_log</code> no ha sido creada.</h4>
+                    <p class="text-muted fs-6">
+                        Para habilitar el registro de auditoría en tiempo real, debes crear la tabla en tu base de datos utilizando phpMyAdmin en XAMPP.
+                    </p>
+                    <p class="text-muted mb-4">
+                        Copia el siguiente script SQL, abre <strong>phpMyAdmin</strong>, selecciona la base de datos de tu proyecto, ve a la pestaña <strong>SQL</strong>, pega el código y presiona <strong>Continuar / Ejecutar</strong>.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block">
+                    <i class="fas fa-database text-danger" style="font-size: 8rem; opacity: 0.25;"></i>
+                </div>
+            </div>
+
+            <!-- Código SQL para Copiar -->
+            <div class="position-relative mb-4">
+                <div class="bg-dark text-white rounded-3 p-3 font-monospace" style="font-size: 0.85rem; max-height: 250px; overflow-y: auto;">
+<pre class="mb-0"><code>CREATE TABLE IF NOT EXISTS `admin_audit_log` (
+  `id_log` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_admin` INT NULL,
+  `accion` VARCHAR(100) NOT NULL,
+  `objetivo` VARCHAR(255) NULL,
+  `detalles` TEXT NULL,
+  `ip_address` VARCHAR(45) NULL,
+  `fecha` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`id_admin`) REFERENCES `tblusuarios`(`id_users`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</code></pre>
+                </div>
+                <button onclick="copySql()" class="btn btn-sm btn-light position-absolute top-0 end-0 m-3 shadow-sm border">
+                    <i class="far fa-copy me-1"></i> Copiar SQL
+                </button>
+            </div>
+            
+            <div class="alert alert-info border-0 rounded-3 mb-0 d-flex align-items-start gap-3">
+                <i class="fas fa-info-circle fa-lg text-info mt-1"></i>
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">Nota de Seguridad:</h6>
+                    <span class="text-muted small">
+                        El sistema de logs está diseñado para fallar silenciosamente en el resto de la aplicación. Es decir, aunque esta tabla no exista, los administradores y usuarios podrán seguir usando todas las funciones de AgroSFT sin interrupciones.
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copySql() {
+            const sqlText = `CREATE TABLE IF NOT EXISTS \`admin_audit_log\` (
+  \`id_log\` INT AUTO_INCREMENT PRIMARY KEY,
+  \`id_admin\` INT NULL,
+  \`accion\` VARCHAR(100) NOT NULL,
+  \`objetivo\` VARCHAR(255) NULL,
+  \`detalles\` TEXT NULL,
+  \`ip_address\` VARCHAR(45) NULL,
+  \`fecha\` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (\`id_admin\`) REFERENCES \`tblusuarios\`(\`id_users\`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                alert("¡Script SQL copiado al portapapeles!");
+            });
+        }
+    </script>
+
+    {% else %}
+    <!-- Caso Exitoso: Se muestra la tabla de auditoría -->
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="card-title mb-0 fw-bold text-dark">
+                <i class="fas fa-list me-2 text-muted"></i>Registro de Eventos Recientes (Últimos 200)
+            </h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase font-monospace" style="font-size: 0.72rem;">
+                    <tr>
+                        <th class="ps-4" style="width: 170px;">Fecha y Hora</th>
+                        <th>Administrador</th>
+                        <th>Acción</th>
+                        <th>Objetivo</th>
+                        <th>Detalles</th>
+                        <th class="pe-4" style="width: 130px;">Dirección IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="ps-4 text-muted small">
+                            <div><i class="far fa-calendar-alt me-1 text-muted"></i>{{ log.fecha|date:"d M Y" }}</div>
+                            <div><i class="far fa-clock me-1 text-muted"></i>{{ log.fecha|date:"h:i:s a" }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-indigo text-white fw-bold me-2"
+                                     style="width: 30px; height: 30px; font-size: 0.85rem; background-color: #4f46e5; flex-shrink: 0;">
+                                    {{ log.admin.nombres|slice:":1"|upper|default:"S" }}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-dark" style="font-size: 0.9rem;">{{ log.admin.get_full_name|default:"Sistema" }}</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">{{ log.admin.correo|default:"automático" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge px-2.5 py-1.5 rounded-pill fs-7 font-monospace text-uppercase
+                                {% if 'Crear' in log.accion or 'Aprobar' in log.accion %}bg-success bg-opacity-10 text-success border border-success border-opacity-25
+                                {% elif 'Editar' in log.accion or 'Actualizar' in log.accion %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25
+                                {% elif 'Rechazar' in log.accion or 'Desactivar' in log.accion or 'Eliminar' in log.accion %}bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25
+                                {% else %}bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25{% endif %}">
+                                {{ log.accion }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark" style="font-size: 0.9rem;">{{ log.objetivo|default:"-" }}</div>
+                        </td>
+                        <td>
+                            <div class="text-muted small" style="max-width: 300px; white-space: normal; line-height: 1.3;">
+                                {{ log.detalles|default:"-" }}
+                            </div>
+                        </td>
+                        <td class="pe-4 font-monospace small text-muted">
+                            <i class="fas fa-network-wired me-1" style="font-size: 0.8rem;"></i>{{ log.ip_address|default:"127.0.0.1" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="fas fa-clipboard-list text-muted fs-1 d-block mb-3" style="opacity: 0.6;"></i>
+                                <h5 class="fw-bold text-dark">No hay registros de auditoría</h5>
+                                <p class="text-muted mb-0">Las acciones de los administradores aparecerán listadas aquí una vez que se realicen.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Estadísticas de la Plataforma - AgroSFT{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Encabezado -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-3 shadow-sm bg-white" style="border-left: 5px solid var(--secondary-color);">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-dark"><i class="fas fa-chart-line me-2 text-success"></i>Estadísticas e Indicadores</h1>
+            <p class="text-muted mb-0">Rendimiento, transacciones y distribución de productos en AgroSFT.</p>
+        </div>
+        <div class="text-muted small">
+            <i class="fas fa-clock me-1"></i>Última actualización: En tiempo real
+        </div>
+    </div>
+
+    <!-- Indicadores Principales (Tarjetas Premium) -->
+    <div class="row g-4 mb-4">
+        <!-- Usuarios -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3 bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold font-monospace">Usuarios</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_usuarios }}</h3>
+                        <span class="text-success small fw-semibold"><i class="fas fa-check-circle me-1"></i>Cuentas activas</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos Genéricos -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3 bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-seedling fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold font-monospace">Catálogo</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_productos }}</h3>
+                        <span class="text-muted small">Productos base</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ofertas Activas -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3 bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-store fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold font-monospace">Ofertas</div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_ofertas }}</h3>
+                        <span class="text-muted small">Publicaciones en venta</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Facturación Acumulada -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-3" style="background: linear-gradient(135deg, #059669 0%, #064e3b 100%); color: white;">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3 bg-white bg-opacity-20 text-white">
+                        <i class="fas fa-wallet fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="text-white-50 small text-uppercase fw-bold font-monospace">Facturación</div>
+                        <h3 class="fw-bold mb-0">${{ facturacion_total|floatformat:2 }}</h3>
+                        <span class="text-white-50 small">{{ total_ventas_count }} ventas finalizadas</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Styles for interactive cards -->
+    <style>
+        .hover-card {
+            background-color: var(--surface-color);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-md);
+        }
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md) !important;
+            border-color: var(--primary-color) !important;
+        }
+    </style>
+
+    <!-- Centro de Descargas e Informes -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+            <h5 class="card-title mb-0 fw-bold text-dark"><i class="fas fa-file-export text-muted me-2"></i>Exportar Reportes y Datos</h5>
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 small">
+                <i class="fas fa-file-csv me-1"></i>Formato CSV (Excel)
+            </span>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{% url 'usuarios:admin_reporte_usuarios_csv' %}" class="card h-100 text-decoration-none hover-card p-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 p-3 bg-primary bg-opacity-10 text-primary">
+                                <i class="fas fa-users-gear fa-xl"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Reporte de Usuarios</h6>
+                                <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Descargar lista de cuentas, roles y estados.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'usuarios:admin_reporte_productos_csv' %}" class="card h-100 text-decoration-none hover-card p-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 p-3 bg-success bg-opacity-10 text-success">
+                                <i class="fas fa-cubes fa-xl"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Catálogo de Productos</h6>
+                                <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Inventario general de productos del sistema.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'usuarios:admin_reporte_ventas_csv' %}" class="card h-100 text-decoration-none hover-card p-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 p-3 bg-warning bg-opacity-10 text-warning">
+                                <i class="fas fa-receipt fa-xl"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Historial de Ventas</h6>
+                                <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Transacciones, montos e información de abasto.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Distribución por Categoría -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-dark"><i class="fas fa-pie-chart text-muted me-2"></i>Productos por Categoría</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column gap-4">
+                        {% for categoria in categorias %}
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold text-dark">{{ categoria.nombre }}</span>
+                                <span class="badge bg-light text-dark fw-bold">{{ categoria.num_productos }}</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if forloop.counter == 1 %}bg-success{% elif forloop.counter == 2 %}bg-primary{% elif forloop.counter == 3 %}bg-warning{% else %}bg-secondary{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {% if total_productos > 0 %}{{ categoria.num_productos|dictsort:"num_productos"|yesno:"1,1" }}{{ categoria.num_productos }}0{% else %}0{% endif %}%;" 
+                                     aria-valuenow="{{ categoria.num_productos }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="{{ total_productos }}"></div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center py-4 mb-0">No hay categorías con productos.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transacciones Recientes -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-dark"><i class="fas fa-history text-muted me-2"></i>Transacciones Recientes</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-uppercase font-monospace" style="font-size: 0.7rem;">
+                            <tr>
+                                <th class="ps-4">Fecha</th>
+                                <th>Tipo</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th class="text-end pe-4">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in recent_txs %}
+                            <tr>
+                                <td class="ps-4 text-muted small" style="font-size: 0.8rem;">
+                                    {{ tx.fecha|date:"d M Y, h:i a" }}
+                                </td>
+                                <td>
+                                    {% if tx.es_venta %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Venta</span>
+                                    {% else %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">Abasto</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ tx.producto }}</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">
+                                        {% if tx.es_venta %}
+                                        De: {{ tx.vendedor }} a {{ tx.comprador }}
+                                        {% else %}
+                                        Por: {{ tx.comprador }}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {{ tx.cantidad }} unidades
+                                </td>
+                                <td class="text-end pe-4 fw-bold text-dark">
+                                    ${{ tx.total|floatformat:2 }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    No hay transacciones registradas.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

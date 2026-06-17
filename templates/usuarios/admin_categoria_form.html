@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} - AgroSFT{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <!-- Botón para regresar -->
+            <div class="mb-4">
+                <a href="{% url 'usuarios:admin_categorias_list' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Volver a Categorías
+                </a>
+            </div>
+
+            <!-- Tarjeta del Formulario -->
+            <div class="card shadow border-0 rounded-4 overflow-hidden">
+                <div class="card-header text-white p-4" style="background: linear-gradient(135deg, var(--secondary-color) 0%, #064e3b 100%);">
+                    <h3 class="mb-1 fw-bold"><i class="fas {% if is_edit %}fa-tags{% else %}fa-plus-circle{% endif %} me-2"></i>{{ titulo }}</h3>
+                    <p class="mb-0 text-white-50">Gestiona las clasificaciones del catálogo de AgroSFT.</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <!-- Mensajes de Error Localizados -->
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        {% if message.tags == 'error' %}
+                        <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Nombre de la Categoría -->
+                        <div class="mb-4">
+                            <label for="nombre" class="form-label fw-bold text-dark">Nombre de la Categoría <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="nombre" name="nombre" 
+                                   value="{{ categoria.nombre|default:'' }}" placeholder="Ej. Tubérculos, Frutas, Lácteos..." required autocomplete="off">
+                            <div class="form-text">Debe ser un nombre único y representativo de los productos.</div>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-4">
+                            <label for="descripcion" class="form-label fw-bold text-dark">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4" 
+                                      placeholder="Describe brevemente qué tipo de productos pertenecen a esta categoría...">{{ categoria.descripcion|default:'' }}</textarea>
+                            <div class="form-text">Detalles opcionales sobre los productos clasificados aquí.</div>
+                        </div>
+
+                        <hr class="my-4 text-muted">
+
+                        <!-- Botones de Acción -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'usuarios:admin_categorias_list' %}" class="btn btn-light px-4 py-2 border">Cancelar</a>
+                            <button type="submit" class="btn btn-success px-5 py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                                <i class="fas fa-save"></i> {% if is_edit %}Guardar Cambios{% else %}Crear Categoría{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

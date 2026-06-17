@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/admin-custom.css' %}" />
+{% endblock %}
+
+{% block title %}{{ title }} | AgroSFT Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        &#127793; AgroSFT - Administraci&oacute;n
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block footer %}
+<div id="footer" style="text-align:center; padding:15px; color:#64748b; font-size:12px; border-top:1px solid #e2e8f0; margin-top:20px;">
+    <p>AgroSFT &copy; 2026 - Gesti&oacute;n Agr&iacute;cola Inteligente | 
+    <a href="/" style="color:#2563eb;">Ir al sitio principal</a></p>
+</div>
+{{ block.super }}
+{% endblock %}

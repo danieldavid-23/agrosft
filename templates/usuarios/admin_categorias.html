@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Categorías - AgroSFT{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Encabezado -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-3 shadow-sm bg-white" style="border-left: 5px solid var(--secondary-color);">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-dark"><i class="fas fa-tags me-2 text-success"></i>Gestión de Categorías</h1>
+            <p class="text-muted mb-0">Administra las clasificaciones de productos disponibles en el catálogo del marketplace.</p>
+        </div>
+        <div>
+            <a href="{% url 'usuarios:admin_categoria_crear' %}" class="btn btn-success d-flex align-items-center gap-2 shadow-sm">
+                <i class="fas fa-plus"></i> Nueva Categoría
+            </a>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabla de Categorías -->
+    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="card-title mb-0 fw-bold text-dark">
+                <i class="fas fa-list-ul me-2 text-muted"></i>Listado de Categorías
+            </h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase font-monospace" style="font-size: 0.75rem;">
+                    <tr>
+                        <th class="ps-4" style="width: 80px;">ID</th>
+                        <th>Nombre de Categoría</th>
+                        <th>Descripción</th>
+                        <th>Productos Asociados</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4" style="width: 200px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for categoria in categorias %}
+                    <tr>
+                        <td class="ps-4 font-monospace fw-bold text-muted">#{{ categoria.id_categoria }}</td>
+                        <td>
+                            <div class="fw-bold text-dark fs-6">{{ categoria.nombre }}</div>
+                        </td>
+                        <td>
+                            <div class="text-muted small" style="max-width: 400px; white-space: normal;">
+                                {{ categoria.descripcion|default:"Sin descripción registrada." }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-primary border border-primary border-opacity-10 px-3 py-2 fw-semibold fs-6">
+                                <i class="fas fa-cubes me-1"></i>{{ categoria.num_productos }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if categoria.activo %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 small">
+                                <i class="fas fa-check-circle me-1"></i>Activo
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 small">
+                                <i class="fas fa-times-circle me-1"></i>Inactivo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-2">
+                                <a href="{% url 'usuarios:admin_categoria_editar' categoria.id_categoria %}" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   title="Editar categoría">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <a href="{% url 'usuarios:admin_categoria_toggle' categoria.id_categoria %}" 
+                                   class="btn btn-sm {% if categoria.activo %}btn-outline-danger{% else %}btn-outline-success{% endif %} px-3"
+                                   title="{% if categoria.activo %}Desactivar{% else %}Activar{% endif %}">
+                                    {% if categoria.activo %}
+                                    <i class="fas fa-ban me-1"></i> Desactivar
+                                    {% else %}
+                                    <i class="fas fa-check me-1"></i> Activar
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="fas fa-tags text-muted fs-1 d-block mb-3" style="opacity: 0.6;"></i>
+                                <h5 class="fw-bold text-dark">No hay categorías registradas</h5>
+                                <p class="text-muted mb-0">Usa el botón "Nueva Categoría" para crear la primera clasificación.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

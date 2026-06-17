@@ -18,18 +18,23 @@ from django.urls import path, include
 from django.shortcuts import redirect
 from django.contrib import admin
 
+# Personalización del panel de administración
+admin.site.site_header = 'AgroSFT - Panel de Administración'
+admin.site.site_title = 'AgroSFT Admin'
+admin.site.index_title = 'Gestión de la Plataforma Agrícola'
+
+
 def home_redirect(request):
     """Redirigir a la página de login en lugar de registro"""
-    return redirect('usuarios:login')  # Cambiado de 'usuarios:registro' a 'usuarios:login'
+    return redirect('usuarios:login')
+
 
 urlpatterns = [
-    path('', home_redirect, name='home'),  # Mantener la redirección pero al login
+    path('', home_redirect, name='home'),
     path('usuarios/', include('apps.usuarios.urls', namespace='usuarios')),
     path('inventario/', include('apps.inventario.urls', namespace='inventario')),
     path('clientes/', include('apps.clientes.urls', namespace='clientes')),
     path('ventas/', include('apps.ventas.urls', namespace='ventas')),
-    path('oauth/', include('social_django.urls', namespace='social')),  # Rutas de Google OAuth
-    # Eliminamos todas las rutas que dependen de componentes del sistema
-    # path('admin/', admin.site.urls),
+    path('oauth/', include('social_django.urls', namespace='social')),
     path('admin/', admin.site.urls),
 ]
