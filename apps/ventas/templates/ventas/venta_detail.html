@@ -12,11 +12,25 @@
         <div>
             <h2 class="mb-1 d-flex align-items-center gap-2">
                 Venta #{{ venta.id }}
-                <span class="badge {% if venta.estado == 'vendida' %}bg-success{% else %}bg-primary{% endif %} fs-6 rounded-pill">
-                    <i class="fas fa-check-circle me-1"></i>{{ venta.estado|title }}
-                </span>
+                {% if venta.estado == 'vendida' %}
+                    <span class="badge bg-success fs-6 rounded-pill">
+                        <i class="fas fa-check-circle me-1"></i>Vendido
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning text-dark fs-6 rounded-pill">
+                        <i class="fas fa-clock me-1"></i>En proceso
+                    </span>
+                {% endif %}
             </h2>
             <p class="text-muted mb-0">Detalles de la venta generada.</p>
+            {% if venta.puede_marcar_vendido %}
+            <form method="post" action="{% url 'ventas:venta_marcar_vendida' venta.id %}" class="mt-2" onsubmit="return confirm('¿Confirmar que esta venta fue completada?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success rounded-pill">
+                    <i class="fas fa-check me-1"></i> Marcar como Vendida
+                </button>
+            </form>
+            {% endif %}
         </div>
     </div>
 

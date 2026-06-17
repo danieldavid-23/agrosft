@@ -226,16 +226,40 @@ erDiagram
 
 ## 3. Triggers de Base de Datos
 
-### trg_actualizar_stock_oferta
+### trg_actualizar_stock_oferta (MODIFICADO)
 
 **Evento**: AFTER INSERT ON `tblproductos_has_tblusuarios_has_movimiento`
 
 **Acciones**:
-1. Actualiza `cantidad` en `tblproductos_has_tblusuarios` sumando la cantidad del movimiento
+1. Si el movimiento **NO** es tipo `'compra'`: actualiza `cantidad` en `tblproductos_has_tblusuarios` sumando la cantidad del movimiento
 2. Si el movimiento incluye calificación, recalcula `calificacion_promedio`
 
+> [!warning] Comportamiento modificado (2026-06-17)
+> Anteriormente actualizaba stock en CUALQUIER inserción. Ahora **omite** la actualización de stock cuando el tipo_movimiento es `'compra'` (solicitud de compra pendiente).
+> Las solicitudes de compra ya no descuentan stock hasta que la venta se confirme como `'vendida'`.
+> **Script**: `scripts/trigger_modificar_stock.sql`
+
+---
+
+### trg_descontar_stock_vendida (NUEVO)
+
+**Evento**: AFTER UPDATE ON `movimiento`
+
+**Acciones**:
+1. Detecta cuando `tipo_movimiento` cambia a `'vendida'` desde otro estado
+2. Descuenta `ABS(cantidad)` del stock de cada `ProductoUsuario` afectado via JOIN con `tblproductos_has_tblusuarios_has_movimiento`
+
+> [!important] Flujo de stock actualizado
+> | Paso | Tipo movimiento | Efecto en stock |
+> |---|---|---|
+> | Checkout (comprador) | `'compra'` | Sin cambio (trigger ignora) |
+> | Aceptar (vendedor) | `'venta'` | Sin cambio (es UPDATE, no INSERT) |
+> | Marcar vendido (vendedor) | `'vendida'` | **Descuenta stock** |
+>
+> **Script**: `scripts/trigger_stock_vendida.sql`
+
 > [!danger] Regla Crítica
-> Este trigger es la ÚNICA fuente de verdad para stock y calificación promedio.
+> Los triggers son la ÚNICA fuente de verdad para stock y calificación promedio.
 > **NUNCA** actualizar estos campos manualmente desde Python.
 
 ---

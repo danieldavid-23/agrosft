@@ -304,10 +304,17 @@ POST /ventas/solicitudes/<pk>/vendido/             → Marcar como vendida
 ### 3.3 Ventas
 
 ```
-GET /ventas/                                       → Listar ventas
-GET /ventas/<pk>/                                  → Detalle de venta
-GET /ventas/crear/                                 → Redirect a solicitudes
+GET  /ventas/                                       → Listar ventas
+GET  /ventas/<pk>/                                  → Detalle de venta
+POST /ventas/<pk>/marcar-vendida/                   → Marcar venta como vendida
+GET  /ventas/crear/                                 → Redirect a solicitudes
 ```
+
+**Marcar como vendida — Response**:
+- Success: `Redirect → /ventas/<pk>/` + mensaje de confirmación
+- Error: `Redirect → /ventas/` + mensaje de error
+
+> **Nota**: Solo disponible para ventas con estado "En proceso" (tipo_movimiento = 'venta'). Requiere POST con CSRF token.
 
 ---
 
@@ -368,9 +375,9 @@ GET /admin/                                        → Django Admin (si habilita
 |---|---|---|---|
 | Usuarios | 12 | 5 | 1 |
 | Inventario | 8 | 7 | 4 |
-| Ventas | 13 | 9 | 8 |
+| Ventas | 14 | 10 | 8 |
 | Clientes | 3 | 3 | 0 |
-| **Total** | **36** | **24** | **13** |
+| **Total** | **37** | **25** | **13** |
 
 ---
 

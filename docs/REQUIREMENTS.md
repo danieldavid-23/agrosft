@@ -55,8 +55,10 @@
 | RF-V08 | El sistema debe permitir al vendedor aceptar una solicitud | Alta | ✅ Implementado |
 | RF-V09 | El sistema debe permitir al vendedor rechazar una solicitud | Alta | ✅ Implementado |
 | RF-V10 | El sistema debe permitir marcar una solicitud como vendida | Alta | ✅ Implementado |
-| RF-V11 | El sistema debe listar las ventas completadas | Media | ✅ Implementado |
+| RF-V11 | El sistema debe listar las ventas con estados visibles: "En proceso" y "Vendido" | Media | ✅ Implementado |
 | RF-V12 | El sistema debe mostrar el detalle de una venta específica | Media | ✅ Implementado |
+| RF-V16 | El sistema debe permitir marcar una venta como "Vendido" desde el módulo de ventas | Alta | ✅ Implementado |
+| RF-V17 | Al marcar como "Vendido", el stock debe actualizarse automáticamente (trigger en BD) | Alta | ✅ Implementado |
 | RF-V13 | El sistema debe permitir calificar una transacción (1.0–5.0, pasos de 0.5) | Media | ✅ Implementado |
 | RF-V14 | El sistema debe mostrar historial de movimientos del usuario | Media | ✅ Implementado |
 | RF-V15 | El frontend de solicitudes debe funcionar sin conexión a base de datos | Alta | ✅ Implementado (Vue puro con mock data) |

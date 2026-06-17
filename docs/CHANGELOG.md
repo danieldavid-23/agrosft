@@ -7,6 +7,20 @@
 
 ## [Unreleased]
 
+### Added (2026-06-17)
+- **Botón "Marcar como Vendido"** en módulo de ventas (`venta_list.html` y `venta_detail.html`)
+  - Endpoint `POST /ventas/<pk>/marcar-vendida/` en `venta_controller.py`
+  - Cambia `tipo_movimiento` de 'venta' a 'vendida' en BD
+  - Solo visible para ventas con estado "En proceso"
+  - Confirmación antes de ejecutar
+- **Estados traducidos** en módulo de ventas: 'venta' → "En proceso", 'vendida' → "Vendido"
+- **RF-V16**: Marcar venta como vendida desde módulo de ventas
+- **RF-V17**: Actualización automática de stock al marcar como "Vendido"
+  - Modificado trigger `trg_actualizar_stock_oferta`: ya no descuenta stock en solicitudes de compra (tipo='compra')
+  - Nuevo trigger `trg_descontar_stock_vendida`: descuenta stock cuando movimiento cambia a 'vendida'
+  - Validación de stock suficiente antes de confirmar venta en `venta_controller.py`
+  - Scripts SQL: `scripts/trigger_modificar_stock.sql`, `scripts/trigger_stock_vendida.sql`
+
 ### Pendiente (ver [[ROADMAP#Fase 1]])
 - Corregir SQL injection en `tabla_existe()` y `columna_existe()`
 - Agregar `@login_required` a vistas de carrito sin protección

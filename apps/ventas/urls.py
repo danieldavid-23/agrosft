@@ -16,6 +16,7 @@ urlpatterns = [
     path('', venta_controller.listar_ventas, name='venta_list'),
     path('<int:pk>/', venta_controller.detalle_venta, name='venta_detail'),
     path('crear/', venta_controller.crear_venta, name='venta_create'),
+    path('<int:pk>/marcar-vendida/', venta_controller.marcar_como_vendida, name='venta_marcar_vendida'),
     
     # Solicitudes de Compra Combinadas
     path('solicitudes/', solicitud_controller.listar_solicitudes, name='solicitud_list'),
