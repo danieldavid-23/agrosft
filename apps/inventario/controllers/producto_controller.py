@@ -118,7 +118,7 @@ def listar_productos(request):
 
     inventario_data = {
         'initialProducts': productos_transformados,
-        'categories': [{'id': c.idt_categoria, 'nombre': c.nombre} for c in categorias],
+        'categories': [{'id': c.id_categoria, 'nombre': c.nombre} for c in categorias],
         'estados': [{'id': e.id_estado, 'nombre': e.estado} for e in estados],
         'urls': {
             'listar': reverse('inventario:listar'),
@@ -230,7 +230,7 @@ def marketplace(request):
 
     marketplace_data = {
         'initialProducts': productos_transformados,
-        'categories': [{'id': c.idt_categoria, 'nombre': c.nombre} for c in categorias_list],
+        'categories': [{'id': c.id_categoria, 'nombre': c.nombre} for c in categorias_list],
         'urls': {
             'marketplace': reverse('inventario:marketplace'),
             'addToCart': reverse('ventas:carrito_agregar', args=[0]),

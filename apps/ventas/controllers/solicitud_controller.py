@@ -52,7 +52,7 @@ def listar_solicitudes(request):
         )
         
         # Calcular total de mis productos en esta solicitud
-        total = sum(p.cantidad * p.id_producto_usuario.precio for p in mis_productos_en_solicitud)
+        total = float(sum(abs(p.cantidad) * p.id_producto_usuario.precio for p in mis_productos_en_solicitud))
         
         # Obtener información del comprador
         comprador = solicitud.id_usuario
@@ -68,17 +68,20 @@ def listar_solicitudes(request):
         else:
             estado = 'recibida'
         
+        # Convertir fecha a string para serialización JSON
+        fecha_obj = solicitud.obtener_fecha()
+        fecha_str = fecha_obj.strftime('%Y-%m-%d %H:%M') if fecha_obj else 'N/A'
+
         solicitudes_data.append({
             'id': solicitud.id_movimiento,
-            'fecha': solicitud.obtener_fecha(),
+            'fecha': fecha_str,
             'descripcion': getattr(solicitud, 'descripcion', 'Sin descripción'),
             'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
             'comprador_email': comprador.correo,
-            'comprador_telefono': getattr(comprador, 'telefono', 'No proporcionado'),
+            'comprador_telefono': getattr(comprador, 'telefono', 'No proporcionado') or 'No proporcionado',
             'total_productos_mios': mis_productos_en_solicitud.count(),
             'total_estimado': total,
             'estado': estado,
-            'productos_mios': mis_productos_en_solicitud,
         })
     
     from django.urls import reverse
@@ -96,7 +99,7 @@ def listar_solicitudes(request):
             'titulo': 'Solicitudes Recibidas',
             'subtitulo': 'Usuarios que quieren comprar tus productos',
         }
-    })
+    }, default=str)
 
     return render(request, 'ventas/solicitudes/solicitud_list.html', {
         'solicitudes': solicitudes_data,
