@@ -19,7 +19,6 @@
     {% endif %}
 
     {% if carrito|length > 0 %}
-<<<<<<< Updated upstream
     <div class="table-responsive">
         <table class="table table-bordered table-striped mt-4">
             <thead class="table-dark">
@@ -76,11 +75,9 @@
             <a href="{% url 'ventas:carrito_checkout_venta' %}" class="btn btn-success btn-lg">Realizar Venta Directa</a>
         </div>
     </div>
-=======
     {{ carrito_json|json_script:"carrito-data" }}
     <div id="vue-carrito"></div>
     <script src="{% static 'dist/carrito.js' %}"></script>
->>>>>>> Stashed changes
     {% else %}
     <div class="alert alert-info mt-4">
         Tu carrito está vacío. <a href="{% url 'inventario:marketplace' %}" class="alert-link">Vuelve al marketplace para agregar productos</a>.
