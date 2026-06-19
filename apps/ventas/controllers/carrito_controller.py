@@ -129,6 +129,12 @@ def checkout_carrito(request):
                 producto_usuario = item['producto']
                 cantidad = item['cantidad']
                 
+                # Refrescar stock desde BD antes de validar
+                # (el valor en memoria puede estar desactualizado)
+                producto_usuario = ProductoUsuario.objects.get(
+                    id_producto_usuario=producto_usuario.id_producto_usuario
+                )
+                
                 # Verificar disponibilidad de stock
                 if producto_usuario.cantidad < cantidad:
                     messages.error(request, f'No hay suficiente stock disponible para {producto_usuario.id_producto.nombre}.')

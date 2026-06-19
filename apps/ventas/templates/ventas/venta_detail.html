@@ -85,13 +85,11 @@
                                         <small class="text-muted">{{ detalle.id_producto_usuario.id_producto.id_categoria.nombre }}</small>
                                     </td>
                                     <td class="px-4 py-3 align-middle text-end">
-                                        <!-- En BD, cantidad de venta se guarda negativa, si lo es, mostramos el valor absoluto o al menos no el guión -->
-                                        <span class="badge bg-primary">{{ detalle.cantidad }}</span>
+                                        <span class="badge bg-primary">{{ detalle.cantidad|abs_value|floatformat:0 }}</span>
                                     </td>
                                     <td class="px-4 py-3 align-middle text-end">${{ detalle.id_producto_usuario.precio|floatformat:2 }}</td>
                                     <td class="px-4 py-3 align-middle text-end fw-semibold text-success">
-                                        <!-- Multiplicamos sin preocuparnos del signo negativo si el CSS lo oculta, o el template filter lo maneja -->
-                                        ${{ detalle.cantidad|multiply:detalle.id_producto_usuario.precio|floatformat:2 }}
+                                        ${{ detalle.cantidad|abs_value|multiply:detalle.id_producto_usuario.precio|floatformat:2 }}
                                     </td>
                                 </tr>
                                 {% endfor %}

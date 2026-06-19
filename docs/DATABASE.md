@@ -232,12 +232,14 @@ erDiagram
 
 **Acciones**:
 1. Si el movimiento **NO** es tipo `'compra'`: actualiza `cantidad` en `tblproductos_has_tblusuarios` sumando la cantidad del movimiento
-2. Si el movimiento incluye calificación, recalcula `calificacion_promedio`
+2. **Protección**: Si la cantidad es negativa (salida), valida que el stock no quede < 0. Emite `SIGNAL SQLSTATE '45000'` si es insuficiente
+3. Si el movimiento incluye calificación, recalcula `calificacion_promedio`
 
 > [!warning] Comportamiento modificado (2026-06-17)
 > Anteriormente actualizaba stock en CUALQUIER inserción. Ahora **omite** la actualización de stock cuando el tipo_movimiento es `'compra'` (solicitud de compra pendiente).
 > Las solicitudes de compra ya no descuentan stock hasta que la venta se confirme como `'vendida'`.
-> **Script**: `scripts/trigger_modificar_stock.sql`
+> Incluye protección contra stock negativo con `SIGNAL` error.
+> **Scripts**: `scripts/trigger_modificar_stock.sql` (básico) o `scripts/trigger_proteccion_stock.sql` (con protección)
 
 ---
 

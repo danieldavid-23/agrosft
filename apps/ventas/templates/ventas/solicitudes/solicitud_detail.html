@@ -79,13 +79,13 @@
                                         <small class="text-muted">{{ producto.id_producto_usuario.id_producto.id_categoria.nombre }}</small>
                                     </td>
                                     <td class="px-4 py-3 align-middle text-center">
-                                        <span class="badge" style="background-color: var(--primary-color)">{{ producto.cantidad }}</span>
+                                        <span class="badge" style="background-color: var(--primary-color)">{{ producto.cantidad|abs_value|floatformat:0 }}</span>
                                     </td>
                                     <td class="px-4 py-3 align-middle text-end fw-semibold">
                                         ${{ producto.id_producto_usuario.precio|floatformat:2 }}
                                     </td>
                                     <td class="px-4 py-3 align-middle text-end fw-bold text-success">
-                                        <span style="color: var(--secondary-color)">${{ producto.cantidad|multiply:producto.id_producto_usuario.precio|floatformat:2 }}</span>
+                                        <span style="color: var(--secondary-color)">${{ producto.cantidad|abs_value|multiply:producto.id_producto_usuario.precio|floatformat:2 }}</span>
                                     </td>
                                 </tr>
                                 {% empty %}

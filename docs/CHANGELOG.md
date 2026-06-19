@@ -21,6 +21,12 @@
   - Validación de stock suficiente antes de confirmar venta en `venta_controller.py`
   - Scripts SQL: `scripts/trigger_modificar_stock.sql`, `scripts/trigger_stock_vendida.sql`
 
+### Fixed (2026-06-17)
+- **Stock negativo**: Corrección del problema donde pedidos (checkout) descontaban stock incorrectamente
+  - Script `scripts/corregir_stock_negativo.sql` revierte descuentos incorrectos de movimientos 'compra' previos
+  - Nuevo trigger `scripts/trigger_proteccion_stock.sql` con validación `SIGNAL` que impide stock negativo
+  - Checkout (`carrito_controller.py`) ahora refresca stock desde BD antes de validar disponibilidad
+
 ### Pendiente (ver [[ROADMAP#Fase 1]])
 - Corregir SQL injection en `tabla_existe()` y `columna_existe()`
 - Agregar `@login_required` a vistas de carrito sin protección

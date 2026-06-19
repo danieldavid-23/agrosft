@@ -144,8 +144,8 @@ def detalle_solicitud(request, pk):
         messages.error(request, 'No tienes permiso para ver esta solicitud.')
         return redirect('ventas:solicitud_list')
     
-    # Calcular total
-    total = sum(p.cantidad * p.id_producto_usuario.precio for p in productos)
+    # Calcular total (abs porque cantidad en BD es negativa por convención de triggers)
+    total = float(sum(abs(p.cantidad) * p.id_producto_usuario.precio for p in productos))
     
     # Determinar estado real basado en el tipo de movimiento
     tipo_movimiento = solicitud.id_tipo_movimiento.tipo
