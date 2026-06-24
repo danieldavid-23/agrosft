@@ -165,6 +165,7 @@ graph LR
 | `venta` | Aceptada | Vendedor aceptó |
 | `rechazada` | Rechazada | Vendedor rechazó |
 | `vendida` | Completada | Transacción finalizada |
+| `cancelada` | Cancelada | Venta cancelada (desde estado `venta`) |
 
 ### 2.5 `apps.clientes` — Historial
 

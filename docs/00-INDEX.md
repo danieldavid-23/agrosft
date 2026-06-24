@@ -14,10 +14,10 @@
 | [[REQUIREMENTS]] | 45 requisitos funcionales + 17 no funcionales + 8 brechas | Qué debe hacer el sistema |
 | [[USER_STORIES]] | 13 historias de usuario con criterios de aceptación | Cómo lo usa el usuario |
 | [[ARCHITECTURE]] | Arquitectura, módulos, patrones, diagramas Mermaid | Cómo está construido |
-| [[DATABASE]] | 11 tablas, triggers, ER diagram, convenciones | Dónde se guardan los datos |
+| [[DATABASE]] | 9 tablas reales en MariaDB, triggers (5), ER diagram, convenciones | Dónde se guardan los datos |
 | [[API]] | 36 endpoints con contratos request/response | Cómo se comunica |
 | [[ROADMAP]] | Plan de evolución en 4 fases | Qué sigue |
-| [[DECISIONS]] | 8 registros de decisiones técnicas (ADR) | Por qué se hizo así |
+| [[DECISIONS]] | 9 registros de decisiones técnicas (ADR) | Por qué se hizo así |
 | [[CHANGELOG]] | Historial cronológico de cambios | Qué cambió y cuándo |
 
 ---

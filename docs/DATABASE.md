@@ -9,9 +9,6 @@
 
 ```mermaid
 erDiagram
-    tblusuarios ||--o{ user_profiles : "tiene perfil"
-    tblusuarios ||--o{ user_devices : "usa dispositivo"
-    tblusuarios ||--o{ user_addresses : "tiene dirección"
     tblusuarios ||--o{ tblproductos_has_tblusuarios : "publica"
     tblusuarios ||--o{ movimiento : "realiza"
 
@@ -24,6 +21,8 @@ erDiagram
     movimiento ||--o{ tblproductos_has_tblusuarios_has_movimiento : "contiene"
 
     tipo_movimiento ||--o{ movimiento : "tipifica"
+
+    calificacion }o--o{ tblproductos_has_tblusuarios_has_movimiento : "referencia"
 ```
 
 ---
@@ -69,6 +68,9 @@ erDiagram
 | `zona_horaria` | VARCHAR(50) | No | 'America/Bogota' | Zona horaria |
 
 **Modelo Django**: `apps.usuarios.models.profile_model.UserProfile`
+
+> [!warning] Tabla inexistente en MariaDB
+> La tabla `user_profiles` **no existe** en la base de datos real de MariaDB. El modelo Django tiene `managed = False` pero apunta a una tabla que nunca fue creada en el schema legacy. Las funcionalidades de perfil extendido (biografía, sitio_web, notificaciones) no están operativas.
 
 ---
 
@@ -148,7 +150,7 @@ erDiagram
 | `id_tipo_movimiento` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
 | `tipo_movimiento` | VARCHAR(45) | No | — | Nombre del tipo |
 
-**Valores**: `compra`, `venta`, `rechazada`, `vendida`  
+**Valores**: `compra` (id=1), `venta` (id=2), `vendida` (id=3), `rechazada` (id=4), `cancelada` (id=5)  
 **Modelo Django**: `apps.ventas.models.movimiento.TipoMovimiento`
 
 ---
@@ -187,7 +189,18 @@ erDiagram
 
 ---
 
-### 2.10 user_devices — Dispositivos de Usuario
+### 2.10 calificacion — Tabla de Referencia (Catálogo)
+
+| Columna | Tipo | Nullable | Default | Descripción |
+|---|---|---|---|---|
+| `id_calificacion` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
+| `calificacion` | INT | No | — | Valor de referencia |
+
+**Nota**: Tabla catálogo con un solo registro (`calificacion = 5`). Las calificaciones reales de transacciones se almacenan en `tblproductos_has_tblusuarios_has_movimiento.calificacion`.
+
+---
+
+### 2.11 user_devices — Dispositivos de Usuario
 
 | Columna | Tipo | Nullable | Default | Descripción |
 |---|---|---|---|---|
@@ -202,6 +215,9 @@ erDiagram
 | `esta_activo` | BOOLEAN | No | TRUE | Dispositivo activo |
 
 **Modelo Django**: `apps.usuarios.models.profile_model.UserDevice`
+
+> [!warning] Tabla inexistente en MariaDB
+> La tabla `user_devices` **no existe** en la base de datos real. Modelo Django con `managed = False` sin respaldo en BD.
 
 ---
 
@@ -222,46 +238,83 @@ erDiagram
 
 **Modelo Django**: `apps.usuarios.models.profile_model.UserAddress`
 
+> [!warning] Tabla inexistente en MariaDB
+> La tabla `user_addresses` **no existe** en la base de datos real. Modelo Django con `managed = False` sin respaldo en BD.
+
 ---
 
 ## 3. Triggers de Base de Datos
 
-### trg_actualizar_stock_oferta (MODIFICADO)
+La BD actual tiene **5 triggers** activos (verificado en MariaDB 2026-06-24):
+
+### 3.1 trg_actualizar_stock_oferta
 
 **Evento**: AFTER INSERT ON `tblproductos_has_tblusuarios_has_movimiento`
 
 **Acciones**:
-1. Si el movimiento **NO** es tipo `'compra'`: actualiza `cantidad` en `tblproductos_has_tblusuarios` sumando la cantidad del movimiento
-2. **Protección**: Si la cantidad es negativa (salida), valida que el stock no quede < 0. Emite `SIGNAL SQLSTATE '45000'` si es insuficiente
-3. Si el movimiento incluye calificación, recalcula `calificacion_promedio`
+1. Obtiene el `tipo_movimiento` asociado vía JOIN con `movimiento` → `tipo_movimiento`
+2. Si el tipo **NO** es `'compra'`: actualiza `cantidad = cantidad + NEW.cantidad` en `tblproductos_has_tblusuarios`
+3. **Protección**: Si `NEW.cantidad < 0` (salida), verifica que `stock_actual + NEW.cantidad >= 0`. Emite `SIGNAL SQLSTATE '45000'` si es insuficiente
+4. Si `NEW.calificacion IS NOT NULL`, recalcula `calificacion_promedio` como AVG de todas las calificaciones de esa publicación
 
-> [!warning] Comportamiento modificado (2026-06-17)
-> Anteriormente actualizaba stock en CUALQUIER inserción. Ahora **omite** la actualización de stock cuando el tipo_movimiento es `'compra'` (solicitud de compra pendiente).
-> Las solicitudes de compra ya no descuentan stock hasta que la venta se confirme como `'vendida'`.
-> Incluye protección contra stock negativo con `SIGNAL` error.
-> **Scripts**: `scripts/trigger_modificar_stock.sql` (básico) o `scripts/trigger_proteccion_stock.sql` (con protección)
+> [!warning] Comportamiento clave
+> - `'compra'` (solicitud): **ignorado** — el stock NO se descuenta al crear la solicitud
+> - `'venta'` (abastecimiento/aceptada): **suma** `cantidad` al stock
+> - Usa el script `scripts/trigger_proteccion_stock.sql` (reemplazó a `scripts/trigger_modificar_stock.sql`)
+> - **Versión original previa al 2026-06-17**: descontaba stock en TODA inserción, incluyendo `'compra'`
 
 ---
 
-### trg_descontar_stock_vendida (NUEVO)
+### 3.2 trg_descontar_stock_vendida
 
 **Evento**: AFTER UPDATE ON `movimiento`
 
 **Acciones**:
-1. Detecta cuando `tipo_movimiento` cambia a `'vendida'` desde otro estado
-2. Descuenta `ABS(cantidad)` del stock de cada `ProductoUsuario` afectado via JOIN con `tblproductos_has_tblusuarios_has_movimiento`
+1. Detecta cuando `tipo_movimiento` cambia A `'vendida'` desde otro estado diferente
+2. Descuenta `stock = stock - ABS(cantidad)` de cada `ProductoUsuario` afectado via JOIN con `tblproductos_has_tblusuarios_has_movimiento`
 
-> [!important] Flujo de stock actualizado
-> | Paso | Tipo movimiento | Efecto en stock |
-> |---|---|---|
-> | Checkout (comprador) | `'compra'` | Sin cambio (trigger ignora) |
-> | Aceptar (vendedor) | `'venta'` | Sin cambio (es UPDATE, no INSERT) |
-> | Marcar vendido (vendedor) | `'vendida'` | **Descuenta stock** |
+> [!important] Stock solo se descuenta en estado `'vendida'`
+> | Paso | Tipo movimiento | ¿Disparador? | Efecto en stock |
+> |---|---|---|---|
+> | Checkout (comprador) | `'compra'` | AFTER INSERT (ignora) | Sin cambio |
+> | Aceptar (vendedor) | `'venta'` | AFTER UPDATE (no INSERT) | Sin cambio |
+> | Marcar vendido | `'vendida'` | AFTER UPDATE → **trg_descontar_stock_vendida** | **Descuenta** |
+> | Rechazar | `'rechazada'` | AFTER UPDATE | Sin cambio (stock nunca se descontó) |
+> | Cancelar | `'cancelada'` | AFTER UPDATE | Sin cambio |
 >
 > **Script**: `scripts/trigger_stock_vendida.sql`
 
+---
+
+### 3.3 trg_actualizar_calificacion_promedio
+
+**Evento**: AFTER INSERT ON `tblproductos_has_tblusuarios_has_movimiento`
+
+**Acciones**:
+1. Si `NEW.calificacion IS NOT NULL`, recalcula `ROUND(AVG(calificacion), 1)` en `tblproductos_has_tblusuarios.calificacion_promedio`
+
+---
+
+### 3.4 trg_actualizar_calificacion_promedio_update
+
+**Evento**: AFTER UPDATE ON `tblproductos_has_tblusuarios_has_movimiento`
+
+**Acciones**:
+1. Si `NEW.calificacion IS NOT NULL` y cambió vs `OLD.calificacion`, recalcula el promedio
+
+---
+
+### 3.5 trg_actualizar_calificacion_promedio_delete
+
+**Evento**: AFTER DELETE ON `tblproductos_has_tblusuarios_has_movimiento`
+
+**Acciones**:
+1. Si `OLD.calificacion IS NOT NULL`, recalcula el promedio (queda `NULL` si no hay más calificaciones)
+
+---
+
 > [!danger] Regla Crítica
-> Los triggers son la ÚNICA fuente de verdad para stock y calificación promedio.
+> Los triggers son la ÚNICA fuente de verdad para `cantidad` (stock) y `calificacion_promedio`.
 > **NUNCA** actualizar estos campos manualmente desde Python.
 
 ---

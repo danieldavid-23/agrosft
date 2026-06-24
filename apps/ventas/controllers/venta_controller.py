@@ -8,6 +8,7 @@ from apps.inventario.models import ProductoUsuario
 ESTADOS_VISIBLES = {
     'venta': 'En proceso',
     'vendida': 'Vendido',
+    'cancelada': 'Cancelada',
 }
 
 @login_required
@@ -15,7 +16,7 @@ def listar_ventas(request):
     """
     Lista las ventas del usuario (solicitudes aceptadas)
     """
-    tipos_venta = TipoMovimiento.objects.filter(tipo__in=['venta', 'vendida'])
+    tipos_venta = TipoMovimiento.objects.filter(tipo__in=['venta', 'vendida', 'cancelada'])
     
     mis_productos_ids = ProductoUsuario.objects.filter(
         id_usuario=request.user
@@ -51,6 +52,7 @@ def listar_ventas(request):
             'estado': venta.id_tipo_movimiento.tipo,
             'estado_visible': ESTADOS_VISIBLES.get(venta.id_tipo_movimiento.tipo, venta.id_tipo_movimiento.tipo.title()),
             'puede_marcar_vendido': venta.id_tipo_movimiento.tipo == 'venta',
+            'puede_cancelar': venta.id_tipo_movimiento.tipo == 'venta',
         })
 
     return render(request, 'ventas/venta_list.html', {
@@ -62,7 +64,7 @@ def detalle_venta(request, pk):
     """
     Ver detalle de una venta específica
     """
-    tipos_venta = TipoMovimiento.objects.filter(tipo__in=['venta', 'vendida'])
+    tipos_venta = TipoMovimiento.objects.filter(tipo__in=['venta', 'vendida', 'cancelada'])
     venta = get_object_or_404(Movimiento, pk=pk, id_tipo_movimiento__in=tipos_venta)
     
     mis_productos_ids = ProductoUsuario.objects.filter(
@@ -91,6 +93,7 @@ def detalle_venta(request, pk):
         'estado': venta.id_tipo_movimiento.tipo,
         'estado_visible': ESTADOS_VISIBLES.get(venta.id_tipo_movimiento.tipo, venta.id_tipo_movimiento.tipo.title()),
         'puede_marcar_vendido': venta.id_tipo_movimiento.tipo == 'venta',
+        'puede_cancelar': venta.id_tipo_movimiento.tipo == 'venta',
         'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
         'comprador_email': comprador.correo,
         'comprador_telefono': getattr(comprador, 'telefono', 'No proporcionado'),
@@ -162,5 +165,43 @@ def marcar_como_vendida(request, pk):
         messages.success(request, f'¡Venta #{pk} marcada como vendida y stock actualizado!')
     except Exception as e:
         messages.error(request, f'Error al marcar como vendida: {str(e)}')
+
+    return redirect('ventas:venta_detail', pk=pk)
+
+
+@login_required
+def cancelar_venta(request, pk):
+    """
+    Cancelar una venta en proceso (tipo 'venta') cambiandola a 'cancelada'.
+    No afecta stock porque el stock solo se descuenta al marcar 'vendida'.
+    """
+    if request.method != 'POST':
+        messages.error(request, 'Método no permitido.')
+        return redirect('ventas:venta_list')
+
+    tipo_venta = get_object_or_404(TipoMovimiento, tipo='venta')
+    venta = get_object_or_404(Movimiento, pk=pk, id_tipo_movimiento=tipo_venta)
+
+    # Verificar que el usuario es vendedor de al menos un producto en esta venta
+    mis_productos_ids = ProductoUsuario.objects.filter(
+        id_usuario=request.user
+    ).values_list('id_producto_usuario', flat=True)
+
+    tiene_productos = ProductoUsuarioMovimiento.objects.filter(
+        id_movimiento=venta,
+        id_producto_usuario_id__in=mis_productos_ids
+    ).exists()
+
+    if not tiene_productos:
+        messages.error(request, 'No tienes permiso para cancelar esta venta.')
+        return redirect('ventas:venta_list')
+
+    try:
+        tipo_cancelada = TipoMovimiento.objects.get_or_create(tipo='cancelada')[0]
+        venta.id_tipo_movimiento = tipo_cancelada
+        venta.save()
+        messages.success(request, f'Venta #{pk} cancelada exitosamente.')
+    except Exception as e:
+        messages.error(request, f'Error al cancelar la venta: {str(e)}')
 
     return redirect('ventas:venta_detail', pk=pk)

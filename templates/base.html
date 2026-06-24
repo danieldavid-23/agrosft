@@ -19,23 +19,25 @@
     <!-- Estilos Premium -->
     <style>
         :root {
-            /* Paleta Profesional — Marketplace Agrícola */
-            --bg-color: #f5f7fa;
+            /* Paleta Raíz y Confianza — AgroSFT */
+            --bg-color: #F5F1E8;            /* Crema Natural — fondo principal */
             --surface-color: #ffffff;
-            --primary-color: #2563eb;        /* Azul profesional */
-            --primary-hover: #1d4ed8;
-            --primary-light: #eff6ff;
-            --primary-dark: #1e3a8a;
-            --secondary-color: #059669;     /* Verde esmeralda (agrícola) */
-            --secondary-light: #ecfdf5;
-            --accent-color: #d97706;       /* Ámbar cálido */
-            --accent-light: #fffbeb;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --primary-color: #3C8D3C;        /* Verde Bosque — identidad, navegación */
+            --primary-hover: #2E7535;
+            --primary-light: #E8F5E8;
+            --primary-dark: #25632C;
+            --secondary-color: #E8853B;      /* Ámbar Cálido — CTA, precios, cosecha */
+            --secondary-light: #FFF0E6;
+            --accent-color: #3A8BC8;         /* Azul Cielo — confianza, chat, enlaces */
+            --accent-light: #E8F1F9;
+            --text-main: #3D5245;            /* Gris Pizarra — texto corporal */
+            --text-muted: #7A8A7D;
+            --border-color: #D6D8CC;
             --danger-color: #dc2626;
-            --warning-color: #d97706;
-            --success-color: #16a34a;
+            --warning-color: #C75B3F;        /* Terracota — alerta/atención */
+            --success-color: #5A9C69;        /* Verde Musgo — éxito/confirmación */
+            --color-info: #7BAFD4;           /* Azul Niebla — información */
+            --color-rating: #E07C3A;         /* Ámbar Intenso — estrellas/reputación */
             
             /* Sombras avanzadas */
             --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
@@ -120,25 +122,25 @@
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
-            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 2px 4px rgba(60, 141, 60, 0.2);
         }
         .btn-primary:hover, .btn-primary:focus {
             background-color: var(--primary-hover);
             border-color: var(--primary-hover);
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 4px 8px rgba(60, 141, 60, 0.3);
         }
 
         .btn-success {
             background-color: var(--secondary-color);
             border-color: var(--secondary-color);
-            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+            box-shadow: 0 2px 4px rgba(212, 160, 23, 0.25);
         }
         .btn-success:hover, .btn-success:focus {
-            background-color: #047857;
-            border-color: #047857;
+            background-color: #D97A30;
+            border-color: #D97A30;
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+            box-shadow: 0 4px 8px rgba(212, 160, 23, 0.35);
         }
 
         .btn-outline-success {
@@ -147,8 +149,8 @@
         }
         .btn-outline-success:hover {
             background-color: var(--secondary-light);
-            color: #047857;
-            border-color: #047857;
+            color: #D97A30;
+            border-color: #D97A30;
         }
 
         .btn-outline-primary {
@@ -174,7 +176,7 @@
 
         .form-control:focus, .form-select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(60, 141, 60, 0.1);
             outline: none;
         }
         
@@ -287,12 +289,12 @@
             border-left: 4px solid var(--warning-color) !important;
         }
         .notification-toast.alert-info {
-            border-left: 4px solid var(--primary-color) !important;
+            border-left: 4px solid var(--color-info) !important;
         }
 
         /* Footer */
         .footer {
-            background-color: #f8fafc;
+            background-color: var(--bg-color);
             border-top: 1px solid var(--border-color);
             padding: 2rem 0;
             color: var(--text-muted);
@@ -322,7 +324,7 @@
     <nav class="navbar navbar-expand-lg navbar-light navbar-premium sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
-                <i class="fas fa-leaf" style="color: var(--secondary-color)"></i> <span style="color: var(--primary-dark); font-size: 1.2rem;">AGROSTF</span>
+                <i class="fas fa-leaf" style="color: var(--secondary-color)"></i> <span style="color: var(--primary-color); font-size: 1.2rem; font-weight: 800;">AGROSFT</span>
             </a>
             <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -346,6 +348,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'ventas:solicitud_list' %}"><i class="fas fa-clipboard-list me-1 d-lg-none"></i> Solicitudes</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ventas:compra_list' %}"><i class="fas fa-shopping-bag me-1 d-lg-none"></i> Mis Compras</a>
+                        </li>
                         {% else %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'usuarios:admin_usuarios_list' %}" style="color: var(--primary-color); font-weight: 600;"><i class="fas fa-users-cog me-1 d-lg-none"></i> <i class="fas fa-users d-none d-lg-inline me-1"></i>Usuarios</a>
@@ -354,16 +359,16 @@
                             <a class="nav-link" href="{% url 'usuarios:admin_moderacion' %}" style="color: var(--accent-color); font-weight: 600;"><i class="fas fa-gavel me-1 d-lg-none"></i> <i class="fas fa-gavel d-none d-lg-inline me-1"></i>Moderación</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'usuarios:admin_categorias_list' %}" style="color: #0d9488; font-weight: 600;"><i class="fas fa-tags me-1 d-lg-none"></i> <i class="fas fa-tags d-none d-lg-inline me-1"></i>Categorías</a>
+                            <a class="nav-link" href="{% url 'usuarios:admin_categorias_list' %}" style="color: var(--secondary-color); font-weight: 600;"><i class="fas fa-tags me-1 d-lg-none"></i> <i class="fas fa-tags d-none d-lg-inline me-1"></i>Categorías</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'usuarios:admin_audit_logs' %}" style="color: #4f46e5; font-weight: 600;"><i class="fas fa-clipboard-list me-1 d-lg-none"></i> <i class="fas fa-clipboard-list d-none d-lg-inline me-1"></i>Auditoría</a>
+                            <a class="nav-link" href="{% url 'usuarios:admin_audit_logs' %}" style="color: var(--color-info); font-weight: 600;"><i class="fas fa-clipboard-list me-1 d-lg-none"></i> <i class="fas fa-clipboard-list d-none d-lg-inline me-1"></i>Auditoría</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'usuarios:admin_estadisticas' %}" style="color: var(--secondary-color); font-weight: 600;"><i class="fas fa-chart-bar me-1 d-lg-none"></i> <i class="fas fa-chart-column d-none d-lg-inline me-1"></i>Estadísticas</a>
+                            <a class="nav-link" href="{% url 'usuarios:admin_estadisticas' %}" style="color: var(--primary-color); font-weight: 600;"><i class="fas fa-chart-bar me-1 d-lg-none"></i> <i class="fas fa-chart-column d-none d-lg-inline me-1"></i>Estadísticas</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin:index' %}" style="color: #64748b; font-weight: 600;"><i class="fas fa-cog me-1 d-lg-none"></i> <i class="fas fa-shield-halved d-none d-lg-inline me-1"></i>Admin</a>
+                            <a class="nav-link" href="{% url 'admin:index' %}" style="color: var(--text-muted); font-weight: 600;"><i class="fas fa-cog me-1 d-lg-none"></i> <i class="fas fa-shield-halved d-none d-lg-inline me-1"></i>Admin</a>
                         </li>
                         {% endif %}
 
@@ -388,10 +393,10 @@
                                 {% if user.is_staff %}
                                 <li><a class="dropdown-item py-2" href="{% url 'usuarios:admin_usuarios_list' %}" style="background: var(--primary-light); color: var(--primary-color); font-weight: 600;"><i class="fas fa-users-cog fa-fw me-2" style="color: var(--primary-color)"></i> Gestionar Usuarios</a></li>
                                 <li><a class="dropdown-item py-2" href="{% url 'usuarios:admin_moderacion' %}" style="background: var(--accent-light); color: var(--accent-color); font-weight: 600;"><i class="fas fa-gavel fa-fw me-2" style="color: var(--accent-color)"></i> Moderar Catálogo</a></li>
-                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:admin_categorias_list' %}" style="background: #e6f7f4; color: #0d9488; font-weight: 600;"><i class="fas fa-tags fa-fw me-2" style="color: #0d9488"></i> Gestionar Categorías</a></li>
-                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:admin_audit_logs' %}" style="background: #eef2ff; color: #4f46e5; font-weight: 600;"><i class="fas fa-clipboard-list fa-fw me-2" style="color: #4f46e5"></i> Auditoría de Acciones</a></li>
-                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:admin_estadisticas' %}" style="background: var(--secondary-light); color: var(--secondary-color); font-weight: 600;"><i class="fas fa-chart-column fa-fw me-2" style="color: var(--secondary-color)"></i> Estadísticas de Plataforma</a></li>
-                                <li><a class="dropdown-item py-2" href="{% url 'admin:index' %}" style="background: #f1f5f9; color: #64748b; font-weight: 600;"><i class="fas fa-shield-halved fa-fw me-2" style="color: #64748b"></i> Panel de Administración</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:admin_categorias_list' %}" style="background: var(--secondary-light); color: var(--secondary-color); font-weight: 600;"><i class="fas fa-tags fa-fw me-2" style="color: var(--secondary-color)"></i> Gestionar Categorías</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:admin_audit_logs' %}" style="background: var(--accent-light); color: var(--accent-color); font-weight: 600;"><i class="fas fa-clipboard-list fa-fw me-2" style="color: var(--accent-color)"></i> Auditoría de Acciones</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'usuarios:admin_estadisticas' %}" style="background: var(--primary-light); color: var(--primary-color); font-weight: 600;"><i class="fas fa-chart-column fa-fw me-2" style="color: var(--primary-color)"></i> Estadísticas de Plataforma</a></li>
+                                <li><a class="dropdown-item py-2" href="{% url 'admin:index' %}" style="background: #F5F1E8; color: var(--text-muted); font-weight: 600;"><i class="fas fa-shield-halved fa-fw me-2" style="color: var(--text-muted)"></i> Panel de Administración</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 {% endif %}
                                 <li><a class="dropdown-item py-2" href="{% url 'usuarios:perfil' %}"><i class="fas fa-id-card fa-fw text-muted me-2"></i> Mi Perfil</a></li>

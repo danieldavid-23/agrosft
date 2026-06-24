@@ -1,5 +1,5 @@
 from django.urls import path
-from .controllers import venta_controller, solicitud_controller, carrito_controller, calificacion_controller
+from .controllers import venta_controller, solicitud_controller, carrito_controller, calificacion_controller, compra_controller
 
 app_name = 'ventas'
 
@@ -17,6 +17,7 @@ urlpatterns = [
     path('<int:pk>/', venta_controller.detalle_venta, name='venta_detail'),
     path('crear/', venta_controller.crear_venta, name='venta_create'),
     path('<int:pk>/marcar-vendida/', venta_controller.marcar_como_vendida, name='venta_marcar_vendida'),
+    path('<int:pk>/cancelar/', venta_controller.cancelar_venta, name='venta_cancelar'),
     
     # Solicitudes de Compra Combinadas
     path('solicitudes/', solicitud_controller.listar_solicitudes, name='solicitud_list'),
@@ -27,6 +28,10 @@ urlpatterns = [
     path('solicitudes/<int:pk>/vendido/', solicitud_controller.marcar_vendido, name='solicitud_marcar_vendido'),
     path('solicitudes/<int:pk>/detalle/<int:detalle_id>/<str:estado>/', solicitud_controller.estado_detalle, name='solicitud_estado_detalle'),
     
+    # Mis Compras (vista del comprador)
+    path('compras/', compra_controller.listar_compras, name='compra_list'),
+    path('compras/<int:pk>/', compra_controller.detalle_compra, name='compra_detail'),
+
     # Calificaciones
     path('calificaciones/calificar/<int:movimiento_id>/', calificacion_controller.calificar_transaccion, name='calificar_transaccion'),
     path('calificaciones/historial/', calificacion_controller.historial_movimientos, name='historial_movimientos'),

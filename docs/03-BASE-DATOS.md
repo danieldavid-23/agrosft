@@ -120,10 +120,11 @@ graph TB
 | `tipo_movimiento` | VARCHAR(45) | Nombre del tipo |
 
 **Valores conocidos**:
-- `compra` → Solicitud de compra (comprador envía al vendedor)
-- `venta` → Solicitud aceptada / venta en proceso
-- `rechazada` → Solicitud rechazada por vendedor
-- `vendida` → Transacción completada
+- `compra` (id=1) → Solicitud de compra (comprador envía al vendedor)
+- `venta` (id=2) → Solicitud aceptada / venta en proceso / abastecimiento
+- `vendida` (id=3) → Transacción completada
+- `rechazada` (id=4) → Solicitud rechazada por vendedor
+- `cancelada` (id=5) → Venta cancelada (desde estado `venta`)
 
 ---
 
@@ -169,7 +170,9 @@ graph TB
 
 ---
 
-## Tablas Extendidas
+## Tablas Extendidas (Solo Django — Inexistentes en MariaDB)
+
+> [!warning] Las siguientes tablas existen como modelos Django (`managed = False`) pero **no están creadas** en la base de datos MariaDB real. No son funcionales.
 
 ### `user_profiles` — Perfil Extendido
 
@@ -185,20 +188,33 @@ graph TB
 | `idioma_preferido` | `CharField` | Default: 'es' |
 | `zona_horaria` | `CharField` | Default: 'America/Bogota' |
 
-### `user_devices` — Dispositivos del Usuario
-### `user_addresses` — Direcciones del Usuario
+### `user_devices` — Dispositivos del Usuario (Inexistente en BD)
+### `user_addresses` — Direcciones del Usuario (Inexistente en BD)
 
 ---
 
-## Triggers de Base de Datos
+## Triggers de Base de Datos (5 activos)
 
-| Trigger | Tabla | Acción |
+| Trigger | Evento | Acción |
 |---|---|---|
-| `trg_actualizar_stock_oferta` | `tblproductos_has_tblusuarios_has_movimiento` | Actualiza `cantidad` en `tblproductos_has_tblusuarios` al insertar detalle |
-| Trigger de calificación promedio | `tblproductos_has_tblusuarios_has_movimiento` | Actualiza `calificacion_promedio` en `tblproductos_has_tblusuarios` |
+| `trg_actualizar_stock_oferta` | AFTER INSERT en detalles | Si tipo != 'compra': `stock += cantidad`. Ignora solicitudes 'compra'. Incluye protección stock negativo |
+| `trg_descontar_stock_vendida` | AFTER UPDATE en movimiento | Si tipo cambia a `'vendida'`: `stock -= ABS(cantidad)` |
+| `trg_actualizar_calificacion_promedio` | AFTER INSERT en detalles | Recalcula calificación promedio al insertar |
+| `trg_actualizar_calificacion_promedio_update` | AFTER UPDATE en detalles | Recalcula calificación promedio al actualizar |
+| `trg_actualizar_calificacion_promedio_delete` | AFTER DELETE en detalles | Recalcula calificación promedio al eliminar |
 
 > [!danger] NO duplicar lógica de triggers en Python
 > El stock y el promedio de calificaciones son gestionados por triggers de BD. Restar manualmente en Python causaría doble-descuento.
+
+> [!warning] Flujo de stock actual
+> | Paso | tipo_movimiento | ¿Afecta stock? |
+> |---|---|---|
+> | Checkout (comprador) | `'compra'` | ❌ No (trigger ignora) |
+> | Aceptar (vendedor) | `'venta'` | ❌ No (UPDATE, no INSERT) |
+> | Marcar vendido | `'vendida'` | ✅ Stock -= ABS(cantidad) |
+> | Rechazar | `'rechazada'` | ❌ No |
+> | Cancelar | `'cancelada'` | ❌ No |
+> | Abastecimiento | `'venta'` | ✅ Stock += cantidad positiva |
 
 ---
 

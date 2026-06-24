@@ -30,18 +30,22 @@ Todos los modelos Django usan `managed = False` y `MIGRATION_MODULES = {app: Non
 
 ## ADR-002: Stock Gestionado por Trigger de BD
 
-**Fecha**: Pre-proyecto (heredado)  
-**Estado**: Aceptada
+**Fecha**: Pre-proyecto (heredado) — **Última actualización**: 2026-06-24  
+**Estado**: Aceptada (evolucionado)
 
 ### Contexto
 
-La base de datos incluye el trigger `trg_actualizar_stock_oferta` que se ejecuta automáticamente al insertar registros en `tblproductos_has_tblusuarios_has_movimiento`.
+La base de datos incluye triggers que gestionan automáticamente el stock y calificaciones. Originalmente existía solo `trg_actualizar_stock_oferta` que descontaba stock en toda inserción. El 2026-06-17 se modificó el flujo:
+
+1. Se separó la lógica de calificación en 3 triggers independientes (INSERT, UPDATE, DELETE)
+2. Se modificó `trg_actualizar_stock_oferta` para ignorar movimientos tipo `'compra'`
+3. Se agregó `trg_descontar_stock_vendida` que descuenta stock solo al marcar `'vendida'`
 
 ### Decisión
 
-El trigger es la única fuente de verdad para:
-- Actualizar `cantidad` en `tblproductos_has_tblusuarios`
-- Recalcular `calificacion_promedio` al insertar calificaciones
+Los triggers son la única fuente de verdad para:
+- Actualizar `cantidad` en `tblproductos_has_tblusuarios` (stock)
+- Recalcular `calificacion_promedio` en operaciones INSERT/UPDATE/DELETE
 
 El código Python **NUNCA** debe actualizar estos campos manualmente.
 
@@ -49,9 +53,18 @@ El código Python **NUNCA** debe actualizar estos campos manualmente.
 
 - ✅ Consistencia garantizada a nivel de BD (independiente del código)
 - ✅ Evita condiciones de carrera en actualizaciones concurrentes
+- ✅ El stock ya no se descuenta en solicitudes de compra (`'compra'`), solo al confirmar (`'vendida'`)
 - ❌ Lógica de negocio invisible en el código Python
 - ❌ Difícil de depurar sin acceso a la definición del trigger
 - ❌ Testing requiere BD real (no se puede mockear fácilmente)
+
+### Evolución
+
+| Fecha | Cambio | Trigger |
+|---|---|---|
+| Original | Stock se descuenta en TODA inserción | `trg_actualizar_stock_oferta` |
+| 2026-06-17 | `'compra'` ya no descuenta stock. Stock solo descuenta en `'vendida'` | `trg_actualizar_stock_oferta` (modificado) + `trg_descontar_stock_vendida` (nuevo) |
+| 2026-06-17 | Calificación separada en 3 triggers | `trg_actualizar_calificacion_promedio`, `_update`, `_delete` |
 
 ---
 
@@ -208,18 +221,108 @@ Usar formato Markdown con sintaxis de Obsidian (`[[wikilinks]]`, callouts `> [!n
 
 ---
 
+---
+
+## ADR-010: Paleta de Colores "Raíz y Confianza"
+
+**Fecha**: 2026-06-24  
+**Estado**: Aceptada
+
+### Contexto
+
+La interfaz de AgroSFT utilizaba una paleta de colores genérica basada en azul profesional (#2563eb), verde esmeralda (#059669) y ámbar (#d97706). Se definió una nueva identidad visual con fundamento psicológico para alinear la interfaz con los valores del proyecto: conexión con la tierra, confianza en la transacción y transparencia.
+
+### Decisión
+
+Adoptar la paleta **"Raíz y Confianza"** con los siguientes colores:
+
+| Rol | Color | Hex | Psicología |
+|---|---|---|---|
+| **Primario** | Verde Fresco | `#3C8D3C` | Crecimiento, vitalidad, frescura agrícola |
+| **Secundario** | Naranja Cosecha | `#E8853B` | Cosecha madura, calidez, acción |
+| **Acento** | Azul Cielo | `#3A8BC8` | Confianza, transparencia, comunicación |
+| **Fondo** | Crema Natural | `#F5F1E8` | Pureza, calidez, artesanal |
+| **Texto** | Gris Pizarra Suave | `#3D5245` | Legibilidad, sofisticación rural |
+| **Éxito** | Verde Musgo | `#5A9C69` | Confirmación, ciclo de recompensa |
+| **Alerta** | Terracota | `#C75B3F` | Urgencia amable, atención sin alarma |
+| **Info** | Azul Niebla | `#7BAFD4` | Información, guía sin presión |
+| **Rating** | Naranja Reputación | `#E07C3A` | Reputación, excelencia, competencia |
+
+El navbar se mantiene con fondo claro (blanco/blur) con acentos verdes. El panel admin se rebrandea completamente con la nueva paleta.
+
+### Consecuencias
+
+- ✅ Identidad visual coherente con el dominio agrícola
+- ✅ WCAG 2.1 AA/AAA en todos los pares de contraste críticos
+- ✅ Psicología del color aplicada intencionalmente por contexto de uso
+- ❌ Requiere actualización de todos los templates con colores hardcodeados
+- ❌ El admin de Django pierde el tema azul profesional estándar
+
+### Archivos Afectados
+
+- `templates/base.html` — Variables CSS, botones, navbar, footer
+- `static/admin/css/admin-custom.css` — Rebranding completo
+- `templates/admin/base_site.html` — Color de enlace
+- `templates/usuarios/admin_usuarios_list.html` — Avatares por rol
+- `templates/usuarios/admin_estadisticas.html` — Gradient de card
+- `frontend/src/solicitudes/SolicitudApp.vue` — Hover color
+
+---
+
+## ADR-009: Sincronización de Documentación con BD Real
+
+**Fecha**: 2026-06-24  
+**Estado**: Aceptada
+
+### Contexto
+
+La documentación SDD original (2026-06-17) fue generada mediante análisis de código, pero contenía discrepancias con la base de datos real alojada en MariaDB vía XAMPP. Se identificaron:
+
+1. **`tipo_movimiento`**: documentados 4 valores, pero la BD real tiene 5 (`cancelada`)
+2. **Triggers**: documentados 2, pero la BD real tiene 5 (3 separados para calificación)
+3. **Tablas inexistentes**: `user_profiles`, `user_devices`, `user_addresses` documentadas como tablas reales pero no existen en MariaDB
+4. **Flujo de stock**: la descripción indicaba que `compra` descuenta stock, pero el trigger actual ignora `compra` y solo descuenta en `vendida`
+
+### Decisión
+
+Actualizar toda la documentación SDD para reflejar fielmente el estado real de la base de datos MariaDB, marcando claramente:
+
+- Los 5 tipos de movimiento y su significado
+- Los 5 triggers activos con sus eventos específicos
+- Las tablas que existen solo como modelos Django sin respaldo en BD
+- El flujo real de stock: `compra`/`venta`/`rechazada`/`cancelada` no afectan stock; solo `vendida` descuenta
+
+### Consecuencias
+
+- ✅ La documentación ahora es la fuente única de verdad (principio SDD #1)
+- ✅ Desarrolladores e IAs pueden entender la BD real sin acceso a phpMyAdmin
+- ✅ Las discrepancias entre código y BD están explícitamente documentadas
+- ❌ Las tablas `user_profiles`, `user_devices`, `user_addresses` quedan como modelos huérfanos sin funcionalidad real
+
+### Archivos Afectados
+
+- `docs/DATABASE.md` — Reestructuración completa de triggers, tipos, tablas y flujo de stock
+- `docs/ARCHITECTURE.md` — Agregado `cancelada` a tabla de estados
+- `docs/USER_STORIES.md` — Agregado `Cancelada` al diagrama de flujo
+- `docs/03-BASE-DATOS.md` — Sincronizado con DATABASE.md
+- `docs/CHANGELOG.md` — Registro del cambio de documentación
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
 |---|---|---|---|
 | ADR-001 | BD legacy con managed=False | Aceptada | Arquitectura completa |
-| ADR-002 | Stock por trigger BD | Aceptada | Todas las transacciones |
+| ADR-002 | Stock por trigger BD | Aceptada (evolucionado) | Todas las transacciones |
 | ADR-003 | Solicitudes JS puro | Aceptada | Módulo ventas |
 | ADR-004 | Carrito en sesión | Aceptada | Módulo carrito |
 | ADR-005 | Cantidades negativas | Aceptada | Modelo de datos |
 | ADR-006 | SPA parcial Vue+Vite | Aceptada | Frontend completo |
 | ADR-007 | Auth backend custom | Aceptada | Seguridad |
 | ADR-008 | Docs Obsidian | Aceptada | Documentación |
+| ADR-009 | Sincronización docs con BD real | Aceptada | Documentación |
+| ADR-010 | Paleta Raíz y Confianza | Aceptada | Frontend / UI |
 
 ---
 

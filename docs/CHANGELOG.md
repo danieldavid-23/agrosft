@@ -7,7 +7,32 @@
 
 ## [Unreleased]
 
+### Changed (2026-06-24)
+- **Paleta "Raíz y Confianza" implementada** — Rebranding visual completo:
+  - `base.html`: Variables CSS en `:root` actualizadas (verde claro #3C8D3C, naranja #E8853B, azul cielo #3A8BC8, crema #F5F1E8, texto #3D5245); sombras, hover y colores inline reemplazados; corregido typo "AGROSTF" → "AGROSFT"
+  - `admin-custom.css`: Panel admin rebrandeado con verde bosque + ámbar + azul cielo
+  - `base_site.html`: Enlace a sitio principal actualizado
+  - `admin_usuarios_list.html`: Avatares de roles con nuevos colores
+  - `admin_estadisticas.html`: Card gradient a verde bosque
+  - `SolicitudApp.vue`: Hover color actualizado
+  - Nuevas variables: `--color-info: #7BAFD4`, `--color-rating: #E07C3A`
+- **Documentación SDD alineada con BD real**:
+  - `DATABASE.md`: Agregado tipo `cancelada` (id=5) a `tipo_movimiento`; documentados 5 triggers reales (separando calificación en INSERT/UPDATE/DELETE); tablas `user_profiles`, `user_devices`, `user_addresses` marcadas como inexistentes en MariaDB; actualizado flujo de stock (solo `vendida` descuenta)
+  - `ARCHITECTURE.md`: Agregado `cancelada` a la tabla de estados de solicitud
+  - `USER_STORIES.md`: Agregado estado `Cancelada` al diagrama de flujo de solicitudes
+  - `03-BASE-DATOS.md`: Agregado tipo `cancelada`; triggers actualizados a 5; tablas extendidas marcadas como inexistentes; flujo de stock documentado
+
 ### Added (2026-06-17)
+- **Boton "Cancelar Venta"** en ventas con estado "En proceso"
+  - Endpoint `POST /ventas/<pk>/cancelar/` en `venta_controller.py`
+  - Cambia `tipo_movimiento` a 'cancelada' (nuevo tipo en BD)
+  - No afecta stock (stock solo se descuenta al marcar 'vendida')
+  - Badge rojo "Cancelada" en listado y detalle
+- **Modulo "Mis Compras"**: Vista del comprador con listado y detalle de pedidos
+  - `compra_controller.py` con `listar_compras()` y `detalle_compra()`
+  - URLs: `GET /ventas/compras/` y `GET /ventas/compras/<pk>/`
+  - Estados traducidos: Pendiente (compra), En proceso (venta), Finalizada (vendida)
+  - Enlace "Mis Compras" en navbar para usuarios no-staff
 - **Botón "Marcar como Vendido"** en módulo de ventas (`venta_list.html` y `venta_detail.html`)
   - Endpoint `POST /ventas/<pk>/marcar-vendida/` en `venta_controller.py`
   - Cambia `tipo_movimiento` de 'venta' a 'vendida' en BD

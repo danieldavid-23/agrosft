@@ -37,6 +37,8 @@
                             <td class="px-4 py-3 align-middle">
                                 {% if venta.estado == 'vendida' %}
                                     <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Vendido</span>
+                                {% elif venta.estado == 'cancelada' %}
+                                    <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Cancelada</span>
                                 {% else %}
                                     <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>En proceso</span>
                                 {% endif %}
@@ -52,6 +54,14 @@
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-success rounded-pill">
                                             <i class="fas fa-check me-1"></i> Marcar Vendido
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    {% if venta.puede_cancelar %}
+                                    <form method="post" action="{% url 'ventas:venta_cancelar' venta.id %}" class="d-inline" onsubmit="return confirm('¿Estás seguro de cancelar esta venta?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger rounded-pill">
+                                            <i class="fas fa-times me-1"></i> Cancelar
                                         </button>
                                     </form>
                                     {% endif %}

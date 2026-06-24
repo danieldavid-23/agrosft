@@ -1,14 +1,14 @@
-/* AgroSFT Admin Panel Custom Styles */
+/* AgroSFT Admin Panel - Paleta Raíz y Confianza */
 
 /* Header */
 #header {
-    background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%) !important;
-    color: #fff !important;
+    background: linear-gradient(135deg, #3C8D3C 0%, #25632C 100%) !important;
+    color: #F5F1E8 !important;
     padding: 12px 20px !important;
 }
 
 #header a:link, #header a:visited {
-    color: #fff !important;
+    color: #F5F1E8 !important;
 }
 
 #branding h1 {
@@ -18,51 +18,53 @@
 }
 
 #branding h1 a {
-    color: #fff !important;
+    color: #F5F1E8 !important;
 }
 
 /* Breadcrumbs */
 div.breadcrumbs {
-    background: #1e40af !important;
-    color: #e0e7ff !important;
+    background: #25632C !important;
+    color: #D6D8CC !important;
     padding: 8px 20px !important;
 }
 
 div.breadcrumbs a {
-    color: #bfdbfe !important;
+    color: #B8C5A0 !important;
 }
 
 /* Module headers */
 .module h2, .module caption, .inline-group h2 {
-    background: #2563eb !important;
-    color: #fff !important;
+    background: #3C8D3C !important;
+    color: #F5F1E8 !important;
 }
 
 /* Links and buttons */
 a:link, a:visited {
-    color: #2563eb;
+    color: #3C8D3C;
 }
 
 .button, input[type=submit], input[type=button], .submit-row input, a.button {
-    background: #2563eb !important;
-    color: #fff !important;
+    background: #E8853B !important;
+    color: #3D5245 !important;
     border: none !important;
     border-radius: 6px !important;
     padding: 8px 16px !important;
     cursor: pointer;
     transition: background 0.2s;
+    font-weight: 600;
 }
 
 .button:hover, input[type=submit]:hover, input[type=button]:hover {
-    background: #1d4ed8 !important;
+    background: #D97A30 !important;
 }
 
 .button.default, input[type=submit].default {
-    background: #059669 !important;
+    background: #3C8D3C !important;
+    color: #F5F1E8 !important;
 }
 
 .button.default:hover, input[type=submit].default:hover {
-    background: #047857 !important;
+    background: #25632C !important;
 }
 
 /* Delete button */
@@ -72,8 +74,8 @@ a:link, a:visited {
 
 /* Results table */
 #result_list th {
-    background: #f8fafc !important;
-    color: #1e293b !important;
+    background: #E8F0E6 !important;
+    color: #3D5245 !important;
     font-weight: 600 !important;
     text-transform: uppercase;
     font-size: 11px !important;
@@ -82,26 +84,26 @@ a:link, a:visited {
 
 #result_list td {
     padding: 10px 12px !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #D6D8CC !important;
 }
 
 #result_list tr:nth-child(even) {
-    background: #f8fafc;
+    background: #F5F1E8;
 }
 
 #result_list tr:hover {
-    background: #eff6ff !important;
+    background: #E8F0E6 !important;
 }
 
 /* Changelist filters */
 #changelist-filter h2 {
-    background: #f1f5f9 !important;
-    color: #1e293b !important;
+    background: #F5F1E8 !important;
+    color: #3D5245 !important;
     font-weight: 600 !important;
 }
 
 #changelist-filter li.selected a {
-    color: #2563eb !important;
+    color: #3C8D3C !important;
     font-weight: 600;
 }
 
@@ -112,20 +114,20 @@ a:link, a:visited {
 
 /* Sidebar */
 #content-related {
-    background: #f8fafc;
+    background: #F5F1E8;
     border-radius: 8px;
     padding: 15px;
 }
 
 /* Forms */
 .form-row {
-    border-bottom: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #D6D8CC !important;
     padding: 12px 0 !important;
 }
 
 .form-row label {
     font-weight: 600 !important;
-    color: #1e293b !important;
+    color: #3D5245 !important;
 }
 
 /* Messages */
@@ -141,9 +143,9 @@ a:link, a:visited {
 }
 
 .messagelist li.success {
-    background: #ecfdf5 !important;
-    color: #065f46 !important;
-    border: 1px solid #a7f3d0 !important;
+    background: #E8F0E6 !important;
+    color: #3C8D3C !important;
+    border: 1px solid #8FAB7A !important;
 }
 
 .messagelist li.error {
@@ -153,40 +155,40 @@ a:link, a:visited {
 }
 
 .messagelist li.warning {
-    background: #fffbeb !important;
-    color: #92400e !important;
-    border: 1px solid #fcd34d !important;
+    background: #FFF3E0 !important;
+    color: #8D5B2E !important;
+    border: 1px solid #E8C88A !important;
 }
 
 .messagelist li.info {
-    background: #eff6ff !important;
-    color: #1e40af !important;
-    border: 1px solid #93c5fd !important;
+    background: #E8F1F9 !important;
+    color: #2E5A7A !important;
+    border: 1px solid #7BAFD4 !important;
 }
 
 /* Pagination */
 .paginator {
-    background: #f8fafc !important;
+    background: #F5F1E8 !important;
     border-radius: 6px !important;
     padding: 10px 15px !important;
 }
 
 .paginator a {
-    background: #fff !important;
-    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    border: 1px solid #D6D8CC !important;
     border-radius: 4px !important;
     padding: 4px 10px !important;
     margin: 0 2px !important;
 }
 
 .paginator a:hover {
-    background: #eff6ff !important;
-    border-color: #2563eb !important;
+    background: #E8F0E6 !important;
+    border-color: #3C8D3C !important;
 }
 
 /* Login page override */
 .login #header {
-    background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 50%, #0f172a 100%) !important;
+    background: linear-gradient(135deg, #3C8D3C 0%, #25632C 50%, #1A4D1A 100%) !important;
 }
 
 .login .submit-row {

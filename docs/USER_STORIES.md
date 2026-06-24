@@ -253,8 +253,10 @@ stateDiagram-v2
     Recibida --> Aceptada: Vendedor acepta
     Recibida --> Rechazada: Vendedor rechaza
     Aceptada --> Vendida: Vendedor marca vendida
+    Aceptada --> Cancelada: Vendedor cancela
     Vendida --> [*]
     Rechazada --> [*]
+    Cancelada --> [*]
 ```
 
 ---

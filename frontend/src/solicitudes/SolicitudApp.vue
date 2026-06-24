@@ -492,6 +492,6 @@ function cerrarDetalle() {
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
 .transition-row { transition: background-color 0.15s ease; }
-.transition-row:hover { background-color: rgba(5, 150, 105, 0.04) !important; }
+.transition-row:hover { background-color: rgba(60, 141, 60, 0.04) !important; }
 </style>
 

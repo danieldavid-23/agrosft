@@ -307,6 +307,7 @@ POST /ventas/solicitudes/<pk>/vendido/             → Marcar como vendida
 GET  /ventas/                                       → Listar ventas
 GET  /ventas/<pk>/                                  → Detalle de venta
 POST /ventas/<pk>/marcar-vendida/                   → Marcar venta como vendida
+POST /ventas/<pk>/cancelar/                         → Cancelar venta en proceso
 GET  /ventas/crear/                                 → Redirect a solicitudes
 ```
 
@@ -316,9 +317,46 @@ GET  /ventas/crear/                                 → Redirect a solicitudes
 
 > **Nota**: Solo disponible para ventas con estado "En proceso" (tipo_movimiento = 'venta'). Requiere POST con CSRF token.
 
+**Cancelar venta — Response**:
+- Success: `Redirect → /ventas/<pk>/` + mensaje de confirmación
+- Error: `Redirect → /ventas/` + mensaje de error
+
+> **Nota**: Cambia tipo_movimiento a 'cancelada'. No afecta stock. Solo disponible para ventas "En proceso".
+
 ---
 
-### 3.4 Calificaciones
+### 3.4 Mis Compras (vista del comprador)
+
+```
+GET  /ventas/compras/                               → Listar mis compras
+GET  /ventas/compras/<pk>/                          → Detalle de compra
+```
+
+**Listar compras — Context**:
+
+| Variable | Tipo | Descripcion |
+|---|---|---|
+| `compras[].id` | int | ID del movimiento |
+| `compras[].fecha` | datetime | Fecha del pedido |
+| `compras[].total_productos` | int | Cantidad de productos |
+| `compras[].total` | float | Total estimado |
+| `compras[].estado` | string | Pendiente / En proceso / Finalizada |
+
+**Detalle de compra — Context**:
+
+| Variable | Tipo | Descripcion |
+|---|---|---|
+| `compra.id` | int | ID del movimiento |
+| `compra.fecha` | datetime | Fecha del pedido |
+| `compra.estado` | string | Pendiente / En proceso / Finalizada |
+| `compra.total` | float | Total del pedido |
+| `productos[]` | QuerySet | Detalles con producto, vendedor, cantidad, precio |
+
+> **Nota**: Solo muestra movimientos donde `id_usuario = request.user` (el comprador). Acceso restringido con `@login_required`.
+
+---
+
+### 3.5 Calificaciones
 
 ```
 GET  /ventas/calificaciones/calificar/<movimiento_id>/
@@ -375,9 +413,9 @@ GET /admin/                                        → Django Admin (si habilita
 |---|---|---|---|
 | Usuarios | 12 | 5 | 1 |
 | Inventario | 8 | 7 | 4 |
-| Ventas | 14 | 10 | 8 |
+| Ventas | 17 | 13 | 8 |
 | Clientes | 3 | 3 | 0 |
-| **Total** | **37** | **25** | **13** |
+| **Total** | **40** | **28** | **13** |
 
 ---
 
