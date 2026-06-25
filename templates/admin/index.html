@@ -1,0 +1,57 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block content %}
+
+<div style="margin-bottom:25px; padding:20px; background:linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%); border-radius:12px; color:#fff;">
+    <h2 style="color:#fff; margin:0 0 5px 0; font-size:20px;">&#127793; Bienvenido al Panel de Administraci&oacute;n AgroSFT</h2>
+    <p style="margin:0; opacity:0.85; font-size:13px;">Gesti&oacute;n Agr&iacute;cola Inteligente - Conecta, vende y administra productos de forma sencilla.</p>
+</div>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:25px;">
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:20px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <div style="font-size:28px; margin-bottom:5px;">&#128100;</div>
+        <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Usuarios</div>
+        <div style="font-size:24px; font-weight:700; color:#2563eb;" id="stat-usuarios">-</div>
+    </div>
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:20px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <div style="font-size:28px; margin-bottom:5px;">&#127807;</div>
+        <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Productos</div>
+        <div style="font-size:24px; font-weight:700; color:#059669;" id="stat-productos">-</div>
+    </div>
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:20px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <div style="font-size:28px; margin-bottom:5px;">&#128230;</div>
+        <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Publicaciones</div>
+        <div style="font-size:24px; font-weight:700; color:#d97706;" id="stat-publicaciones">-</div>
+    </div>
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:20px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <div style="font-size:28px; margin-bottom:5px;">&#128200;</div>
+        <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Movimientos</div>
+        <div style="font-size:24px; font-weight:700; color:#7c3aed;" id="stat-movimientos">-</div>
+    </div>
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:20px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+        <div style="font-size:28px; margin-bottom:5px;">&#128101;</div>
+        <div style="font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Clientes</div>
+        <div style="font-size:24px; font-weight:700; color:#0891b2;" id="stat-clientes">-</div>
+    </div>
+</div>
+
+{{ block.super }}
+
+<script>
+// Load dashboard stats via fetch
+fetch('/admin/api/stats/')
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+        if (data) {
+            document.getElementById('stat-usuarios').textContent = data.usuarios || 0;
+            document.getElementById('stat-productos').textContent = data.productos || 0;
+            document.getElementById('stat-publicaciones').textContent = data.publicaciones || 0;
+            document.getElementById('stat-movimientos').textContent = data.movimientos || 0;
+            document.getElementById('stat-clientes').textContent = data.clientes || 0;
+        }
+    })
+    .catch(() => {});
+</script>
+
+{% endblock %}

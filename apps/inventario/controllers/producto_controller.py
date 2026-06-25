@@ -60,7 +60,7 @@ def listar_productos(request):
     if q:
         productos = productos.filter(id_producto__nombre__icontains=q)
     if categoria_id:
-        productos = productos.filter(id_producto__id_categoria__id=categoria_id)
+        productos = productos.filter(id_producto__id_categoria=categoria_id)
 
     if orden == 'precio_asc':
         productos = productos.order_by('precio')
@@ -167,7 +167,7 @@ def marketplace(request):
     if q:
         productos = productos.filter(id_producto__nombre__icontains=q)
     if categoria_id:
-        productos = productos.filter(id_producto__id_categoria__id=categoria_id)
+        productos = productos.filter(id_producto__id_categoria=categoria_id)
 
     if orden == 'precio_asc':
         productos = productos.order_by('precio')

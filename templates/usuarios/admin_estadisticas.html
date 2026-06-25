@@ -1,9 +1,21 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block title %}Estadísticas de la Plataforma - AgroSFT{% endblock %}
 
 {% block content %}
+<style>
+    .hover-card {
+        background-color: var(--surface-color);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--radius-md);
+    }
+    .hover-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md) !important;
+        border-color: var(--primary-color) !important;
+    }
+</style>
 <div class="container py-4">
     <!-- Encabezado -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 p-4 rounded-3 shadow-sm bg-white" style="border-left: 5px solid var(--secondary-color);">
@@ -83,20 +95,7 @@
         </div>
     </div>
 
-    <!-- Styles for interactive cards -->
-    <style>
-        .hover-card {
-            background-color: var(--surface-color);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid var(--border-color) !important;
-            border-radius: var(--radius-md);
-        }
-        .hover-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md) !important;
-            border-color: var(--primary-color) !important;
-        }
-    </style>
+
 
     <!-- Centro de Descargas e Informes -->
     <div class="card border-0 shadow-sm rounded-3 mb-4">
@@ -167,9 +166,10 @@
                                 <span class="badge bg-light text-dark fw-bold">{{ categoria.num_productos }}</span>
                             </div>
                             <div class="progress" style="height: 8px;">
+                                {% widthratio categoria.num_productos total_productos 100 as percentage %}
                                 <div class="progress-bar {% if forloop.counter == 1 %}bg-success{% elif forloop.counter == 2 %}bg-primary{% elif forloop.counter == 3 %}bg-warning{% else %}bg-secondary{% endif %}" 
                                      role="progressbar" 
-                                     style="width: {% if total_productos > 0 %}{{ categoria.num_productos|dictsort:"num_productos"|yesno:"1,1" }}{{ categoria.num_productos }}0{% else %}0{% endif %}%;" 
+                                     data-width="{{ percentage|default:'0' }}" 
                                      aria-valuenow="{{ categoria.num_productos }}" 
                                      aria-valuemin="0" 
                                      aria-valuemax="{{ total_productos }}"></div>
@@ -244,4 +244,12 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.progress-bar[data-width]').forEach(function(bar) {
+            bar.style.width = bar.dataset.width + '%';
+        });
+    });
+</script>
 {% endblock %}

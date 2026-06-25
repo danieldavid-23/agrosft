@@ -1,0 +1,298 @@
+:root {
+    /* Paleta Raíz y Confianza — AgroSFT */
+    --bg-color: #F5F1E8;            /* Crema Natural — fondo principal */
+    --surface-color: #ffffff;
+    --primary-color: #3C8D3C;        /* Verde Bosque — identidad, navegación */
+    --primary-hover: #2E7535;
+    --primary-light: #E8F5E8;
+    --primary-dark: #25632C;
+    --secondary-color: #E8853B;      /* Ámbar Cálido — CTA, precios, cosecha */
+    --secondary-light: #FFF0E6;
+    --accent-color: #3A8BC8;         /* Azul Cielo — confianza, chat, enlaces */
+    --accent-light: #E8F1F9;
+    --text-main: #3D5245;            /* Gris Pizarra — texto corporal */
+    --text-muted: #7A8A7D;
+    --border-color: #D6D8CC;
+    --danger-color: #dc2626;
+    --warning-color: #C75B3F;        /* Terracota — alerta/atención */
+    --success-color: #5A9C69;        /* Verde Musgo — éxito/confirmación */
+    --color-info: #7BAFD4;           /* Azul Niebla — información */
+    --color-rating: #E07C3A;         /* Ámbar Intenso — estrellas/reputación */
+    
+    /* Sombras avanzadas */
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    
+    /* Bordes */
+    --radius-md: 0.625rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Utilidades tipográficas */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-main);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+.text-muted { color: var(--text-muted) !important; }
+
+/* Navbar */
+.navbar-premium {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    padding: 0.75rem 0;
+    transition: all 0.3s ease;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.875rem;
+    margin: 0 0.125rem;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+    color: var(--primary-color);
+    background-color: var(--primary-light);
+}
+
+.navbar-light .navbar-nav .nav-link.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.navbar-brand {
+    font-weight: 800;
+    color: var(--primary-color) !important;
+    font-size: 1.4rem;
+    letter-spacing: -0.04em;
+}
+
+/* Botones */
+.btn {
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-md);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.01em;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(60, 141, 60, 0.2);
+}
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(60, 141, 60, 0.3);
+}
+
+.btn-success {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    box-shadow: 0 2px 4px rgba(212, 160, 23, 0.25);
+}
+.btn-success:hover, .btn-success:focus {
+    background-color: #D97A30;
+    border-color: #D97A30;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(212, 160, 23, 0.35);
+}
+
+.btn-outline-success {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+.btn-outline-success:hover {
+    background-color: var(--secondary-light);
+    color: #D97A30;
+    border-color: #D97A30;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.btn-outline-primary:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* Formularios */
+.form-control, .form-select {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-color: white;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(60, 141, 60, 0.1);
+    outline: none;
+}
+
+.input-group-text {
+    background-color: #f8fafc;
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+/* Tarjetas */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    background-color: var(--surface-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    background-color: #fafbfc;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+}
+
+.badge {
+    font-weight: 600;
+    padding: 0.35em 0.7em;
+    border-radius: 9999px;
+    letter-spacing: 0.01em;
+    font-size: 0.78em;
+}
+
+.bg-success { background-color: var(--success-color) !important; }
+.text-success { color: var(--success-color) !important; }
+.bg-warning { background-color: var(--warning-color) !important; color: white !important;}
+
+/* Tablas */
+.table thead th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    border-bottom-width: 1px;
+}
+.table tbody td {
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+/* Main Container */
+main.container, main.container-fluid {
+    flex: 1;
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+/* Notificaciones */
+.notification-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 360px;
+    width: calc(100% - 40px);
+    pointer-events: none;
+}
+
+.notification-toast {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateX(150%);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid var(--border-color);
+}
+
+.notification-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification-toast.hide {
+    transform: translateX(150%);
+    opacity: 0;
+}
+
+.notification-toast.alert-success {
+    border-left: 4px solid var(--success-color) !important;
+}
+.notification-toast.alert-danger, .notification-toast.alert-error {
+    border-left: 4px solid var(--danger-color) !important;
+}
+.notification-toast.alert-warning {
+    border-left: 4px solid var(--warning-color) !important;
+}
+.notification-toast.alert-info {
+    border-left: 4px solid var(--color-info) !important;
+}
+
+/* Footer */
+.footer {
+    background-color: var(--bg-color);
+    border-top: 1px solid var(--border-color);
+    padding: 2rem 0;
+    color: var(--text-muted);
+    margin-top: auto;
+}
+
+.footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer a:hover {
+    color: var(--primary-color);
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-color); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }

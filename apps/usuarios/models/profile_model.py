@@ -48,7 +48,7 @@ class Tblusuarios(models.Model):
     id_users = models.AutoField(primary_key=True, db_column='id_users')
     nombres = models.CharField(max_length=45, db_column='nombres')
     apellidos = models.CharField(max_length=45, db_column='apellidos')
-    telefono = models.CharField(max_length=45, db_column='Telefono', blank=True, null=True)
+    telefono = models.CharField(max_length=45, db_column='Telefono', blank=True, default='')
     correo = models.CharField(unique=True, max_length=45, db_column='correo')
     contraseña = models.CharField(max_length=255, db_column='contraseña')
     fecha_creacion = models.DateTimeField(db_column='fecha_creacion', auto_now_add=True)
@@ -73,6 +73,11 @@ class Tblusuarios(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos} ({self.correo})"
+
+    def save(self, *args, **kwargs):
+        if self.telefono is None:
+            self.telefono = ''
+        super().save(*args, **kwargs)
 
     def set_password(self, raw_password):
         """Establece la contraseña cifrada"""
@@ -113,6 +118,12 @@ class Tblusuarios(models.Model):
         return getattr(self, 'rol', None) == 'cliente'
 
     # Métodos y propiedades requeridos por Django
+    @property
+    def profile(self):
+        """Obtiene el perfil extendido del usuario"""
+        from apps.usuarios.models.profile_model import UserProfile
+        return UserProfile.get_or_create_for_user(self)
+
     @property
     def password(self):
         return self.contraseña

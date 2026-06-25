@@ -11,6 +11,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
+        style: 'frontend/src/style.css',
         carrito: 'frontend/src/carrito/main.js',
         marketplace: 'frontend/src/marketplace/main.js',
         inventario: 'frontend/src/inventario/main.js',
@@ -20,7 +21,12 @@ export default defineConfig({
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: 'chunks/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash][extname]',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+            return 'css/[name].[ext]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
       },
     },
   },

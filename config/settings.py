@@ -213,7 +213,10 @@ MIGRATION_MODULES = {
 }
 
 # Configuración de Google OAuth
-
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('GOOGLE_CLIENT_ID', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
 # Pipeline personalizado para gestionar la creación de usuarios Tblusuarios con campos personalizados
 SOCIAL_AUTH_PIPELINE = (
