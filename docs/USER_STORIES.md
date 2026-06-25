@@ -217,9 +217,9 @@ graph TD
 **Requisitos relacionados**: [[REQUIREMENTS#RF-V06]]
 
 **Criterios de Aceptación**:
-- [x] Checkout crea Movimiento tipo "compra"
-- [x] Crea ProductoUsuarioMovimiento por cada item (cantidad negativa)
-- [x] Trigger de BD descuenta stock automáticamente
+- [x] Checkout crea Movimiento de tipo "compra"
+- [x] Crea ProductoUsuarioMovimiento por cada item con la cantidad
+- [x] Trigger de BD descuenta stock automáticamente al registrar el movimiento de "compra"
 - [x] Limpia el carrito tras checkout exitoso
 - [x] Redirige a vista de solicitudes
 
@@ -236,28 +236,14 @@ graph TD
 **Requisitos relacionados**: [[REQUIREMENTS#RF-V07]], [[REQUIREMENTS#RF-V08]], [[REQUIREMENTS#RF-V09]], [[REQUIREMENTS#RF-V10]]
 
 **Criterios de Aceptación**:
-- [x] Lista solicitudes que contienen MIS productos
-- [x] Muestra datos del comprador (nombre, email, teléfono)
-- [x] Aceptar: cambia tipo_movimiento de "compra" a "venta"
-- [x] Rechazar: cambia tipo_movimiento a "rechazada"
-- [x] Marcar vendida: cambia tipo_movimiento de "venta" a "vendida"
-- [x] Frontend funciona sin conexión a BD (Vue puro con mock data)
-- [x] Notificaciones toast para feedback
+- [x] Lista solicitudes de compra ("compra") sobre MIS productos
+- [x] Muestra datos del comprador (nombre, email, teléfono) y facilita contacto por WhatsApp
+- [x] Coordinación de la entrega y el pago fuera de la plataforma
+- [x] Frontend funcional y notificaciones para feedback
+- [x] Permite proceder a calificar la transacción/vendedor después
 
 **Implementación**: `apps/ventas/controllers/solicitud_controller.py`  
 **Frontend**: `frontend/src/solicitudes/SolicitudApp.vue`
-
-```mermaid
-stateDiagram-v2
-    [*] --> Recibida: Checkout comprador
-    Recibida --> Aceptada: Vendedor acepta
-    Recibida --> Rechazada: Vendedor rechaza
-    Aceptada --> Vendida: Vendedor marca vendida
-    Aceptada --> Cancelada: Vendedor cancela
-    Vendida --> [*]
-    Rechazada --> [*]
-    Cancelada --> [*]
-```
 
 ---
 
