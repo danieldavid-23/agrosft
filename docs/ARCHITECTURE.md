@@ -10,11 +10,13 @@
 ```mermaid
 graph TB
     subgraph Browser
-        HTML[Django Templates]
-        Vue[Vue 3 SPA Components]
+        LayoutVue[LayoutApp.vue<br/>Navbar + Footer + Toast]
+        PageVue[Vue 3 Components<br/>Marketplace, Carrito, etc.]
+        Templates[Django Templates<br/>(páginas individuales)]
     end
 
     subgraph Django App Layer
+        CP[context_processors<br/>layout_data]
         URL[URL Router]
         Ctrl[Controllers / Views]
         Forms[Django Forms]
@@ -34,8 +36,9 @@ graph TB
         FS[File System /media]
     end
 
-    HTML --> URL
-    Vue -->|AJAX| Ctrl
+    CP -->|JSON| LayoutVue
+    Templates --> URL
+    PageVue -->|AJAX| Ctrl
     URL --> Ctrl
     Ctrl --> Forms
     Ctrl --> Svc
@@ -53,7 +56,9 @@ graph TB
 
 | Capa | Responsabilidad | Ubicación |
 |---|---|---|
-| **Presentación** | Templates Django + Componentes Vue | `templates/`, `frontend/src/` |
+| **Layout Vue** | Navbar, footer, notificaciones (3 estados: guest/user/admin) | `frontend/src/layout/LayoutApp.vue` |
+| **Presentación** | Templates Django + Componentes Vue por página | `templates/`, `frontend/src/*/` |
+| **Context Processor** | Inyecta JSON con datos de layout a Vue | `core/context_processors.py` |
 | **Routing** | Mapeo URL → Controller | `config/urls.py`, `apps/*/urls.py` |
 | **Controllers** | Orquestación de requests, validación de permisos, renderizado | `apps/*/controllers/` |
 | **Forms** | Validación de entrada del usuario | `apps/*/forms/` |
@@ -180,7 +185,35 @@ apps/clientes/
 
 ## 3. Frontend Architecture
 
-### 3.1 Integración Django + Vue
+### 3.1 Layout Global en Vue
+
+> Layout estructural migrado a Vue.js. Ver [[DECISIONS#ADR-011]].
+
+El navbar, footer y notificaciones toast se renderizan desde un **único componente Vue** (`LayoutApp.vue`) que recibe datos mediante el context processor `core.context_processors.layout_data`. Este inyecta un JSON con datos del usuario, URLs de navegación, contador del carrito y mensajes flash.
+
+```mermaid
+graph TB
+    subgraph Django
+        CP[context_processors.layout_data]
+        Template[base.html]
+    end
+    subgraph Vite
+        LayoutJS[layout/main.js]
+        LayoutVue[LayoutApp.vue]
+    end
+    subgraph Browser
+        DOM[div#vue-layout]
+    end
+
+    CP -->|layout_data_json| Template
+    Template -->|json_script| DOM
+    LayoutJS -->|createApp| LayoutVue
+    LayoutVue -->|mount| DOM
+```
+
+El `LayoutApp.vue` es un componente **no-scoped** que reutiliza las clases CSS de Bootstrap 5 y las variables CSS del proyecto (`frontend/src/style.css`). Los estados se manejan con Vue reactivo (`ref`, `v-if`, `v-for`).
+
+### 3.2 Integración Django + Vue (Componentes de Página)
 
 ```mermaid
 sequenceDiagram
@@ -198,17 +231,18 @@ sequenceDiagram
     Vue->>Vue: Update reactive state
 ```
 
-### 3.2 Entry Points (Vite)
+### 3.3 Entry Points (Vite)
 
 | Entry | Archivo | Componente | Props |
 |---|---|---|---|
+| `layout` | `frontend/src/layout/main.js` | `LayoutApp.vue` | `user`, `urls`, `cart_count`, `messages` |
 | `marketplace` | `frontend/src/marketplace/main.js` | `MarketApp.vue` | `initialProducts`, `categories`, `urls` |
 | `carrito` | `frontend/src/carrito/main.js` | `CarritoApp.vue` | `items`, `urls` |
 | `inventario` | `frontend/src/inventario/main.js` | `InventarioApp.vue` | `initialProducts`, `categories`, `estados`, `urls` |
 | `solicitudes` | `frontend/src/solicitudes/main.js` | `SolicitudApp.vue` | Ninguna (autocontenido) |
 | `calificaciones` | `frontend/src/calificaciones/main.js` | `CalificacionApp.vue` | `movimientoDetalle`, `urls` |
 
-### 3.3 Módulo Especial: Solicitudes (JS Puro)
+### 3.4 Módulo Especial: Solicitudes (JS Puro)
 
 > [!important] Desviación Arquitectónica Documentada
 > `SolicitudApp.vue` funciona **sin conexión a base de datos**. Ver [[DECISIONS#ADR-003]].

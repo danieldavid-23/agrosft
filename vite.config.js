@@ -12,6 +12,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         style: 'frontend/src/style.css',
+        layout: 'frontend/src/layout/main.js',
         carrito: 'frontend/src/carrito/main.js',
         marketplace: 'frontend/src/marketplace/main.js',
         inventario: 'frontend/src/inventario/main.js',

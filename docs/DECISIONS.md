@@ -309,6 +309,53 @@ Actualizar toda la documentación SDD para reflejar fielmente el estado real de 
 
 ---
 
+---
+
+## ADR-011: Layout Global Migrado a Vue.js
+
+**Fecha**: 2026-06-25  
+**Estado**: Aceptada
+
+### Contexto
+
+Hasta esta fecha, todo el layout estructural (navbar, footer, notificaciones toast) se renderizaba como HTML de Django en `templates/base.html`. Esto impedía:
+- Reutilizar el logo SVG oficial en el frontend desde Vue
+- Manejar estados condicionales (roles, autenticación, carrito) desde el frontend
+- Tener un componente de layout unificado para futuras migraciones
+
+### Decisión
+
+Migrar el layout completo (navbar + footer + notificaciones) a un único componente Vue (`frontend/src/layout/LayoutApp.vue`) que se monta en `<div id="vue-layout">` en `base.html`.
+
+Los datos del layout fluyen desde Django hacia Vue mediante un **context processor** (`core.context_processors.layout_data`) que inyecta un JSON con:
+- Datos del usuario autenticado (o `null` para invitados)
+- URLs de navegación (generadas con `reverse()`)
+- Contador del carrito (desde `request.session['carrito']`)
+- Mensajes flash de Django (consumidos y pasados a Vue)
+- URL del logo oficial (`/static/img/agrosft_o.svg`)
+
+### Consecuencias
+
+- ✅ El navbar ahora es 100% Vue, con manejo reactivo de estados (guest/user/admin)
+- ✅ El logo SVG oficial se renderiza desde Vue en navbar y footer
+- ✅ Las notificaciones toast usan el ciclo de vida de Vue (auto-dismiss, animaciones)
+- ✅ Se eliminaron ~170 líneas de HTML Django de `base.html`
+- ✅ Patrón extensible para futuras migraciones de páginas a Vue
+- ❌ Dependencia del context processor para datos de layout en todas las páginas
+- ❌ Bootstrap Dropdown se maneja manualmente con clases CSS (sin depender de inicialización JS de Bootstrap)
+
+### Archivos Afectados
+
+- `frontend/src/layout/LayoutApp.vue` — Nuevo componente Vue del layout
+- `frontend/src/layout/main.js` — Entry point Vite
+- `core/context_processors.py` — Nuevo context processor
+- `templates/base.html` — Reducido a 35 líneas (antes 204)
+- `vite.config.js` — Nueva entrada `layout`
+- `config/settings.py` — Context processor registrado
+- `static/img/agrosft_o.svg` — Logo oficial del proyecto
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -323,6 +370,7 @@ Actualizar toda la documentación SDD para reflejar fielmente el estado real de 
 | ADR-008 | Docs Obsidian | Aceptada | Documentación |
 | ADR-009 | Sincronización docs con BD real | Aceptada | Documentación |
 | ADR-010 | Paleta Raíz y Confianza | Aceptada | Frontend / UI |
+| ADR-011 | Layout global migrado a Vue.js | Aceptada | Frontend / Arquitectura |
 
 ---
 

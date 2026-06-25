@@ -100,7 +100,7 @@
     <!-- Mantenemos los scripts Vue si el proyecto depende de ellos en otro lugar -->
     {{ carrito_json|json_script:"carrito-data" }}
     <div id="vue-carrito" class="d-none"></div>
-    <script src="{% static 'dist/carrito.js' %}"></script>
+    <script type="module" src="{% static 'dist/carrito.js' %}"></script>
     
     {% else %}
     <div class="card premium-card border-0 text-center p-5 mt-4" style="box-shadow: var(--shadow-lg); border-radius: var(--radius-xl); background-color: var(--surface-color);">

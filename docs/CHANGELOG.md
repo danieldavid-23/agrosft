@@ -7,6 +7,19 @@
 
 ## [Unreleased]
 
+### Fixed (2026-06-25)
+- **Footer en posición inferior corregido** — El footer se mostraba en la parte superior en páginas con poco contenido:
+  - Movido `margin-top: auto` de `.footer` (elemento anidado dentro de `#vue-footer`) a `#vue-footer` (hijo directo del body flex), asegurando que el footer se empuje al fondo correctamente
+
+### Added (2026-06-25)
+- **Layout global migrado a Vue.js** — Navbar, footer y notificaciones ahora son un componente Vue (`LayoutApp.vue`) montado desde `base.html`:
+  - Navbar con 3 estados: no autenticado, autenticado, staff (roles, carrito, dropdown de usuario)
+  - Footer con logo SVG oficial
+  - Notificaciones toast con auto-dismiss (animación escalonada)
+- **Logo oficial del proyecto**: `static/img/agrosft_o.svg` — renderizado por Vue en navbar y footer
+- **Context processor `core.context_processors.layout_data`**: inyecta datos de layout (usuario, URLs, carrito, mensajes) como JSON para Vue
+- **Entry point Vite**: `frontend/src/layout/main.js` → bundle `layout.js` (11.64 kB)
+
 ### Changed (2026-06-24)
 - **Paleta "Raíz y Confianza" implementada** — Rebranding visual completo:
   - `base.html`: Variables CSS en `:root` actualizadas (verde claro #3C8D3C, naranja #E8853B, azul cielo #3A8BC8, crema #F5F1E8, texto #3D5245); sombras, hover y colores inline reemplazados; corregido typo "AGROSTF" → "AGROSFT"

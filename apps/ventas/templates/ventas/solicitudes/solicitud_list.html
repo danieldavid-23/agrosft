@@ -74,6 +74,6 @@
     </div>
     {{ solicitudes_json|json_script:"solicitudes-data" }}
     <div id="vue-solicitudes"></div>
-    <script src="{% static 'dist/solicitudes.js' %}"></script>
+    <script type="module" src="{% static 'dist/solicitudes.js' %}"></script>
 </div>
 {% endblock %}

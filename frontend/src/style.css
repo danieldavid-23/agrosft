@@ -273,12 +273,15 @@ main.container, main.container-fluid {
 }
 
 /* Footer */
+#vue-footer {
+    margin-top: auto;
+}
+
 .footer {
     background-color: var(--bg-color);
     border-top: 1px solid var(--border-color);
     padding: 2rem 0;
     color: var(--text-muted);
-    margin-top: auto;
 }
 
 .footer a {

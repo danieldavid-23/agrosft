@@ -17,7 +17,7 @@
 
     {{ marketplace_json|json_script:"marketplace-data" }}
     <div id="vue-marketplace"></div>
-    <script src="{% static 'dist/marketplace.js' %}"></script>
+    <script type="module" src="{% static 'dist/marketplace.js' %}"></script>
     <!-- Grid de Productos -->
     <div class="row g-4">
         {% for producto in productos %}

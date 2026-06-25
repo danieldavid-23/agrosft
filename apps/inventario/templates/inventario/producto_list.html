@@ -7,7 +7,7 @@
 <div class="container py-4">
     {{ inventario_json|json_script:"inventario-data" }}
     <div id="vue-inventario"></div>
-    <script src="{% static 'dist/inventario.js' %}"></script>
+    <script type="module" src="{% static 'dist/inventario.js' %}"></script>
     <!-- Encabezado Premium -->
     <div class="row align-items-center mb-5">
         <div class="col-md-8">

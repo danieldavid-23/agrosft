@@ -116,8 +116,9 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.template.context_processors.media',  # Para manejo de archivos media
-                'django.contrib.messages.context_processors.messages',  # Added for messages
-                'django.contrib.auth.context_processors.auth',  # Added for auth context
+                'django.contrib.messages.context_processors.messages',
+                'django.contrib.auth.context_processors.auth',
+                'core.context_processors.layout_data',
                 'social_django.context_processors.backends',  # Agregado para social auth
                 'social_django.context_processors.login_redirect',  # Agregado para social auth
             ],

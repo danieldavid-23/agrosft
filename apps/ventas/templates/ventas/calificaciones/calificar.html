@@ -7,6 +7,6 @@
 <div class="container mt-4">
     {{ calificaciones_json|json_script:"calificaciones-data" }}
     <div id="vue-calificaciones"></div>
-    <script src="{% static 'dist/calificaciones.js' %}"></script>
+    <script type="module" src="{% static 'dist/calificaciones.js' %}"></script>
 </div>
 {% endblock %}
