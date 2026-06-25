@@ -253,36 +253,22 @@ La BD actual tiene **5 triggers** activos (verificado en MariaDB 2026-06-24):
 
 **Acciones**:
 1. Obtiene el `tipo_movimiento` asociado vía JOIN con `movimiento` → `tipo_movimiento`
-2. Si el tipo **NO** es `'compra'`: actualiza `cantidad = cantidad + NEW.cantidad` en `tblproductos_has_tblusuarios`
-3. **Protección**: Si `NEW.cantidad < 0` (salida), verifica que `stock_actual + NEW.cantidad >= 0`. Emite `SIGNAL SQLSTATE '45000'` si es insuficiente
-4. Si `NEW.calificacion IS NOT NULL`, recalcula `calificacion_promedio` como AVG de todas las calificaciones de esa publicación
+2. Si el movimiento es de **venta** (abastecimiento): actualiza `cantidad = cantidad + NEW.cantidad` en `tblproductos_has_tblusuarios`
+3. Si el movimiento es de **compra**: actualiza `cantidad = cantidad - NEW.cantidad` en `tblproductos_has_tblusuarios`
+4. **Protección**: Si se realiza una compra (descuento), verifica que `stock_actual - NEW.cantidad >= 0`. Emite `SIGNAL SQLSTATE '45000'` si es insuficiente para garantizar la integridad de los datos.
+5. Si `NEW.calificacion IS NOT NULL`, recalcula `calificacion_promedio` como AVG de todas las calificaciones de esa publicación.
 
-> [!warning] Comportamiento clave
-> - `'compra'` (solicitud): **ignorado** — el stock NO se descuenta al crear la solicitud
-> - `'venta'` (abastecimiento/aceptada): **suma** `cantidad` al stock
-> - Usa el script `scripts/trigger_proteccion_stock.sql` (reemplazó a `scripts/trigger_modificar_stock.sql`)
-> - **Versión original previa al 2026-06-17**: descontaba stock en TODA inserción, incluyendo `'compra'`
+> [!important] Comportamiento clave
+> - `'venta'` (abastecimiento): **suma** la cantidad ingresada al stock.
+> - `'compra'`: **descuenta** la cantidad adquirida.
+> - La base de datos es la fuente única de verdad sobre la disponibilidad real de los productos, previniendo stocks negativos.
 
 ---
 
-### 3.2 trg_descontar_stock_vendida
-
-**Evento**: AFTER UPDATE ON `movimiento`
-
-**Acciones**:
-1. Detecta cuando `tipo_movimiento` cambia A `'vendida'` desde otro estado diferente
-2. Descuenta `stock = stock - ABS(cantidad)` de cada `ProductoUsuario` afectado via JOIN con `tblproductos_has_tblusuarios_has_movimiento`
-
-> [!important] Stock solo se descuenta en estado `'vendida'`
-> | Paso | Tipo movimiento | ¿Disparador? | Efecto en stock |
-> |---|---|---|---|
-> | Checkout (comprador) | `'compra'` | AFTER INSERT (ignora) | Sin cambio |
-> | Aceptar (vendedor) | `'venta'` | AFTER UPDATE (no INSERT) | Sin cambio |
-> | Marcar vendido | `'vendida'` | AFTER UPDATE → **trg_descontar_stock_vendida** | **Descuenta** |
-> | Rechazar | `'rechazada'` | AFTER UPDATE | Sin cambio (stock nunca se descontó) |
-> | Cancelar | `'cancelada'` | AFTER UPDATE | Sin cambio |
+> [!important] Integración con la lógica de negocio
+> Tras una transacción, el sistema facilita los datos de WhatsApp de ambas partes (vendedor y comprador) para coordinar la entrega y el pago fuera de la plataforma. Posteriormente, se puede calificar la publicación, alimentando la tabla de calificaciones.
 >
-> **Script**: `scripts/trigger_stock_vendida.sql`
+> Este diseño elimina redundancias y asegura que los registros de movimientos conformen una auditoría inmutable de todas las operaciones.
 
 ---
 

@@ -146,28 +146,23 @@ graph TB
 
 ```mermaid
 graph LR
-    A[Comprador navega Marketplace] --> B[Agrega productos al Carrito]
-    B --> C[Checkout del Carrito]
-    C --> D[Se crea Movimiento tipo compra]
-    D --> E[Trigger descuenta stock]
-    E --> F[Vendedor ve Solicitud recibida]
-    F --> G{Decisión}
-    G -->|Aceptar| H[Tipo cambia a venta]
-    G -->|Rechazar| I[Tipo cambia a rechazada]
-    H --> J[Vendedor marca como Vendida]
-    J --> K[Tipo cambia a vendida]
-    K --> L[Comprador califica transacción]
+    A[Comprador navega Marketplace] --> B[Inicia movimiento de compra sobre publicación]
+    B --> C[Registro en movimiento y detalle]
+    C --> D[Trigger descuenta stock]
+    D --> E[Sistema facilita datos de WhatsApp de ambas partes]
+    E --> F[Coordinación de entrega y pago fuera de la plataforma]
+    F --> G[Calificación de la transacción/vendedor]
 ```
 
 ### 8.2 Flujo de Publicación
 
 ```mermaid
 graph LR
-    A[Agricultor crea Producto] --> B[Producto en estado Pendiente]
-    B --> C{Admin revisa}
-    C -->|Aprobar| D[Estado = Aprobado]
-    C -->|Rechazar| E[Estado = Rechazado]
-    D --> F[Visible en Marketplace]
+    A[Vendedor elige/crea producto en catálogo] --> B[Genera registro en tbl_productos_has_usuarios con precio y stock inicial]
+    B --> C[Publicación en estado Pendiente]
+    C --> D{Revisión admin}
+    D -->|Aprobar| E[Estado = Aprobado]
+    E --> F[Publicación visible en Marketplace]
 ```
 
 ---
