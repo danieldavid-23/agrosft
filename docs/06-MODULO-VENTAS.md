@@ -1,6 +1,6 @@
 # Módulo Ventas
 
-> Carrito de compras, solicitudes de compra (JS puro), ventas y calificaciones.
+> Carrito de compras, solicitudes de compra, ventas y calificaciones.
 
 **App**: `apps.ventas` | **Namespace**: `ventas` | **URL prefix**: `/ventas/`
 
@@ -124,22 +124,12 @@ graph LR
 | `marcar_vendido` | Cambia tipo_movimiento de 'venta' a 'vendida' |
 | `estado_detalle` | Placeholder para estado por producto individual |
 
-### Frontend: SolicitudApp.vue
+### Frontend
 
-> [!important] Módulo JavaScript Puro (COMPLETADO)
-> El componente `SolicitudApp.vue` funciona **sin conexión a base de datos**. Todas las acciones (aceptar, rechazar, marcar vendida) operan sobre el estado local Vue. Los datos se cargan desde:
-> 1. **JSON inyectado por Django** (si existe `#solicitudes-data` en el template)
-> 2. **Datos mock locales** (fallback automático si no hay datos del servidor)
->
-> **No requiere `csrf.js`** ni llamadas `fetch()` al backend.
-> `main.js` monta el componente sin props: `createApp(SolicitudApp).mount(el)`
-
-**Características del componente**:
-- Stats cards con contadores por estado (total, recibidas, aceptadas, rechazadas, vendidas)
-- Filtro por estado, búsqueda por nombre/email/ID, ordenamiento
-- Modal de detalle con desglose de productos
-- Notificaciones toast para feedback
-- Transiciones CSS suaves
+La tabla de solicitudes se renderiza desde el servidor con Django templates (`solicitud_list.html`). Cada fila incluye:
+- ID de solicitud, datos del comprador, fecha, mis productos involucrados, total estimado
+- Badge de estado (Recibida/Aceptada/Rechazada/Vendida)
+- Botón "Ver Detalle" que redirige a la vista de detalle (`solicitud_detail.html`)
 
 ---
 
@@ -216,4 +206,4 @@ graph LR
 - [[03-BASE-DATOS#movimiento]] — Schema de movimientos
 - [[03-BASE-DATOS#tblproductos_has_tblusuarios_has_movimiento]] — Schema de detalles
 - [[08-FRONTEND#CarritoApp.vue]] — Componente Vue del carrito
-- [[08-FRONTEND#SolicitudApp.vue]] — Componente Vue de solicitudes
+- [[APP-VENTAS#solicitud_list]] — Template Django de solicitudes

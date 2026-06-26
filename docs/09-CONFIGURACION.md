@@ -187,7 +187,6 @@ static/dist/
 ├── marketplace.js
 ├── carrito.js
 ├── inventario.js
-├── solicitudes.js
 ├── calificaciones.js
 ├── chunks/
 │   └── vendor-[hash].js

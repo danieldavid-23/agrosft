@@ -68,7 +68,8 @@ function dismissToast(id) {
   <nav class="navbar navbar-expand-lg navbar-light navbar-premium sticky-top">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2" :href="urls.home">
-        <img :src="urls.logo" alt="AgroSFT" height="36" class="me-2">
+        <img :src="urls.logo" alt="AgroSFT" height="36">
+        <span class="fw-bold fs-5" style="color: var(--primary-color)">AGROSFT</span>
       </a>
       <button class="navbar-toggler border-0 shadow-none" type="button" @click="toggleMobile">
         <span class="navbar-toggler-icon"></span>

@@ -61,7 +61,7 @@
 | RF-V17 | Al marcar como "Vendido", el stock debe actualizarse automáticamente (trigger en BD) | Alta | ✅ Implementado |
 | RF-V13 | El sistema debe permitir calificar una transacción (1.0–5.0, pasos de 0.5) | Media | ✅ Implementado |
 | RF-V14 | El sistema debe mostrar historial de movimientos del usuario | Media | ✅ Implementado |
-| RF-V15 | El frontend de solicitudes debe funcionar sin conexión a base de datos | Alta | ✅ Implementado (Vue puro con mock data) |
+| RF-V15 | El frontend de solicitudes debe funcionar sin conexión a base de datos | Alta | ❌ Eliminado — Se revirtió a renderizado Django server-side |
 
 ### 1.4 Módulo de Clientes
 

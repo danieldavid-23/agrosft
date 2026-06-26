@@ -34,7 +34,6 @@ Definidos en `vite.config.js`:
 | `marketplace` | `frontend/src/marketplace/main.js` | `MarketApp.vue` |
 | `carrito` | `frontend/src/carrito/main.js` | `CarritoApp.vue` |
 | `inventario` | `frontend/src/inventario/main.js` | `InventarioApp.vue` |
-| `solicitudes` | `frontend/src/solicitudes/main.js` | `SolicitudApp.vue` |
 | `calificaciones` | `frontend/src/calificaciones/main.js` | `CalificacionApp.vue` |
 
 ---
@@ -97,25 +96,6 @@ async function fetchProducts() {
 - Badges: Agotado, Últimas unidades, Pendiente
 
 ---
-
-### SolicitudApp.vue — Solicitudes de Compra
-
-**Props**: Ninguna (autocontenido)
-
-**Datos**: Carga desde JSON inyectado por Django (`#solicitudes-data`) o usa datos mock locales como fallback.
-
-**Funcionalidades**:
-- Stats cards con contadores por estado (total, recibidas, aceptadas, rechazadas, vendidas)
-- Tabla de solicitudes con datos del comprador (nombre, email, teléfono/WhatsApp)
-- Filtro por estado, búsqueda por nombre/email/ID, ordenamiento (reciente/mayor/menor total)
-- Modal de detalle con desglose de productos y subtotales
-- Acciones: Aceptar, Rechazar, Marcar Vendida (operan sobre estado local Vue)
-- Notificaciones toast para feedback
-- Formato de precio COP
-- Transiciones CSS suaves
-
-> [!important] Refactor JS Puro (COMPLETADO)
-> Este componente funciona **sin conexión a BD**. No requiere `csrf.js` ni llamadas `fetch()`. `main.js` monta sin props: `createApp(SolicitudApp).mount(el)`
 
 ---
 
@@ -180,7 +160,6 @@ static/dist/
 ├── marketplace.js
 ├── carrito.js
 ├── inventario.js
-├── solicitudes.js
 ├── calificaciones.js
 ├── chunks/      → Code splitting compartido
 └── assets/      → CSS y otros assets

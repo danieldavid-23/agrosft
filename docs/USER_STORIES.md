@@ -243,7 +243,7 @@ graph TD
 - [x] Permite proceder a calificar la transacción/vendedor después
 
 **Implementación**: `apps/ventas/controllers/solicitud_controller.py`  
-**Frontend**: `frontend/src/solicitudes/SolicitudApp.vue`
+**Frontend**: `apps/ventas/templates/ventas/solicitudes/solicitud_list.html` (Django template)
 
 ---
 

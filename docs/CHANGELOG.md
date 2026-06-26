@@ -7,9 +7,22 @@
 
 ## [Unreleased]
 
+### Removed (2026-06-25)
+- **Módulo Vue de solicitudes eliminado** — Se revirtió a la tabla Django server-side original:
+  - `frontend/src/solicitudes/SolicitudApp.vue`: Eliminado
+  - `frontend/src/solicitudes/main.js`: Eliminado
+  - `vite.config.js`: Eliminada entrada `solicitudes`
+  - `apps/ventas/templates/ventas/solicitudes/solicitud_list.html`: Eliminado script Vue y div de montaje
+  - Se mantiene el controlador Django (`solicitud_controller.py`) y templates server-side como única implementación
+
 ### Fixed (2026-06-25)
+- **Logo del navbar ya no redirige al login** — El logo siempre enviaba a `/` que redirigía a `usuarios:login` sin importar el estado de autenticación:
+  - `config/urls.py`: `home_redirect` ahora redirige a `inventario:marketplace` (usuarios autenticados no-staff), `usuarios:admin_usuarios_list` (staff) o `usuarios:login` (invitados)
 - **Footer en posición inferior corregido** — El footer se mostraba en la parte superior en páginas con poco contenido:
   - Movido `margin-top: auto` de `.footer` (elemento anidado dentro de `#vue-footer`) a `#vue-footer` (hijo directo del body flex), asegurando que el footer se empuje al fondo correctamente
+
+### Added (2026-06-25)
+- **Nombre "AGROSFT" junto al logo en el navbar** — Agregado texto `<span>AGROSFT</span>` al lado del logo en `NavbarApp.vue`
 
 ### Added (2026-06-25)
 - **Layout global migrado a Vue.js** — Navbar, footer y notificaciones ahora son un componente Vue (`LayoutApp.vue`) montado desde `base.html`:

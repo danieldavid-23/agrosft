@@ -167,7 +167,7 @@
 
 ### Fase 1 — Estabilización (Sprint actual)
 - [x] Documentación completa del proyecto
-- [x] Refactor módulo solicitudes a JS puro
+- [x] Refactor módulo solicitudes a JS puro (revertido — se restauró renderizado Django server-side)
 - [ ] Corregir SQL Injection en helpers
 - [ ] Eliminar `TemporalUsuario` o marcar como dev-only
 - [ ] Agregar `managed = False` a modelo `Cliente`

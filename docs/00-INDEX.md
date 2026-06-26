@@ -31,7 +31,7 @@
 | 03 | [[03-BASE-DATOS]] | Esquema de base de datos MariaDB, modelos Django, triggers y relaciones |
 | 04 | [[04-MODULO-USUARIOS]] | Autenticación, registro, perfil, términos y condiciones |
 | 05 | [[05-MODULO-INVENTARIO]] | Catálogo de productos, CRUD, marketplace y aprobación |
-| 06 | [[06-MODULO-VENTAS]] | Carrito, solicitudes (JS puro), ventas y calificaciones |
+| 06 | [[06-MODULO-VENTAS]] | Carrito, solicitudes, ventas y calificaciones |
 | 07 | [[07-MODULO-CLIENTES]] | Historial de compradores y actividad de usuarios |
 | 08 | [[08-FRONTEND]] | Componentes Vue 3, Vite, integración con Django templates |
 | 09 | [[09-CONFIGURACION]] | Instalación, variables de entorno, servidor de desarrollo |

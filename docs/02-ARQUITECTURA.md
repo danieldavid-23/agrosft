@@ -132,7 +132,6 @@ frontend/src/
 ├── marketplace/  → MarketApp.vue    (catálogo, filtros, carrito)
 ├── carrito/      → CarritoApp.vue   (tabla de items, total)
 ├── inventario/   → InventarioApp.vue (CRUD personal)
-├── solicitudes/  → SolicitudApp.vue  (inbox vendedor) ← JS PURO
 ├── calificaciones/ → CalificacionApp.vue (estrellas interactivas)
 └── shared/
     ├── api.js    → Wrapper fetch con CSRF

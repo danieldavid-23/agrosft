@@ -25,7 +25,11 @@ admin.site.index_title = 'Gestión de la Plataforma Agrícola'
 
 
 def home_redirect(request):
-    """Redirigir a la página de login en lugar de registro"""
+    """Redirigir según estado de autenticación"""
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            return redirect('usuarios:admin_usuarios_list')
+        return redirect('inventario:marketplace')
     return redirect('usuarios:login')
 
 

@@ -239,18 +239,7 @@ sequenceDiagram
 | `marketplace` | `frontend/src/marketplace/main.js` | `MarketApp.vue` | `initialProducts`, `categories`, `urls` |
 | `carrito` | `frontend/src/carrito/main.js` | `CarritoApp.vue` | `items`, `urls` |
 | `inventario` | `frontend/src/inventario/main.js` | `InventarioApp.vue` | `initialProducts`, `categories`, `estados`, `urls` |
-| `solicitudes` | `frontend/src/solicitudes/main.js` | `SolicitudApp.vue` | Ninguna (autocontenido) |
 | `calificaciones` | `frontend/src/calificaciones/main.js` | `CalificacionApp.vue` | `movimientoDetalle`, `urls` |
-
-### 3.4 Módulo Especial: Solicitudes (JS Puro)
-
-> [!important] Desviación Arquitectónica Documentada
-> `SolicitudApp.vue` funciona **sin conexión a base de datos**. Ver [[DECISIONS#ADR-003]].
-
-- No requiere props del servidor
-- Carga datos mock locales como fallback
-- `main.js` monta sin props: `createApp(SolicitudApp).mount(el)`
-- Todas las acciones operan sobre estado Vue reactivo
 
 ---
 

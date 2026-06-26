@@ -71,13 +71,13 @@ El código Python **NUNCA** debe actualizar estos campos manualmente.
 ## ADR-003: Módulo de Solicitudes en JavaScript Puro (Sin BD)
 
 **Fecha**: 2026-06-17  
-**Estado**: Aceptada
+**Estado**: Reemplazada por ADR-012
 
 ### Contexto
 
 El usuario solicitó que el módulo de solicitudes funcione completamente en JavaScript, sin conexión a la base de datos y sin necesidad de registrar solicitudes reales.
 
-### Decisión
+### Decisión (Original)
 
 Refactorizar `SolicitudApp.vue` para:
 1. No usar `fetch()` hacia endpoints Django
@@ -86,7 +86,7 @@ Refactorizar `SolicitudApp.vue` para:
 4. Cargar datos desde JSON inyectado por Django (si existe) o datos mock locales (fallback)
 5. Simplificar `main.js` para montar sin props
 
-### Consecuencias
+### Consecuencias (Originales)
 
 - ✅ El componente funciona de forma autónoma sin backend
 - ✅ Ideal para demostraciones y pruebas de UI
@@ -94,7 +94,7 @@ Refactorizar `SolicitudApp.vue` para:
 - ❌ Los cambios de estado no persisten (se pierden al recargar la página)
 - ❌ Desconexión entre frontend y backend para este módulo
 
-### Archivos Afectados
+### Archivos Afectados (Originales)
 
 - `frontend/src/solicitudes/SolicitudApp.vue` — Refactorizado a Vue puro
 - `frontend/src/solicitudes/main.js` — Simplificado sin props
@@ -356,13 +356,59 @@ Los datos del layout fluyen desde Django hacia Vue mediante un **context process
 
 ---
 
+---
+
+## ADR-012: Reversión a Renderizado Server-Side de Solicitudes
+
+**Fecha**: 2026-06-25  
+**Estado**: Aceptada
+
+### Contexto
+
+El módulo de solicitudes fue refactorizado (ADR-003) a un componente Vue puro sin conexión a BD. Esto generó dos tablas en la misma página: una Django server-side y otra Vue con mock data. Se decidió eliminar la duplicación y volver al enfoque original.
+
+### Decisión
+
+Eliminar el módulo Vue de solicitudes (`SolicitudApp.vue`, `main.js`) y restaurar el renderizado exclusivo mediante Django templates server-side:
+
+1. Eliminar `frontend/src/solicitudes/SolicitudApp.vue`
+2. Eliminar `frontend/src/solicitudes/main.js`
+3. Eliminar entrada `solicitudes` de `vite.config.js`
+4. Eliminar script Vue y div de montaje de `solicitud_list.html`
+5. Mantener `solicitud_controller.py` como única implementación backend
+
+### Consecuencias
+
+- ✅ Una sola tabla de solicitudes (server-side Django)
+- ✅ Datos siempre consistentes con la BD
+- ✅ Los cambios de estado persisten (aceptar/rechazar/marcar vendido vía backend real)
+- ✅ Menos bundles de Vite que compilar
+- ❌ El frontend deja de funcionar offline (requiere BD)
+- ❌ Se pierde la UI reactiva (filtros, búsqueda, ordenamiento en cliente)
+
+### Archivos Afectados
+
+- `frontend/src/solicitudes/SolicitudApp.vue` — Eliminado
+- `frontend/src/solicitudes/main.js` — Eliminado
+- `vite.config.js` — Eliminada entrada `solicitudes`
+- `apps/ventas/templates/ventas/solicitudes/solicitud_list.html` — Eliminado script Vue
+- `docs/ARCHITECTURE.md` — Eliminada sección 3.4
+- `docs/08-FRONTEND.md` — Eliminada sección SolicitudApp.vue
+- `docs/06-MODULO-VENTAS.md` — Actualizada sección frontend
+- `docs/02-ARQUITECTURA.md` — Eliminada entrada solicitudes
+- `docs/USER_STORIES.md` — Actualizada referencia frontend
+- `docs/REQUIREMENTS.md` — RF-V15 marcado como eliminado
+- `docs/CHANGELOG.md` — Registro del cambio
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
 |---|---|---|---|
 | ADR-001 | BD legacy con managed=False | Aceptada | Arquitectura completa |
 | ADR-002 | Stock por trigger BD | Aceptada (evolucionado) | Todas las transacciones |
-| ADR-003 | Solicitudes JS puro | Aceptada | Módulo ventas |
+| ADR-003 | Solicitudes JS puro | Reemplazada (ADR-012) | Módulo ventas |
 | ADR-004 | Carrito en sesión | Aceptada | Módulo carrito |
 | ADR-005 | Cantidades negativas | Aceptada | Modelo de datos |
 | ADR-006 | SPA parcial Vue+Vite | Aceptada | Frontend completo |
@@ -371,6 +417,7 @@ Los datos del layout fluyen desde Django hacia Vue mediante un **context process
 | ADR-009 | Sincronización docs con BD real | Aceptada | Documentación |
 | ADR-010 | Paleta Raíz y Confianza | Aceptada | Frontend / UI |
 | ADR-011 | Layout global migrado a Vue.js | Aceptada | Frontend / Arquitectura |
+| ADR-012 | Reversión a renderizado server-side de solicitudes | Aceptada | Módulo ventas |
 
 ---
 
