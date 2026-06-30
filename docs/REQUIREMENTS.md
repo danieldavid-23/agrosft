@@ -59,6 +59,8 @@
 | RF-V12 | El sistema debe mostrar el detalle de una venta específica | Media | ✅ Implementado |
 | RF-V16 | El sistema debe permitir marcar una venta como "Vendido" desde el módulo de ventas | Alta | ✅ Implementado |
 | RF-V17 | Al marcar como "Vendido", el stock debe actualizarse automáticamente (trigger en BD) | Alta | ✅ Implementado |
+| RF-V18 | Al aceptar una solicitud, el sistema debe generar un enlace de WhatsApp (wa.me) con mensaje predefinido para contactar al comprador | Alta | ✅ Implementado |
+| RF-V19 | El sistema debe mostrar el número de teléfono del comprador como enlace cliqueable de WhatsApp cuando la solicitud está aceptada | Media | ✅ Implementado |
 | RF-V13 | El sistema debe permitir calificar una transacción (1.0–5.0, pasos de 0.5) | Media | ✅ Implementado |
 | RF-V14 | El sistema debe mostrar historial de movimientos del usuario | Media | ✅ Implementado |
 | RF-V15 | El frontend de solicitudes debe funcionar sin conexión a base de datos | Alta | ❌ Eliminado — Se revirtió a renderizado Django server-side |
@@ -106,7 +108,7 @@
 | RNF-U02 | Notificaciones toast para feedback al usuario | Media | ✅ Implementado |
 | RNF-U03 | Formato de precios en COP (pesos colombianos) | Media | ✅ Implementado |
 | RNF-U04 | Iconografía clara con Font Awesome | Media | ✅ Implementado |
-| RNF-U05 | Soporte para WhatsApp (enlace directo con teléfono) | Baja | ✅ Implementado |
+| RNF-U05 | Soporte para WhatsApp (enlace wa.me con mensaje predefinido al aceptar solicitud) | Media | ✅ Implementado |
 
 ### 2.4 Mantenibilidad
 

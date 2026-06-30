@@ -5,10 +5,16 @@ from django.views.generic import CreateView, FormView, View
 from django.urls import reverse_lazy
 from django.contrib.auth.views import LoginView as DjangoLoginView, LogoutView as DjangoLogoutView
 from django.contrib.auth import get_user_model
-from apps.usuarios.forms.auth_forms import RegistroForm, LoginForm, PerfilForm
+from apps.usuarios.forms.auth_forms import RegistroForm, LoginForm, PerfilForm, PasswordResetRequestForm
 from apps.usuarios.models.profile_model import Tblusuarios, UserProfile
 from django.db import connection
 from django.contrib.auth import logout
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.urls import reverse
+from apps.usuarios.services.email_service import send_password_reset_email
+from apps.usuarios.utils.password_reset_tokens import agrosft_token_generator
+from apps.usuarios.forms.auth_forms import NuevaPasswordForm
 from django.http import JsonResponse
 from apps.usuarios.services.terminos_service import TerminosService
 from core.controllers.base_controller import BaseController
@@ -319,16 +325,48 @@ class UserPasswordResetView(View):
     """Vista para restablecer la contraseña"""
     
     def get(self, request):
+        form = PasswordResetRequestForm()
         context = {
+            'form': form,
             'titulo': 'Restablecer Contraseña'
         }
-        return render(request, 'usuarios/password_reset.html', context)
+        return render(request, 'usuarios/password_reset_form.html', context)
     
     def post(self, request):
-        email = request.POST.get('email')
-        # Lógica para enviar correo de restablecimiento de contraseña
-        messages.success(request, 'Instrucciones para restablecer la contraseña enviadas a su correo.')
-        return redirect('usuarios:login')
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data.get('email')
+            try:
+                user = Tblusuarios.objects.get(correo__iexact=email, is_active=True)
+                # Generar token y uid
+                token = agrosft_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                # Construir link absoluto
+                domain = request.get_host()
+                protocol = 'https' if request.is_secure() else 'http'
+                confirm_url = reverse('usuarios:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+                reset_link = f"{protocol}://{domain}{confirm_url}"
+                
+                # Nombre del destinatario
+                to_name = user.get_full_name()
+                
+                # Enviar correo
+                send_password_reset_email(user.correo, to_name, reset_link)
+            except Tblusuarios.DoesNotExist:
+                # Evitar enumeración de usuarios
+                pass
+            except Exception as e:
+                import logging
+                logger = logging.getLogger('apps.usuarios.controllers.auth_controller')
+                logger.error(f"Error en proceso de password_reset: {str(e)}")
+            
+            return redirect('usuarios:password_reset_done')
+        
+        context = {
+            'form': form,
+            'titulo': 'Restablecer Contraseña'
+        }
+        return render(request, 'usuarios/password_reset_form.html', context)
 
 
 class UserPasswordResetDoneView(View):
@@ -344,25 +382,61 @@ class UserPasswordResetDoneView(View):
 class UserPasswordResetConfirmView(View):
     """Vista para confirmar el restablecimiento de contraseña"""
     
+    def get_user(self, uidb64):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            return Tblusuarios.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, Tblusuarios.DoesNotExist):
+            return None
+    
     def get(self, request, uidb64, token):
+        user = self.get_user(uidb64)
+        validlink = False
+        form = None
+        
+        if user is not None and agrosft_token_generator.check_token(user, token):
+            validlink = True
+            form = NuevaPasswordForm()
+            
         context = {
             'titulo': 'Confirmar Restablecimiento de Contraseña',
+            'validlink': validlink,
+            'form': form,
             'uidb64': uidb64,
             'token': token
         }
         return render(request, 'usuarios/password_reset_confirm.html', context)
     
     def post(self, request, uidb64, token):
-        new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
-        
-        if new_password != confirm_password:
-            messages.error(request, 'Las contraseñas no coinciden.')
-            return self.get(request, uidb64, token)
-        
-        # Lógica para confirmar el restablecimiento de contraseña
-        messages.success(request, 'Contraseña restablecida exitosamente.')
-        return redirect('usuarios:login')
+        user = self.get_user(uidb64)
+        if user is None or not agrosft_token_generator.check_token(user, token):
+            context = {
+                'titulo': 'Confirmar Restablecimiento de Contraseña',
+                'validlink': False,
+                'form': None,
+                'uidb64': uidb64,
+                'token': token
+            }
+            return render(request, 'usuarios/password_reset_confirm.html', context)
+            
+        form = NuevaPasswordForm(request.POST)
+        if form.is_valid():
+            # Guardar usando exactamente el mismo mecanismo que el resto del proyecto:
+            # set_password() aplica make_password() al campo contraseña,
+            # luego save() persiste en BD con update_fields para mayor seguridad.
+            user.set_password(form.cleaned_data['new_password1'])
+            user.save(update_fields=['contraseña'])
+            messages.success(request, 'Tu contraseña ha sido restablecida exitosamente.')
+            return redirect('usuarios:password_reset_complete')
+            
+        context = {
+            'titulo': 'Confirmar Restablecimiento de Contraseña',
+            'validlink': True,
+            'form': form,
+            'uidb64': uidb64,
+            'token': token
+        }
+        return render(request, 'usuarios/password_reset_confirm.html', context)
 
 
 class UserPasswordResetCompleteView(View):

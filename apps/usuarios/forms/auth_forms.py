@@ -2,10 +2,12 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from apps.usuarios.models.profile_model import Tblusuarios
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 
 class CustomUserCreationForm(UserCreationForm):
-    correo = forms.EmailField(required=True, label='Correo Electrónico')
+    correo = forms.EmailField(required=True, label='Correo ElectrÃ³nico')
     nombres = forms.CharField(max_length=255, required=True, label='Nombres')  # Ajustado al tamaño real
     apellidos = forms.CharField(max_length=255, required=True, label='Apellidos')
     telefono = forms.CharField(max_length=20, required=False, label='Teléfono')
@@ -31,12 +33,12 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
     nombres = forms.CharField(max_length=255, required=True, label='Nombres', widget=forms.TextInput(attrs={'class': 'form-control'}))
     apellidos = forms.CharField(max_length=255, required=True, label='Apellidos', widget=forms.TextInput(attrs={'class': 'form-control'}))
     telefono = forms.CharField(max_length=20, required=True, label='Teléfono', widget=forms.TextInput(attrs={'class': 'form-control'}))
-    correo = forms.EmailField(required=True, label='Correo Electrónico', widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    correo = forms.EmailField(required=True, label='Correo ElectrÃ³nico', widget=forms.EmailInput(attrs={'class': 'form-control'}))
     password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     password2 = forms.CharField(label='Confirmar Contraseña', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
     def clean(self):
-        """Validación general del formulario"""
+        """ValidaciÃ³n general del formulario"""
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
@@ -46,14 +48,14 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
             if password1 != password2:
                 self.add_error('password2', "Las contraseñas no coinciden. Por favor, verifica que ambas sean iguales.")
         
-        # Validar longitud mínima de la contraseña
+        # Validar longitud mÃ­nima de la contraseña
         if password1 and len(password1) < 8:
             self.add_error('password1', "La contraseña debe tener al menos 8 caracteres.")
         
         return cleaned_data
 
     def clean_password2(self):
-        """Validación adicional de password2"""
+        """ValidaciÃ³n adicional de password2"""
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         
@@ -67,7 +69,7 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
         if correo:
             correo = correo.lower().strip()
             if Tblusuarios.objects.filter(correo=correo).exists():
-                raise forms.ValidationError('Este correo electrónico ya está registrado.')
+                raise forms.ValidationError('Este correo electrÃ³nico ya estÃ¡ registrado.')
         return correo
 
     def save(self, commit=True):
@@ -87,7 +89,7 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(label='Correo electrónico', max_length=255)  # Ajustado al tamaño real
+    username = forms.CharField(label='Correo electrÃ³nico', max_length=255)  # Ajustado al tamaño real
     password = forms.CharField(label='Contraseña', widget=forms.PasswordInput)
 
     def clean(self):
@@ -139,7 +141,7 @@ class AdminUsuarioForm(forms.ModelForm):
     """Formulario para que un administrador cree o edite usuarios"""
     password = forms.CharField(
         label='Contraseña', 
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña (Dejar vacío para mantener actual en edición)'}), 
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Contraseña (Dejar vacÃ­o para mantener actual en ediciÃ³n)'}), 
         required=False
     )
 
@@ -163,13 +165,13 @@ class AdminUsuarioForm(forms.ModelForm):
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
-                raise forms.ValidationError('Este correo electrónico ya está registrado.')
+                raise forms.ValidationError('Este correo electrÃ³nico ya estÃ¡ registrado.')
         return correo
 
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
-        # Si es creación, la contraseña es obligatoria
+        # Si es creaciÃ³n, la contraseña es obligatoria
         if not self.instance.pk and not password:
             self.add_error('password', 'La contraseña es obligatoria al crear un nuevo usuario.')
         return cleaned_data
@@ -185,4 +187,47 @@ class AdminUsuarioForm(forms.ModelForm):
 
 
 # Alias para mantener compatibilidad con el controller
-RegistroForm = RegistroTblusuariosForm
+RegistroForm = RegistroTblusuariosForm
+
+
+class PasswordResetRequestForm(forms.Form):
+    """Formulario para solicitar restablecimiento de contraseña"""
+    email = forms.EmailField(
+        label='Correo ElectrÃ³nico',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'tucorreo@ejemplo.com'
+        })
+    )
+
+
+
+
+
+class NuevaPasswordForm(forms.Form):
+    new_password1 = forms.CharField(
+        label='Nueva contrasena',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
+        help_text='Minimo 8 caracteres. No puede ser solo numeros.',
+    )
+    new_password2 = forms.CharField(
+        label='Confirmar nueva contrasena',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
+    )
+
+    def clean_new_password1(self):
+        password1 = self.cleaned_data.get('new_password1')
+        if password1:
+            try:
+                validate_password(password1)
+            except ValidationError as e:
+                raise forms.ValidationError(list(e.messages))
+        return password1
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('new_password1')
+        password2 = cleaned_data.get('new_password2')
+        if password1 and password2 and password1 != password2:
+            self.add_error('new_password2', 'Las contrasenas no coinciden.')
+        return cleaned_data

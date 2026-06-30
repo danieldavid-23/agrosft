@@ -121,13 +121,8 @@
                         <td class="ps-4 font-monospace fw-bold text-muted">#{{ usuario.id_users }}</td>
                         <td>
                             <div class="d-flex align-items-center">
-<<<<<<< Updated upstream
-                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-3"
-                                     style="width: 40px; height: 40px; font-size: 1.1rem; flex-shrink:0; background: {% if usuario.is_superuser %}linear-gradient(135deg, #E07C3A, #D97A30){% elif usuario.is_staff %}linear-gradient(135deg, #3C8D3C, #25632C){% else %}linear-gradient(135deg, #3A8BC8, #2E74A8){% endif %};"> 
-=======
                                 <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-3 {% if usuario.is_superuser %}bg-superadmin-gradient{% elif usuario.is_staff %}bg-staff-gradient{% else %}bg-user-gradient{% endif %}"
                                      style="width: 40px; height: 40px; font-size: 1.1rem; flex-shrink:0;">
->>>>>>> Stashed changes
                                     {{ usuario.nombres|slice:":1"|upper }}
                                 </div>
                                 <div>

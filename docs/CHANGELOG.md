@@ -7,6 +7,19 @@
 
 ## [Unreleased]
 
+### Added (2026-06-30)
+- **WhatsApp Click-to-Chat**: Nueva función `generar_whatsapp_link()` en `core/utils/helpers.py` que genera enlaces `wa.me` con formato internacional (+57 Colombia) y mensaje predefinido.
+- **Contacto WhatsApp post-aceptación**: Al aceptar una solicitud de compra, el sistema genera automáticamente un enlace de WhatsApp y muestra un modal con botón para abrir el chat del comprador (`apps/ventas/controllers/solicitud_controller.py`).
+- **Enlace cliqueable**: El número de teléfono del comprador en el detalle de solicitud ahora es un enlace a WhatsApp cuando la solicitud está aceptada (`apps/ventas/templates/ventas/solicitudes/solicitud_detail.html`).
+- **Requisitos RF-V18 y RF-V19**: Documentados en REQUIREMENTS.md
+- **Historia US-14**: Contactar comprador por WhatsApp documentada en USER_STORIES.md
+- **API.md**: Documentado campo `whatsapp_link` en respuesta de aceptar solicitud
+
+### Changed (2026-06-30)
+- `REQUIREMENTS.md`: Agregados RF-V18 y RF-V19, actualizado RNF-U05
+- `USER_STORIES.md`: Agregada US-14, actualizado conteo (14 completadas)
+- `API.md`: Documentado campo `whatsapp_link` en respuesta AJAX de aceptar solicitud
+
 ### Removed (2026-06-25)
 - **Módulo Vue de solicitudes eliminado** — Se revirtió a la tabla Django server-side original:
   - `frontend/src/solicitudes/SolicitudApp.vue`: Eliminado
@@ -32,6 +45,13 @@
 - **Logo oficial del proyecto**: `static/img/agrosft_o.svg` — renderizado por Vue en navbar y footer
 - **Context processor `core.context_processors.layout_data`**: inyecta datos de layout (usuario, URLs, carrito, mensajes) como JSON para Vue
 - **Entry point Vite**: `frontend/src/layout/main.js` → bundle `layout.js` (11.64 kB)
+
+### Added (2026-06-30)
+- **Recuperación de contraseña con Brevo REST API** — Implementada la recuperación de contraseña usando la API REST de Brevo y el sistema nativo de Django:
+  - `apps/usuarios/services/email_service.py` [NEW]: Consumo de la API de Brevo a través de la librería `requests`, con envío de correos que incluyen una plantilla HTML profesional (destacando a AGROSFT) y una versión en texto plano. Uso del remitente verificado a través de `settings.DEFAULT_FROM_EMAIL` y manejo seguro de errores con logs.
+  - `apps/usuarios/forms/auth_forms.py`: Definido el formulario `PasswordResetRequestForm` para capturar el correo electrónico. Definido `NuevaPasswordForm`, formulario propio compatible con `Tblusuarios` (hereda de `models.Model`), que reemplaza a `SetPasswordForm` de Django (incompatible con modelos que no heredan de `AbstractBaseUser`).
+  - `apps/usuarios/utils/password_reset_tokens.py` [NEW]: `TblusuariosPasswordResetTokenGenerator`, generador de tokens personalizado que sobreescribe `_make_hash_value()` para usar los campos reales `user.correo` y `user.contraseña` del modelo `Tblusuarios`, evitando la llamada a `get_email_field_name()` que solo existe en `AbstractBaseUser`.
+  - `apps/usuarios/controllers/auth_controller.py`: Modificadas las vistas `UserPasswordResetView` y `UserPasswordResetConfirmView` para integrar la lógica de generación de tokens (`agrosft_token_generator`), codificación base64 (`uidb64`), y la actualización segura de contraseñas utilizando `user.set_password()` + `user.save()` (mecanismo nativo del proyecto).
 
 ### Changed (2026-06-24)
 - **Paleta "Raíz y Confianza" implementada** — Rebranding visual completo:

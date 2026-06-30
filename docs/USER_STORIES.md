@@ -287,11 +287,34 @@ graph TD
 
 ---
 
+---
+
+### US-14: Contactar Comprador por WhatsApp
+
+**Como** vendedor,
+**quiero** al aceptar una solicitud de compra ser dirigido automáticamente al chat de WhatsApp del comprador,
+**para** coordinar rápidamente la entrega y el pago del producto.
+
+**Requisitos relacionados**: [[REQUIREMENTS#RF-V18]], [[REQUIREMENTS#RF-V19]]
+
+**Criterios de Aceptación**:
+- [x] Al aceptar una solicitud, se muestra un modal con botón para abrir WhatsApp del comprador
+- [x] El mensaje de WhatsApp incluye el ID de la solicitud y el nombre del vendedor
+- [x] El número de teléfono del comprador es un enlace cliqueable a wa.me
+- [x] El enlace de WhatsApp solo aparece cuando la solicitud está en estado "aceptada"
+- [x] No requiere API key de WhatsApp — usa wa.me links
+- [x] El modal se muestra automáticamente tras aceptar la solicitud
+
+**Implementación**: `apps/ventas/controllers/solicitud_controller.py` → `aceptar_solicitud()`, `detalle_solicitud()`  
+**Utility**: `core/utils/helpers.py` → `generar_whatsapp_link()`
+
+---
+
 ## Resumen de Historias por Estado
 
 | Estado | Cantidad | Historias |
 |---|---|---|
-| ✅ Completadas | 13 | US-01 a US-13 |
+| ✅ Completadas | 14 | US-01 a US-14 |
 | 🔶 Parciales | 2 | RF-U08 (password reset), RF-I13 (stock alerts) |
 | ❌ No iniciadas | 8 | GAP-01 a GAP-08 (ver [[REQUIREMENTS#3. Requisitos Pendientes]]) |
 

@@ -6,6 +6,7 @@ from django.db.models import Q, Count
 from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 from apps.inventario.models import ProductoUsuario
 from apps.usuarios.models.profile_model import Tblusuarios
+from core.utils.helpers import generar_whatsapp_link
 import json
 
 
@@ -160,6 +161,26 @@ def detalle_solicitud(request, pk):
     
     # Obtener información del comprador
     comprador = solicitud.id_usuario
+    telefono_comprador = getattr(comprador, 'telefono', '') or 'No proporcionado'
+    
+    # Generar link de WhatsApp si la solicitud está aceptada
+    whatsapp_link = ''
+    if estado == 'aceptada' and telefono_comprador and telefono_comprador != 'No proporcionado':
+        mensaje_whatsapp = (
+            f"¡Hola {comprador.nombres}! Soy quien aceptó tu solicitud de compra "
+            f"#{solicitud.id_movimiento} en AgroSFT. Coordinemos la entrega. ¡Gracias!"
+        )
+        whatsapp_link = generar_whatsapp_link(telefono_comprador, mensaje_whatsapp)
+    
+    # Verificar si venimos de una aceptación reciente (para mostrar modal)
+    show_whatsapp_modal = False
+    whatsapp_modal_link = ''
+    whatsapp_modal_comprador = ''
+    session_data = request.session.pop('whatsapp_just_accepted', None)
+    if session_data and session_data.get('solicitud_id') == solicitud.id_movimiento:
+        show_whatsapp_modal = True
+        whatsapp_modal_link = session_data.get('whatsapp_link', whatsapp_link)
+        whatsapp_modal_comprador = session_data.get('comprador_nombre', '')
     
     return render(request, 'ventas/solicitudes/solicitud_detail.html', {
         'solicitud': {
@@ -171,9 +192,13 @@ def detalle_solicitud(request, pk):
             'estado': estado,
             'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
             'comprador_email': comprador.correo,
-            'comprador_telefono': getattr(comprador, 'telefono', 'No proporcionado'),
+            'comprador_telefono': telefono_comprador,
         },
         'productos': productos,
+        'whatsapp_link': whatsapp_link,
+        'show_whatsapp_modal': show_whatsapp_modal,
+        'whatsapp_modal_link': whatsapp_modal_link,
+        'whatsapp_modal_comprador': whatsapp_modal_comprador,
     })
 
 
@@ -203,10 +228,31 @@ def aceptar_solicitud(request, pk):
             tipo_venta = TipoMovimiento.objects.get_or_create(tipo='venta')[0]
             solicitud_original.id_tipo_movimiento = tipo_venta
             solicitud_original.save()
+
+            # Obtener teléfono del comprador y generar link de WhatsApp
+            comprador = solicitud_original.id_usuario
+            telefono_comprador = getattr(comprador, 'telefono', '') or ''
+            mensaje_whatsapp = (
+                f"¡Hola {comprador.nombres}! He aceptado tu solicitud de compra "
+                f"#{pk} en AgroSFT. Coordinemos la entrega. ¡Gracias!"
+            )
+            whatsapp_link = generar_whatsapp_link(telefono_comprador, mensaje_whatsapp)
+
+            # Guardar en sesión para mostrar modal en el detalle
+            request.session['whatsapp_just_accepted'] = {
+                'solicitud_id': pk,
+                'whatsapp_link': whatsapp_link,
+                'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
+            }
             
             msg = f'¡Solicitud #{pk} aceptada y transferida al módulo de ventas con estado "en proceso"!'
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'message': msg, 'estado': 'aceptada'})
+                return JsonResponse({
+                    'success': True,
+                    'message': msg,
+                    'estado': 'aceptada',
+                    'whatsapp_link': whatsapp_link,
+                })
             messages.success(request, msg)
             
     except Exception as e:

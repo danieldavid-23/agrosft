@@ -11,19 +11,16 @@ const props = defineProps({
 })
 
 const showMobileMenu = ref(false)
-const showDropdown = ref(false)
 const toasts = ref([])
 
 function toggleMobile() {
   showMobileMenu.value = !showMobileMenu.value
 }
 
-function toggleDropdown() {
-  showDropdown.value = !showDropdown.value
-}
-
-function closeDropdown() {
-  showDropdown.value = false
+function isActive(href) {
+  const current = window.location.pathname.replace(/\/+$/, '')
+  const link = (href || '').replace(/\/+$/, '')
+  return current === link
 }
 
 function onClickOutside(event) {
@@ -87,42 +84,42 @@ function dismissToast(id) {
           <template v-if="is_authenticated && user">
             <template v-if="!user.is_staff">
               <li class="nav-item">
-                <a class="nav-link" :href="urls.marketplace"><i class="fas fa-store me-1 d-lg-none"></i> Inicio</a>
+                <a class="nav-link" :class="{ active: isActive(urls.marketplace) }" :href="urls.marketplace"><i class="fas fa-store me-1 d-lg-none"></i> Inicio</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.mi_inventario"><i class="fas fa-box-open me-1 d-lg-none"></i> Mi Inventario</a>
+                <a class="nav-link" :class="{ active: isActive(urls.mi_inventario) }" :href="urls.mi_inventario"><i class="fas fa-box-open me-1 d-lg-none"></i> Mi Inventario</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.clientes"><i class="fas fa-users me-1 d-lg-none"></i> Clientes</a>
+                <a class="nav-link" :class="{ active: isActive(urls.clientes) }" :href="urls.clientes"><i class="fas fa-users me-1 d-lg-none"></i> Clientes</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.ventas"><i class="fas fa-chart-line me-1 d-lg-none"></i> Ventas</a>
+                <a class="nav-link" :class="{ active: isActive(urls.ventas) }" :href="urls.ventas"><i class="fas fa-chart-line me-1 d-lg-none"></i> Ventas</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.solicitudes"><i class="fas fa-clipboard-list me-1 d-lg-none"></i> Solicitudes</a>
+                <a class="nav-link" :class="{ active: isActive(urls.solicitudes) }" :href="urls.solicitudes"><i class="fas fa-clipboard-list me-1 d-lg-none"></i> Solicitudes</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.mis_compras"><i class="fas fa-shopping-bag me-1 d-lg-none"></i> Mis Compras</a>
+                <a class="nav-link" :class="{ active: isActive(urls.mis_compras) }" :href="urls.mis_compras"><i class="fas fa-shopping-bag me-1 d-lg-none"></i> Mis Compras</a>
               </li>
             </template>
             <template v-else>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.admin_usuarios" style="color: var(--primary-color); font-weight: 600;"><i class="fas fa-users-cog me-1 d-lg-none"></i><i class="fas fa-users d-none d-lg-inline me-1"></i>Usuarios</a>
+                <a class="nav-link" :class="{ active: isActive(urls.admin_usuarios) }" :href="urls.admin_usuarios" style="color: var(--primary-color); font-weight: 600;"><i class="fas fa-users-cog me-1 d-lg-none"></i><i class="fas fa-users d-none d-lg-inline me-1"></i>Usuarios</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.admin_moderacion" style="color: var(--accent-color); font-weight: 600;"><i class="fas fa-gavel me-1 d-lg-none"></i><i class="fas fa-gavel d-none d-lg-inline me-1"></i>Moderación</a>
+                <a class="nav-link" :class="{ active: isActive(urls.admin_moderacion) }" :href="urls.admin_moderacion" style="color: var(--primary-color); font-weight: 600;"><i class="fas fa-gavel me-1 d-lg-none"></i><i class="fas fa-gavel d-none d-lg-inline me-1"></i>Moderación</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.admin_categorias" style="color: var(--secondary-color); font-weight: 600;"><i class="fas fa-tags me-1 d-lg-none"></i><i class="fas fa-tags d-none d-lg-inline me-1"></i>Categorías</a>
+                <a class="nav-link" :class="{ active: isActive(urls.admin_categorias) }" :href="urls.admin_categorias" style="color: var(--secondary-color); font-weight: 600;"><i class="fas fa-tags me-1 d-lg-none"></i><i class="fas fa-tags d-none d-lg-inline me-1"></i>Categorías</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.admin_auditoria" style="color: var(--color-info); font-weight: 600;"><i class="fas fa-clipboard-list me-1 d-lg-none"></i><i class="fas fa-clipboard-list d-none d-lg-inline me-1"></i>Auditoría</a>
+                <a class="nav-link" :class="{ active: isActive(urls.admin_auditoria) }" :href="urls.admin_auditoria" style="color: var(--primary-color); font-weight: 600;"><i class="fas fa-clipboard-list me-1 d-lg-none"></i><i class="fas fa-clipboard-list d-none d-lg-inline me-1"></i>Auditoría</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.admin_estadisticas" style="color: var(--primary-color); font-weight: 600;"><i class="fas fa-chart-bar me-1 d-lg-none"></i><i class="fas fa-chart-column d-none d-lg-inline me-1"></i>Estadísticas</a>
+                <a class="nav-link" :class="{ active: isActive(urls.admin_estadisticas) }" :href="urls.admin_estadisticas" style="color: var(--primary-color); font-weight: 600;"><i class="fas fa-chart-bar me-1 d-lg-none"></i><i class="fas fa-chart-column d-none d-lg-inline me-1"></i>Estadísticas</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" :href="urls.admin_panel" style="color: var(--text-muted); font-weight: 600;"><i class="fas fa-cog me-1 d-lg-none"></i><i class="fas fa-shield-halved d-none d-lg-inline me-1"></i>Admin</a>
+                <a class="nav-link" :class="{ active: isActive(urls.admin_panel) }" :href="urls.admin_panel" style="color: var(--text-muted); font-weight: 600;"><i class="fas fa-cog me-1 d-lg-none"></i><i class="fas fa-shield-halved d-none d-lg-inline me-1"></i>Admin</a>
               </li>
             </template>
 
@@ -142,14 +139,14 @@ function dismissToast(id) {
                 <img v-if="user.imagen_perfil_url" :src="user.imagen_perfil_url" alt="Avatar" class="rounded-circle me-1 align-middle" style="width: 24px; height: 24px; object-fit: cover; border: 1.5px solid var(--primary-color);">
                 <i v-else class="fas fa-user-circle fs-5 me-1 align-middle" style="color: var(--primary-color)"></i>
                 {{ user.nombre_corto || user.correo }}
-                <span v-if="user.is_staff" class="badge ms-1" style="background-color: var(--accent-color); font-size: 0.6rem; vertical-align: middle;">ADMIN</span>
+                <span v-if="user.is_staff" class="badge ms-1" style="background-color: var(--primary-color); font-size: 0.6rem; vertical-align: middle;">ADMIN</span>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end shadow border-0" :class="{ show: showDropdown }" style="border-radius: var(--radius-md);">
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: var(--radius-md);">
                 <template v-if="user.is_staff">
                   <li><a class="dropdown-item py-2" :href="urls.admin_usuarios" style="background: var(--primary-light); color: var(--primary-color); font-weight: 600;"><i class="fas fa-users-cog fa-fw me-2" style="color: var(--primary-color)"></i> Gestionar Usuarios</a></li>
-                  <li><a class="dropdown-item py-2" :href="urls.admin_moderacion" style="background: var(--accent-light); color: var(--accent-color); font-weight: 600;"><i class="fas fa-gavel fa-fw me-2" style="color: var(--accent-color)"></i> Moderar Catálogo</a></li>
+                  <li><a class="dropdown-item py-2" :href="urls.admin_moderacion" style="background: var(--primary-light); color: var(--primary-color); font-weight: 600;"><i class="fas fa-gavel fa-fw me-2" style="color: var(--primary-color)"></i> Moderar Catálogo</a></li>
                   <li><a class="dropdown-item py-2" :href="urls.admin_categorias" style="background: var(--secondary-light); color: var(--secondary-color); font-weight: 600;"><i class="fas fa-tags fa-fw me-2" style="color: var(--secondary-color)"></i> Gestionar Categorías</a></li>
-                  <li><a class="dropdown-item py-2" :href="urls.admin_auditoria" style="background: var(--accent-light); color: var(--accent-color); font-weight: 600;"><i class="fas fa-clipboard-list fa-fw me-2" style="color: var(--accent-color)"></i> Auditoría de Acciones</a></li>
+                  <li><a class="dropdown-item py-2" :href="urls.admin_auditoria" style="background: var(--primary-light); color: var(--primary-color); font-weight: 600;"><i class="fas fa-clipboard-list fa-fw me-2" style="color: var(--primary-color)"></i> Auditoría de Acciones</a></li>
                   <li><a class="dropdown-item py-2" :href="urls.admin_estadisticas" style="background: var(--primary-light); color: var(--primary-color); font-weight: 600;"><i class="fas fa-chart-column fa-fw me-2" style="color: var(--primary-color)"></i> Estadísticas de Plataforma</a></li>
                   <li><a class="dropdown-item py-2" :href="urls.admin_panel" style="background: #F5F1E8; color: var(--text-muted); font-weight: 600;"><i class="fas fa-shield-halved fa-fw me-2" style="color: var(--text-muted)"></i> Panel de Administración</a></li>
                   <li><hr class="dropdown-divider"></li>
