@@ -11,7 +11,6 @@
         <tr>
           <th># Factura</th>
           <th>Fecha</th>
-          <th>Metodo de pago</th>
           <th>Total</th>
           <th>Estado</th>
           <th></th>
@@ -22,10 +21,9 @@
         <tr>
           <td>{{ f.id_factura }}</td>
           <td>{{ f.creada_en|date:"d/m/Y H:i" }}</td>
-          <td>{{ f.metodo_pago.nombre|default:"-" }}</td>
           <td>${{ f.total|floatformat:2 }}</td>
           <td>
-            <span class="badge bg-{% if f.estado == 'pagada' %}success{% elif f.estado == 'pendiente' %}warning{% else %}secondary{% endif %}">
+            <span class="badge bg-{% if f.estado == 'emitida' %}success{% else %}secondary{% endif %}">
               {{ f.get_estado_display }}
             </span>
           </td>

@@ -2,38 +2,10 @@ from django.db import models
 from django.conf import settings
 
 
-class MetodoPago(models.Model):
-    TIPOS = [
-        ('mercadopago', 'Mercado Pago'),
-        ('wompi', 'Wompi'),
-        ('paypal', 'PayPal'),
-    ]
-    ESTADOS = [
-        ('activo', 'Activo'),
-        ('inactivo', 'Inactivo'),
-    ]
-    codigo = models.CharField(max_length=20, unique=True, choices=TIPOS)
-    nombre = models.CharField(max_length=60)
-    comision_porcentaje = models.DecimalField(max_digits=4, decimal_places=2, default=0.00)
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='activo')
-    logo_url = models.URLField(blank=True)
-    orden = models.IntegerField(default=0)
-
-    class Meta:
-        db_table = 'metodo_pago'
-        verbose_name = 'Metodo de Pago'
-        verbose_name_plural = 'Metodos de Pago'
-
-    def __str__(self):
-        return self.nombre
-
-
 class Factura(models.Model):
     ESTADOS = [
-        ('pendiente', 'Pendiente de pago'),
-        ('pagada', 'Pagada'),
+        ('emitida', 'Emitida'),
         ('cancelada', 'Cancelada'),
-        ('reembolsada', 'Reembolsada'),
     ]
     id_factura = models.AutoField(primary_key=True)
     usuario = models.ForeignKey(
@@ -45,16 +17,10 @@ class Factura(models.Model):
         db_column='id_movimiento'
     )
     total = models.DecimalField(max_digits=12, decimal_places=2)
-    metodo_pago = models.ForeignKey(
-        MetodoPago, on_delete=models.SET_NULL, null=True,
-        db_column='id_metodo_pago'
-    )
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
-    transaction_id = models.CharField(max_length=255, blank=True)
+    metodo_pago_nombre = models.CharField(max_length=60, blank=True, db_column='metodo_pago_nombre')
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='emitida')
     payer_email = models.EmailField(max_length=255, blank=True)
-    payment_data = models.JSONField(default=dict, blank=True)
     creada_en = models.DateTimeField(auto_now_add=True, db_column='creada_en')
-    pagada_en = models.DateTimeField(null=True, blank=True, db_column='pagada_en')
     pdf_generado = models.BooleanField(default=False, db_column='pdf_generado')
 
     class Meta:

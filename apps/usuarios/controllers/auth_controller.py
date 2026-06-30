@@ -158,14 +158,14 @@ class LogoutView(DjangoLogoutView):
     
     def get(self, request, *args, **kwargs):
         """Soporte para cierre de sesión mediante GET (para enlaces directos <a>)"""
-        logout(request)
         messages.info(request, 'Has cerrado sesión exitosamente.')
+        logout(request)
         return redirect(self.next_page)
 
     def post(self, request, *args, **kwargs):
         """Cierre de sesión mediante POST"""
-        logout(request)
         messages.info(request, 'Has cerrado sesión exitosamente.')
+        logout(request)
         return redirect(self.next_page)
 
 

@@ -14,34 +14,41 @@ def layout_data(request):
 
     urls = data['urls']
     urls['logo'] = f"{settings.STATIC_URL}img/agrosft_o.svg"
-    urls['home'] = reverse('home')
 
-    urls['login'] = reverse('usuarios:login')
-    urls['registro'] = reverse('usuarios:registro')
-    urls['logout'] = reverse('usuarios:logout')
-    urls['terminos'] = reverse('usuarios:terminos')
+    def _url(name, fallback='#'):
+        try:
+            return reverse(name)
+        except Exception:
+            return fallback
 
-    urls['marketplace'] = reverse('inventario:marketplace')
-    urls['mi_inventario'] = reverse('inventario:listar')
+    urls['home'] = _url('home')
 
-    urls['ventas'] = reverse('ventas:venta_list')
-    urls['solicitudes'] = reverse('ventas:solicitud_list')
-    urls['mis_compras'] = reverse('ventas:compra_list')
-    urls['carrito'] = reverse('ventas:carrito_detalle')
+    urls['login'] = _url('usuarios:login')
+    urls['registro'] = _url('usuarios:registro')
+    urls['logout'] = _url('usuarios:logout')
+    urls['terminos'] = _url('usuarios:terminos')
 
-    urls['clientes'] = reverse('clientes:cliente_list')
+    urls['marketplace'] = _url('inventario:marketplace')
+    urls['mi_inventario'] = _url('inventario:listar')
 
-    urls['facturacion_historial'] = reverse('facturacion:historial_facturas')
-    urls['perfil'] = reverse('usuarios:perfil')
-    urls['historial'] = reverse('usuarios:historial')
-    urls['cambiar_password'] = reverse('usuarios:cambiar_password')
+    urls['ventas'] = _url('ventas:venta_list')
+    urls['solicitudes'] = _url('ventas:solicitud_list')
+    urls['mis_compras'] = _url('ventas:compra_list')
+    urls['carrito'] = _url('ventas:carrito_detalle')
 
-    urls['admin_usuarios'] = reverse('usuarios:admin_usuarios_list')
-    urls['admin_moderacion'] = reverse('usuarios:admin_moderacion')
-    urls['admin_categorias'] = reverse('usuarios:admin_categorias_list')
-    urls['admin_auditoria'] = reverse('usuarios:admin_audit_logs')
-    urls['admin_estadisticas'] = reverse('usuarios:admin_estadisticas')
-    urls['admin_panel'] = reverse('admin:index')
+    urls['clientes'] = _url('clientes:cliente_list')
+
+    urls['facturacion_historial'] = _url('facturacion:historial_facturas')
+    urls['perfil'] = _url('usuarios:perfil')
+    urls['historial'] = _url('usuarios:historial')
+    urls['cambiar_password'] = _url('usuarios:cambiar_password')
+
+    urls['admin_usuarios'] = _url('usuarios:admin_usuarios_list')
+    urls['admin_moderacion'] = _url('usuarios:admin_moderacion')
+    urls['admin_categorias'] = _url('usuarios:admin_categorias_list')
+    urls['admin_auditoria'] = _url('usuarios:admin_audit_logs')
+    urls['admin_estadisticas'] = _url('usuarios:admin_estadisticas')
+    urls['admin_panel'] = _url('admin:index')
 
     if request.user.is_authenticated:
         user = request.user

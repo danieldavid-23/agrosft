@@ -16,7 +16,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.correo = self.cleaned_data["correo"]
+        user.correo = self.cleaned_data["correo"].lower().strip()
         user.nombres = self.cleaned_data["nombres"]
         user.apellidos = self.cleaned_data["apellidos"]
         user.telefono = self.cleaned_data["telefono"]
@@ -65,13 +65,14 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
     def clean_correo(self):
         correo = self.cleaned_data.get('correo')
         if correo:
+            correo = correo.lower().strip()
             if Tblusuarios.objects.filter(correo=correo).exists():
                 raise forms.ValidationError('Este correo electrónico ya está registrado.')
         return correo
 
     def save(self, commit=True):
         user = Tblusuarios(
-            correo=self.cleaned_data['correo'],
+            correo=self.cleaned_data['correo'].lower().strip(),
             nombres=self.cleaned_data['nombres'],
             apellidos=self.cleaned_data['apellidos'],
             contraseña=make_password(self.cleaned_data['password1']),
@@ -126,12 +127,11 @@ class PerfilForm(forms.ModelForm):
     """Formulario para editar perfil de usuario"""
     class Meta:
         model = Tblusuarios
-        fields = ('nombres', 'apellidos', 'telefono', 'correo')
+        fields = ('nombres', 'apellidos', 'telefono')
         widgets = {
             'nombres': forms.TextInput(attrs={'class': 'form-control'}),
             'apellidos': forms.TextInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
 
