@@ -7,6 +7,19 @@
 
 ## [Unreleased]
 
+### Added (2026-06-30)
+- **WhatsApp Click-to-Chat**: Nueva función `generar_whatsapp_link()` en `core/utils/helpers.py` que genera enlaces `wa.me` con formato internacional (+57 Colombia) y mensaje predefinido.
+- **Contacto WhatsApp post-aceptación**: Al aceptar una solicitud de compra, el sistema genera automáticamente un enlace de WhatsApp y muestra un modal con botón para abrir el chat del comprador (`apps/ventas/controllers/solicitud_controller.py`).
+- **Enlace cliqueable**: El número de teléfono del comprador en el detalle de solicitud ahora es un enlace a WhatsApp cuando la solicitud está aceptada (`apps/ventas/templates/ventas/solicitudes/solicitud_detail.html`).
+- **Requisitos RF-V18 y RF-V19**: Documentados en REQUIREMENTS.md
+- **Historia US-14**: Contactar comprador por WhatsApp documentada en USER_STORIES.md
+- **API.md**: Documentado campo `whatsapp_link` en respuesta de aceptar solicitud
+
+### Changed (2026-06-30)
+- `REQUIREMENTS.md`: Agregados RF-V18 y RF-V19, actualizado RNF-U05
+- `USER_STORIES.md`: Agregada US-14, actualizado conteo (14 completadas)
+- `API.md`: Documentado campo `whatsapp_link` en respuesta AJAX de aceptar solicitud
+
 ### Removed (2026-06-25)
 - **Módulo Vue de solicitudes eliminado** — Se revirtió a la tabla Django server-side original:
   - `frontend/src/solicitudes/SolicitudApp.vue`: Eliminado

@@ -294,10 +294,22 @@ POST /ventas/solicitudes/<pk>/rechazar/            → Rechazar solicitud
 POST /ventas/solicitudes/<pk>/vendido/             → Marcar como vendida
 ```
 
-**Aceptar/Rechazar — Response (AJAX)**:
+**Aceptar — Response (AJAX)**:
 ```json
-{"success": true, "message": "¡Solicitud #5 aceptada!", "estado": "aceptada"}
+{
+  "success": true,
+  "message": "¡Solicitud #5 aceptada y transferida al módulo de ventas con estado 'en proceso'!",
+  "estado": "aceptada",
+  "whatsapp_link": "https://wa.me/573154840318?text=%C2%A1Hola%20Samuel!%20He%20aceptado%20tu%20solicitud..."
+}
 ```
+
+**Rechazar — Response (AJAX)**:
+```json
+{"success": true, "message": "¡Solicitud #5 rechazada!", "estado": "rechazada"}
+```
+
+> **Nota**: Al aceptar, se genera un enlace `wa.me` con mensaje predefinido para contactar al comprador. Para requests no-AJAX, se almacena en sesión y se muestra un modal en la página de detalle.
 
 ---
 

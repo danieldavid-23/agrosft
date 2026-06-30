@@ -402,6 +402,59 @@ Eliminar el módulo Vue de solicitudes (`SolicitudApp.vue`, `main.js`) y restaur
 
 ---
 
+## ADR-013: Integración WhatsApp mediante wa.me (Click-to-Chat)
+
+**Fecha**: 2026-06-30  
+**Estado**: Aceptada
+
+### Contexto
+
+El sistema requiere que al aceptar una solicitud de compra, el vendedor sea dirigido al chat de WhatsApp del comprador para coordinar la entrega y el pago. Actualmente solo se muestra el número de teléfono como texto, no como enlace.
+
+### Alternativas Consideradas
+
+1. **WhatsApp Business API (Cloud API)**: Requiere registro en Meta for Developers, número empresarial verificado, token de acceso, webhooks. Soporta envío proactivo de mensajes desde el sistema.
+2. **WhatsApp Click-to-Chat (wa.me)**: Genera enlaces `https://wa.me/numero?text=mensaje`. Sin registro, sin API key, abre WhatsApp Web/App del usuario. El vendedor debe enviar el mensaje manualmente.
+
+### Decisión
+
+Se implementa **WhatsApp Click-to-Chat (wa.me)** con:
+
+1. Función utilitaria `generar_whatsapp_link()` en `core/utils/helpers.py` que:
+   - Limpia el número de teléfono (solo dígitos)
+   - Formatea a estándar internacional (+57 para Colombia)
+   - Codifica el mensaje predefinido como query param `?text=`
+2. En el controlador `aceptar_solicitud()`:
+   - Genera el link WhatsApp tras cambiar estado a 'venta'
+   - Incluye `whatsapp_link` en respuesta AJAX
+   - Almacena en sesión para mostrar modal tras redirect
+3. Modal automático post-aceptación con botón "Abrir WhatsApp"
+4. Enlace cliqueable en el detalle cuando estado es 'aceptada'
+
+### Consecuencias
+
+- ✅ Sin dependencias externas (no requiere API key)
+- ✅ Sin costos operativos
+- ✅ Sin registro en Meta
+- ✅ Compatible con cualquier dispositivo (WhatsApp Web/App)
+- ✅ Implementación inmediata (1 día)
+- ❌ No permite envío automático de mensajes desde el sistema
+- ❌ Requiere acción manual del vendedor (click en enlace)
+- ❌ No hay tracking de conversaciones dentro de la plataforma
+- ❌ Limitado a países con formato +57 (Colombia) configurable
+
+### Archivos Afectados
+
+- `core/utils/helpers.py` — Nueva función `generar_whatsapp_link()`
+- `apps/ventas/controllers/solicitud_controller.py` — Modificados `aceptar_solicitud()`, `detalle_solicitud()`
+- `apps/ventas/templates/ventas/solicitudes/solicitud_detail.html` — Agregado modal post-aceptación + botón WhatsApp
+- `docs/REQUIREMENTS.md` — RF-V18, RF-V19
+- `docs/USER_STORIES.md` — US-14
+- `docs/API.md` — Documentado `whatsapp_link`
+- `docs/CHANGELOG.md` — Registro del cambio
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -418,6 +471,7 @@ Eliminar el módulo Vue de solicitudes (`SolicitudApp.vue`, `main.js`) y restaur
 | ADR-010 | Paleta Raíz y Confianza | Aceptada | Frontend / UI |
 | ADR-011 | Layout global migrado a Vue.js | Aceptada | Frontend / Arquitectura |
 | ADR-012 | Reversión a renderizado server-side de solicitudes | Aceptada | Módulo ventas |
+| ADR-013 | Integración WhatsApp mediante wa.me (Click-to-Chat) | Aceptada | Módulo ventas / Core |
 
 ---
 
