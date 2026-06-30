@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Factura #{{ factura.id_factura }}</title>
+<style>
+  @page {
+    size: letter;
+    margin: 2cm;
+  }
+  body {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 11pt;
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #22c55e;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+  }
+  .header .logo h1 {
+    font-size: 24pt;
+    color: #22c55e;
+    margin: 0;
+  }
+  .header .logo span {
+    font-size: 9pt;
+    color: #64748b;
+  }
+  .header .titulo {
+    text-align: right;
+  }
+  .header .titulo h2 {
+    font-size: 18pt;
+    color: #1e293b;
+    margin: 0;
+  }
+  .header .titulo p {
+    margin: 2px 0;
+    color: #64748b;
+    font-size: 9pt;
+  }
+  .info-grid {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 6px;
+  }
+  .info-grid .col p {
+    margin: 3px 0;
+    font-size: 10pt;
+  }
+  .info-grid .col .label {
+    color: #64748b;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .info-grid .col .value {
+    font-weight: bold;
+    color: #1e293b;
+  }
+  table.items {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  table.items thead th {
+    background: #22c55e;
+    color: white;
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  table.items thead th.right {
+    text-align: right;
+  }
+  table.items tbody td {
+    padding: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 10pt;
+  }
+  table.items tbody td.right {
+    text-align: right;
+  }
+  table.items tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  .total-box {
+    margin-left: auto;
+    width: 250px;
+    border: 2px solid #22c55e;
+    border-radius: 6px;
+    padding: 12px 15px;
+    text-align: right;
+  }
+  .total-box .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 10pt;
+  }
+  .total-box .total-final {
+    font-size: 16pt;
+    font-weight: bold;
+    color: #22c55e;
+    border-top: 2px solid #22c55e;
+    padding-top: 8px;
+    margin-top: 5px;
+  }
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 8pt;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 10px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  .badge-success {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  .watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 60pt;
+    color: rgba(34, 197, 94, 0.06);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="watermark">AGROSFT</div>
+
+<div class="header">
+  <div class="logo">
+    <h1>AGROSFT</h1>
+    <span>Plataforma Agricola</span>
+  </div>
+  <div class="titulo">
+    <h2>FACTURA</h2>
+    <p>No. {{ factura.id_factura|stringformat:"06d" }}</p>
+    <p>Fecha: {{ factura.creada_en|date:"d/m/Y H:i" }}</p>
+  </div>
+</div>
+
+<div class="info-grid">
+  <div class="col">
+    <p class="label">Cliente</p>
+    <p class="value">{{ factura.usuario.get_full_name|default:factura.usuario.correo }}</p>
+    <p>{{ factura.usuario.correo }}</p>
+    {% if factura.usuario.telefono %}
+    <p>Tel: {{ factura.usuario.telefono }}</p>
+    {% endif %}
+  </div>
+  <div class="col" style="text-align:right">
+    <p class="label">Estado</p>
+    <p><span class="badge badge-success">{{ factura.get_estado_display|upper }}</span></p>
+    {% if factura.metodo_pago_nombre %}
+    <p class="label">Metodo de pago</p>
+    <p class="value">{{ factura.metodo_pago_nombre }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<table class="items">
+  <thead>
+    <tr>
+      <th style="width:50%">Producto</th>
+      <th class="right">Cantidad</th>
+      <th class="right">Precio Unit.</th>
+      <th class="right">Subtotal</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.descripcion }}</td>
+      <td class="right">{{ item.cantidad }}</td>
+      <td class="right">${{ item.precio_unitario|floatformat:2 }}</td>
+      <td class="right">${{ item.subtotal|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="total-box">
+  <div class="row">
+    <span>Subtotal:</span>
+    <span>${{ factura.total|floatformat:2 }}</span>
+  </div>
+  <div class="row total-final">
+    <span>TOTAL:</span>
+    <span>${{ factura.total|floatformat:2 }}</span>
+  </div>
+</div>
+
+<div class="footer">
+  AgroSFT - Plataforma Agricola | Esta factura es un documento de soporte generado electronicamente.
+</div>
+
+</body>
+</html>

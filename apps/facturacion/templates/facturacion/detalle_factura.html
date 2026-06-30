@@ -45,7 +45,10 @@
         </tfoot>
       </table>
 
-      <div class="mt-4">
+      <div class="mt-4 d-flex gap-2">
+        <a href="{% url 'facturacion:generar_pdf' factura.id_factura %}" class="btn btn-success" target="_blank">
+          <i class="fas fa-file-pdf me-2"></i>Descargar PDF
+        </a>
         <a href="{% url 'facturacion:historial_facturas' %}" class="btn btn-outline-primary">
           <i class="fas fa-arrow-left me-2"></i>Volver a facturas
         </a>
