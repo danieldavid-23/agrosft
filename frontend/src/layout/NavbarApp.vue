@@ -26,6 +26,13 @@ function closeDropdown() {
   showDropdown.value = false
 }
 
+function onClickOutside(event) {
+  const dropdown = document.querySelector('.navbar-nav .dropdown')
+  if (dropdown && !dropdown.contains(event.target)) {
+    showDropdown.value = false
+  }
+}
+
 async function logout() {
   try {
     await fetch(props.urls.logout, {
@@ -37,6 +44,7 @@ async function logout() {
 }
 
 onMounted(() => {
+  document.addEventListener('click', onClickOutside)
   if (props.messages && props.messages.length) {
     props.messages.forEach((msg, i) => {
       const id = Date.now() + i
@@ -130,7 +138,7 @@ function dismissToast(id) {
             </template>
 
             <li class="nav-item dropdown ms-lg-2 mt-2 mt-lg-0" :class="{ show: showDropdown }">
-              <a class="nav-link dropdown-toggle btn btn-light px-3 fw-bold rounded-pill" style="color: var(--text-main)" href="#" @click.prevent="toggleDropdown" @blur="closeDropdown" role="button">
+              <a class="nav-link dropdown-toggle btn btn-light px-3 fw-bold rounded-pill" style="color: var(--text-main)" href="#" @click.prevent="toggleDropdown" role="button">
                 <img v-if="user.imagen_perfil_url" :src="user.imagen_perfil_url" alt="Avatar" class="rounded-circle me-1 align-middle" style="width: 24px; height: 24px; object-fit: cover; border: 1.5px solid var(--primary-color);">
                 <i v-else class="fas fa-user-circle fs-5 me-1 align-middle" style="color: var(--primary-color)"></i>
                 {{ user.nombre_corto || user.correo }}
