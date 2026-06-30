@@ -30,7 +30,7 @@
                         
                         <div class="mb-3">
                             <label class="form-label">Cliente</label>
-                            <input type="text" class="form-control" value="{{ request.user.get_full_name|default:request.user.username }}" disabled>
+                            <input type="text" class="form-control" value="{{ request.user.get_full_name|default:request.user.correo }}" disabled>
                             <div class="form-text">La venta se registrará automáticamente a tu nombre y el stock se actualizará.</div>
                         </div>
 

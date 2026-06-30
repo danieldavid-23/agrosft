@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     'apps.inventario', 
     'apps.clientes',
     'apps.ventas',
+    'apps.facturacion',  # Facturacion y pasarelas de pago
     'social_django',  # Agregado para Google OAuth
 ]
 
@@ -190,9 +191,9 @@ CACHES = {
     }
 }
 
-# Configuración de sesiones - usar sesiones en caché en lugar de base de datos
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+# Configuración de sesiones - usando base de datos para persistencia (necesario para Google OAuth)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+# SESSION_CACHE_ALIAS = 'default'  # Comentado: sesiones en DB para que funcione Google OAuth
 
 # URLs de autenticación personalizada
 LOGIN_URL = 'usuarios:login'

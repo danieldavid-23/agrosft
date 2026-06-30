@@ -31,6 +31,7 @@ def layout_data(request):
 
     urls['clientes'] = reverse('clientes:cliente_list')
 
+    urls['facturacion_historial'] = reverse('facturacion:historial_facturas')
     urls['perfil'] = reverse('usuarios:perfil')
     urls['historial'] = reverse('usuarios:historial')
     urls['cambiar_password'] = reverse('usuarios:cambiar_password')

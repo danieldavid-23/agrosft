@@ -149,6 +149,7 @@ function dismissToast(id) {
                 <li><a class="dropdown-item py-2" :href="urls.perfil"><i class="fas fa-id-card fa-fw text-muted me-2"></i> Mi Perfil</a></li>
                 <li><a class="dropdown-item py-2" :href="urls.historial"><i class="fas fa-history fa-fw text-muted me-2"></i> Mi historial</a></li>
                 <li><a class="dropdown-item py-2" :href="urls.cambiar_password"><i class="fas fa-key fa-fw text-muted me-2"></i> Seguridad</a></li>
+                <li><a class="dropdown-item py-2" :href="urls.facturacion_historial"><i class="fas fa-file-invoice-dollar fa-fw text-muted me-2"></i> Mis Facturas</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item py-2" href="#" @click.prevent="logout" style="color: #dc2626;"><i class="fas fa-sign-out-alt fa-fw me-2" style="color: #dc2626;"></i> Cerrar Sesión</a></li>
               </ul>

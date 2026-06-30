@@ -6,6 +6,9 @@ from datetime import datetime
 
 
 class TblusuariosManager(BaseUserManager):
+    def normalize_email(self, email):
+        return email.lower().strip() if email else email
+
     def create_user(self, correo, nombres, apellidos, password=None, **extra_fields):
         if not correo:
             raise ValueError('El correo es obligatorio')

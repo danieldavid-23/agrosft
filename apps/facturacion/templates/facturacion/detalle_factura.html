@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Factura #{{ factura.id_factura }} - AgroSFT{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Factura #{{ factura.id_factura }}</h4>
+      <span class="badge bg-{% if factura.estado == 'pagada' %}success{% elif factura.estado == 'pendiente' %}warning{% else %}secondary{% endif %} fs-6">
+        {{ factura.get_estado_display }}
+      </span>
+    </div>
+    <div class="card-body">
+      <div class="row mb-4">
+        <div class="col-sm-6">
+          <p class="mb-1"><strong>Cliente:</strong> {{ factura.usuario.get_full_name }}</p>
+          <p class="mb-1"><strong>Email:</strong> {{ factura.usuario.correo }}</p>
+          <p class="mb-1"><strong>Metodo de pago:</strong> {{ factura.metodo_pago.nombre }}</p>
+        </div>
+        <div class="col-sm-6 text-sm-end">
+          <p class="mb-1"><strong>Fecha:</strong> {{ factura.creada_en|date:"d/m/Y H:i" }}</p>
+          {% if factura.pagada_en %}
+          <p class="mb-1"><strong>Pagada el:</strong> {{ factura.pagada_en|date:"d/m/Y H:i" }}</p>
+          {% endif %}
+          <p class="mb-1"><strong>Transaction ID:</strong> <code>{{ factura.transaction_id|default:"-" }}</code></p>
+        </div>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr><th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>{{ item.descripcion }}</td>
+            <td>{{ item.cantidad }}</td>
+            <td>${{ item.precio_unitario|floatformat:2 }}</td>
+            <td>${{ item.subtotal|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="fw-bold fs-5">
+            <td colspan="3" class="text-end">Total:</td>
+            <td>${{ factura.total|floatformat:2 }}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="mt-4">
+        <a href="{% url 'facturacion:historial_facturas' %}" class="btn btn-outline-primary">
+          <i class="fas fa-arrow-left me-2"></i>Volver a facturas
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

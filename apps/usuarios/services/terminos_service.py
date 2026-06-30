@@ -16,20 +16,12 @@ class TerminosService:
         """Registra la aceptación de términos por un usuario"""
         termino_activo = TerminosService.obtener_terminos_activos()
         if termino_activo:
-            # Intentar actualizar el atributo en memoria
-            usuario.acepta_terminos = True
-            
             # Guardar la aceptación de términos en caché usando el ID del usuario (persistencia de 30 días)
             cache_key = f"user_{usuario.id_users}_acepto_terminos"
             cache.set(cache_key, True, 60 * 60 * 24 * 30)
             
-            try:
-                # Intentar guardarlo en la base de datos si existiese la columna
-                usuario.save(update_fields=['acepta_terminos'])
-            except Exception:
-                # Si falla debido a que el modelo no cuenta con este campo, 
-                # la caché actuará de respaldo seguro sin interrumpir al usuario
-                pass
+            # Intentar actualizar el atributo en memoria (persistente mientras dure el objeto)
+            usuario.acepta_terminos = True
             
             # Registrar aceptación simulada para el historial en memoria
             aceptacion_simulada = AceptacionTermino(

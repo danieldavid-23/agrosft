@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Historial de Facturas - AgroSFT{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4">Historial de Facturas</h2>
+
+  {% if facturas %}
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th># Factura</th>
+          <th>Fecha</th>
+          <th>Metodo de pago</th>
+          <th>Total</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in facturas %}
+        <tr>
+          <td>{{ f.id_factura }}</td>
+          <td>{{ f.creada_en|date:"d/m/Y H:i" }}</td>
+          <td>{{ f.metodo_pago.nombre|default:"-" }}</td>
+          <td>${{ f.total|floatformat:2 }}</td>
+          <td>
+            <span class="badge bg-{% if f.estado == 'pagada' %}success{% elif f.estado == 'pendiente' %}warning{% else %}secondary{% endif %}">
+              {{ f.get_estado_display }}
+            </span>
+          </td>
+          <td>
+            <a href="{% url 'facturacion:detalle_factura' f.id_factura %}" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-file-invoice fa-4x text-muted mb-3"></i>
+    <p class="text-muted">No tienes facturas aun.</p>
+    <a href="{% url 'inventario:marketplace' %}" class="btn btn-primary">Ir al marketplace</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

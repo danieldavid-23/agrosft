@@ -39,6 +39,7 @@ urlpatterns = [
     path('inventario/', include('apps.inventario.urls', namespace='inventario')),
     path('clientes/', include('apps.clientes.urls', namespace='clientes')),
     path('ventas/', include('apps.ventas.urls', namespace='ventas')),
+    path('facturacion/', include('apps.facturacion.urls', namespace='facturacion')),
     path('oauth/', include('social_django.urls', namespace='social')),
     path('admin/', admin.site.urls),
 ]
