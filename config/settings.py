@@ -202,7 +202,7 @@ LOGOUT_REDIRECT_URL = 'usuarios:login'
 
 # Email backend
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'soporte@agrosft.com'
+DEFAULT_FROM_EMAIL = 'agrosft.soporte@gmail.com'
 
 # Eliminar todas las migraciones para las apps personalizadas (ya que están gestionadas externamente)
 MIGRATION_MODULES = {

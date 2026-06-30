@@ -46,6 +46,13 @@
 - **Context processor `core.context_processors.layout_data`**: inyecta datos de layout (usuario, URLs, carrito, mensajes) como JSON para Vue
 - **Entry point Vite**: `frontend/src/layout/main.js` → bundle `layout.js` (11.64 kB)
 
+### Added (2026-06-30)
+- **Recuperación de contraseña con Brevo REST API** — Implementada la recuperación de contraseña usando la API REST de Brevo y el sistema nativo de Django:
+  - `apps/usuarios/services/email_service.py` [NEW]: Consumo de la API de Brevo a través de la librería `requests`, con envío de correos que incluyen una plantilla HTML profesional (destacando a AGROSFT) y una versión en texto plano. Uso del remitente verificado a través de `settings.DEFAULT_FROM_EMAIL` y manejo seguro de errores con logs.
+  - `apps/usuarios/forms/auth_forms.py`: Definido el formulario `PasswordResetRequestForm` para capturar el correo electrónico. Definido `NuevaPasswordForm`, formulario propio compatible con `Tblusuarios` (hereda de `models.Model`), que reemplaza a `SetPasswordForm` de Django (incompatible con modelos que no heredan de `AbstractBaseUser`).
+  - `apps/usuarios/utils/password_reset_tokens.py` [NEW]: `TblusuariosPasswordResetTokenGenerator`, generador de tokens personalizado que sobreescribe `_make_hash_value()` para usar los campos reales `user.correo` y `user.contraseña` del modelo `Tblusuarios`, evitando la llamada a `get_email_field_name()` que solo existe en `AbstractBaseUser`.
+  - `apps/usuarios/controllers/auth_controller.py`: Modificadas las vistas `UserPasswordResetView` y `UserPasswordResetConfirmView` para integrar la lógica de generación de tokens (`agrosft_token_generator`), codificación base64 (`uidb64`), y la actualización segura de contraseñas utilizando `user.set_password()` + `user.save()` (mecanismo nativo del proyecto).
+
 ### Changed (2026-06-24)
 - **Paleta "Raíz y Confianza" implementada** — Rebranding visual completo:
   - `base.html`: Variables CSS en `:root` actualizadas (verde claro #3C8D3C, naranja #E8853B, azul cielo #3A8BC8, crema #F5F1E8, texto #3D5245); sombras, hover y colores inline reemplazados; corregido typo "AGROSTF" → "AGROSFT"

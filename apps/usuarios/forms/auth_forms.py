@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from apps.usuarios.models.profile_model import Tblusuarios
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -185,4 +187,51 @@ class AdminUsuarioForm(forms.ModelForm):
 
 
 # Alias para mantener compatibilidad con el controller
-RegistroForm = RegistroTblusuariosForm
+RegistroForm = RegistroTblusuariosForm
+
+
+class PasswordResetRequestForm(forms.Form):
+    """Formulario para solicitar restablecimiento de contraseña"""
+    email = forms.EmailField(
+        label='Correo Electrónico',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'tucorreo@ejemplo.com'
+        })
+    )
+
+
+class NuevaPasswordForm(forms.Form):
+    """
+    Formulario para establecer la nueva contraseña durante el restablecimiento.
+    Compatible con Tblusuarios (models.Model), NO usa SetPasswordForm de Django
+    que requiere AbstractBaseUser.
+    Aplica las mismas validaciones de contraseña configuradas en AUTH_PASSWORD_VALIDATORS.
+    """
+    new_password1 = forms.CharField(
+        label='Nueva contraseña',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
+        help_text='Mínimo 8 caracteres. No puede ser solo números.',
+    )
+    new_password2 = forms.CharField(
+        label='Confirmar nueva contraseña',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
+    )
+
+    def clean_new_password1(self):
+        password1 = self.cleaned_data.get('new_password1')
+        if password1:
+            # Aplicar los validadores configurados en settings.AUTH_PASSWORD_VALIDATORS
+            try:
+                validate_password(password1)
+            except ValidationError as e:
+                raise forms.ValidationError(list(e.messages))
+        return password1
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('new_password1')
+        password2 = cleaned_data.get('new_password2')
+        if password1 and password2 and password1 != password2:
+            self.add_error('new_password2', 'Las contraseñas no coinciden.')
+        return cleaned_data
