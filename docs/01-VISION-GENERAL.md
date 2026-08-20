@@ -74,7 +74,7 @@ Desarrollar una plataforma digital que conecte agricultores con compradores y of
 | **Términos y condiciones** | ✅ Implementado | Simulados (sin tabla real en BD) |
 | **Chat/mensajería** | ❌ Faltante | Mencionado en alcance de ficha, no implementado |
 | **Notificaciones** | ❌ Faltante | Solo email backend de consola |
-| **Fotos de productos** | ❌ Faltante | La ficha las menciona, no están en el modelo |
+| **Fotos de productos** | ✅ Implementado | ImageField en Producto (`tblproducto.imagen`) |
 | **Ubicación de productos** | ❌ Faltante | Mencionado en alcance, sin campo en modelo |
 
 > [!warning] Brechas críticas

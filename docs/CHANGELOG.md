@@ -7,6 +7,32 @@
 
 ## [Unreleased]
 
+### Added (2026-08-20)
+- **Soporte de imágenes en productos y perfil de usuario** (ver [[DECISIONS#ADR-013]]):
+  - `apps/inventario/models/producto.py`: campo `imagen` como `ImageField(upload_to='productos/')` con validación de extensión (JPG/JPEG/PNG/WEBP) y tamaño máx. 5MB
+  - `apps/usuarios/models/profile_model.py`: `imagen_perfil` convertido a `ImageField(upload_to='profile_pictures/')` con los mismos validators
+  - `core/utils/helpers.py`: función `validate_image_size` (límite 5MB)
+  - `apps/inventario/forms/producto_form.py` y `apps/usuarios/forms/auth_forms.py`: validators replicados en los campos de los formularios (validación server-side real en `is_valid()`)
+  - `apps/inventario/controllers/producto_controller.py`: `request.FILES` en `crear_producto`/`editar_producto`; exposición de la URL de imagen en listas y marketplace
+  - `apps/usuarios/controllers/auth_controller.py`: guardado/eliminación de foto de perfil en `UserProfile`
+  - Templates y Vue: renderizado de imagen en marketplace, inventario, detalle, carrito y avatar del navbar
+- **`scripts/agregar_imagen_producto.sql`** [NEW]: script idempotente de referencia para la columna `imagen` de `tblproducto` (ya existente en BD; documentación del cambio para reproducción)
+
+### Fixed (2026-08-20)
+- **Imagen rota en grids server-side** — Los controllers ahora exponen la URL de imagen como string (`producto.imagen`), pero `marketplace.html`, `producto_list.html` y `producto_detail.html` usaban `{{ producto.imagen.url }}` (válido solo para modelos), generando `<img src="">`:
+  - Cambiado a `{{ producto.imagen }}` en los tres templates
+
+### Fixed (2026-06-30)
+- **Tablas `factura` e `item_factura` no existían en MariaDB** — La migración de `facturacion` no se había ejecutado tras el merge, causando error "Table doesn't exist" al hacer clic en "Generar Factura":
+  - Ejecutado `python manage.py migrate facturacion` creando las tablas `factura` e `item_factura`
+  - El flujo completo carrito → factura → solicitud → WhatsApp ahora funciona correctamente
+- **Error `django_session` no existe al iniciar sesión** — `ProgrammingError (1146)` al POST en `/usuarios/login/`:
+  - `config/settings.py`: `SESSION_ENGINE` cambiado de `django.contrib.sessions.backends.db` a `django.contrib.sessions.backends.signed_cookies`
+  - Las sesiones ahora se almacenan en cookies firmadas, eliminando la dependencia de la tabla `django_session` en MariaDB
+  - Ver [[DECISIONS#ADR-011]] para el análisis completo de la decisión
+- **Clave incorrecta `total_productos` en detalle_solicitud** — El controller pasaba `total_productos` pero el template esperaba `total_productos_mios`, dejando el campo vacío:
+  - `apps/ventas/controllers/solicitud_controller.py`: Cambiado `total_productos` a `total_productos_mios` en el dict del contexto
+
 ### Added (2026-06-30)
 - **WhatsApp Click-to-Chat**: Nueva función `generar_whatsapp_link()` en `core/utils/helpers.py` que genera enlaces `wa.me` con formato internacional (+57 Colombia) y mensaje predefinido.
 - **Contacto WhatsApp post-aceptación**: Al aceptar una solicitud de compra, el sistema genera automáticamente un enlace de WhatsApp y muestra un modal con botón para abrir el chat del comprador (`apps/ventas/controllers/solicitud_controller.py`).
@@ -63,7 +89,7 @@
   - `SolicitudApp.vue`: Hover color actualizado
   - Nuevas variables: `--color-info: #7BAFD4`, `--color-rating: #E07C3A`
 - **Documentación SDD alineada con BD real**:
-  - `DATABASE.md`: Agregado tipo `cancelada` (id=5) a `tipo_movimiento`; documentados 5 triggers reales (separando calificación en INSERT/UPDATE/DELETE); tablas `user_profiles`, `user_devices`, `user_addresses` marcadas como inexistentes en MariaDB; actualizado flujo de stock (solo `vendida` descuenta)
+  - `DATABASE.md`: Agregado tipo `cancelada` (id=5) a `tipo_movimiento`; documentados 5 triggers reales (separando calificación en INSERT/UPDATE/DELETE); agregada columna `imagen` a tblproducto; tablas `user_profiles`, `user_devices`, `user_addresses` confirmadas como existentes en MariaDB con FK CASCADE; actualizado flujo de stock (solo `vendida` descuenta)
   - `ARCHITECTURE.md`: Agregado `cancelada` a la tabla de estados de solicitud
   - `USER_STORIES.md`: Agregado estado `Cancelada` al diagrama de flujo de solicitudes
   - `03-BASE-DATOS.md`: Agregado tipo `cancelada`; triggers actualizados a 5; tablas extendidas marcadas como inexistentes; flujo de stock documentado

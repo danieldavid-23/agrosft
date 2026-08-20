@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.core.validators import FileExtensionValidator
+from core.utils.helpers import validate_image_size
 from apps.usuarios.models.profile_model import Tblusuarios
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
@@ -127,6 +129,16 @@ class TblusuariosForm(forms.ModelForm):
 
 class PerfilForm(forms.ModelForm):
     """Formulario para editar perfil de usuario"""
+    
+    imagen_perfil = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        validators=[
+            FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
+            validate_image_size
+        ]
+    )
+
     class Meta:
         model = Tblusuarios
         fields = ('nombres', 'apellidos', 'telefono')

@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
+from core.utils.helpers import validate_image_size
 from apps.usuarios.models.profile_model import Tblusuarios
 
 
@@ -68,6 +70,16 @@ class Producto(models.Model):
     id_producto = models.AutoField(primary_key=True, db_column='id_productos')
     nombre = models.CharField(max_length=45, db_column='nombre')
     descripcion = models.TextField(blank=True, null=True, db_column='descripcion')
+    imagen = models.ImageField(
+        upload_to='productos/', 
+        null=True, 
+        blank=True, 
+        db_column='imagen',
+        validators=[
+            FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
+            validate_image_size
+        ]
+    )
     cantidad = models.IntegerField(db_column='cantidad')
     fecha_creacion = models.DateTimeField(auto_now_add=True, db_column='fecha_creacion')
     id_categoria = models.ForeignKey(

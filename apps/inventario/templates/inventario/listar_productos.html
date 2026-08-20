@@ -1,3 +1,4 @@
+{% load currency_tags %}
                         <tr>
                             <th scope="row">{{ producto.id_producto_usuario }}</th>
                             <td>{{ producto.id_producto.nombre }}</td>
@@ -7,7 +8,7 @@
                                     {{ producto.cantidad }}
                                 </span>
                             </td>
-                            <td>${{ producto.precio|floatformat:2 }}</td>
+                            <td>{{ producto.precio|currency_cop }}</td>
                             <td>
                                 {% if producto.id_estado.estado == 'pendiente' %}
                                     <span class="badge bg-secondary">Pendiente</span>
