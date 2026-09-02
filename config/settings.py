@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',      # Needed for messages
     'django.contrib.staticfiles',   # Needed for static files
     
+    'core',
     'apps.usuarios',
     'apps.inventario', 
     'apps.clientes',
@@ -191,9 +192,8 @@ CACHES = {
     }
 }
 
-# Configuración de sesiones - usando base de datos para persistencia (necesario para Google OAuth)
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-# SESSION_CACHE_ALIAS = 'default'  # Comentado: sesiones en DB para que funcione Google OAuth
+# Configuración de sesiones - usando cookies firmadas para evitar dependencia de tabla django_session
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 # URLs de autenticación personalizada
 LOGIN_URL = 'usuarios:login'

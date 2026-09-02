@@ -13,7 +13,7 @@
 | Inventario | 90% | CRUD, marketplace, aprobación, filtros |
 | Ventas | 80% | Carrito, solicitudes, ventas, calificaciones |
 | Clientes | 70% | Listado, historial básico |
-| **Brechas críticas** | 0% | Chat, fotos, geolocalización, notificaciones |
+| **Brechas críticas** | 25% | Fotos ✅ · Chat, geolocalización, notificaciones pendientes |
 
 ---
 
@@ -39,7 +39,7 @@
 
 **Objetivo**: Implementar las funcionalidades críticas de la ficha SENA.
 
-#### 2.1 Fotografías de Productos (GAP-02)
+#### 2.1 Fotografías de Productos (GAP-02) — ✅ Implementado (2026-08-20)
 
 | Aspecto | Detalle |
 |---|---|
@@ -47,12 +47,14 @@
 | **Complejidad** | Media |
 | **Impacto** | Mejora la experiencia de compra significativamente |
 
-**Especificación**:
-- Agregar campo `imagen` en `ProductoUsuario` o nueva tabla `producto_imagen`
-- Upload con Pillow para compresión automática
-- Galería de hasta 5 imágenes por producto
-- Thumbnail en cards del marketplace
-- Vista ampliada en detalle de producto
+**Estado**: Implementado. Campo `imagen` en `tblproducto` (VARCHAR(255) NULL), `ImageField` en el modelo `Producto`, upload a `MEDIA_ROOT/productos/`, validación de extensión (JPG/JPEG/PNG/WEBP) y tamaño (máx. 5MB) en modelo y formularios. Ver [[REQUIREMENTS#RF-I15]], [[USER_STORIES#US-15]] y [[DECISIONS#ADR-012]].
+
+**Especificación original (referencia)**:
+- Agregar campo `imagen` en `ProductoUsuario` o nueva tabla `producto_imagen` *(decisión final: columna `imagen` en `tblproducto`, catálogo maestro)*
+- Upload con Pillow para compresión automática *(pendiente: compresión/redimensionado)*
+- Galería de hasta 5 imágenes por producto *(pendiente: actualmente 1 imagen)*
+- Thumbnail en cards del marketplace *(implementado)*
+- Vista ampliada en detalle de producto *(implementado)*
 
 #### 2.2 Chat/Mensajería (GAP-01)
 

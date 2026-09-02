@@ -38,7 +38,15 @@ async function fetchProducts() {
 }
 
 function formatearPrecio(valor) {
-  return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(valor)
+  if (valor == null) return '$0';
+  const num = Number(valor);
+  const formatted = new Intl.NumberFormat('es-CO', { 
+    style: 'currency', 
+    currency: 'COP', 
+    minimumFractionDigits: 0, 
+    maximumFractionDigits: Number.isInteger(num) ? 0 : 2 
+  }).format(num);
+  return formatted.replace(/\s+/g, '');
 }
 
 async function eliminarProducto(id, nombre) {

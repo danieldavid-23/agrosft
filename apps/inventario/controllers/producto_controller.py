@@ -97,7 +97,7 @@ def listar_productos(request):
             'categoria_nombre': pu.id_producto.id_categoria.nombre,
             'agricultor_id': pu.id_usuario.id_users,
             'esta_agotado': pu.cantidad == 0,
-            'imagen': None,
+            'imagen': pu.id_producto.imagen.url if pu.id_producto.imagen else None,
             'es_mi_producto': True,
             'editUrl': reverse('inventario:editar', args=[pu.id_producto_usuario]),
             'deleteUrl': reverse('inventario:eliminar', args=[pu.id_producto_usuario]),
@@ -211,7 +211,7 @@ def marketplace(request):
             'agricultor_id': pu.id_usuario.id_users,
             'agricultor_nombre': f"{pu.id_usuario.nombres} {pu.id_usuario.apellidos}",
             'esta_agotado': pu.cantidad == 0,
-            'imagen': None,
+            'imagen': pu.id_producto.imagen.url if pu.id_producto.imagen else None,
             'es_mi_producto': False,
             'detailUrl': reverse('inventario:detalle', args=[pu.id_producto_usuario]),
         }
@@ -251,7 +251,7 @@ def marketplace(request):
 @login_required
 def crear_producto(request):
     if request.method == 'POST':
-        form = ProductoForm(request.POST)
+        form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
             # Verificar si el producto ya existe en el catálogo maestro
             nombre_producto = form.cleaned_data['nombre']
@@ -274,6 +274,11 @@ def crear_producto(request):
                     'estado': EstadoProducto.PENDIENTE.lower()  # Valor predeterminado
                 }
             )
+            
+            # Guardar la imagen si fue subida y el producto se creó, o si se está reusando uno pero se subió imagen
+            if form.cleaned_data.get('imagen'):
+                producto_existente.imagen = form.cleaned_data['imagen']
+                producto_existente.save()
             
             # Si el producto ya existe y es admin, actualizar stock_minimo
             if not created and (request.user.is_staff or request.user.is_superuser):
@@ -333,7 +338,7 @@ def editar_producto(request, pk):
         return redirect('inventario:listar')
     
     if request.method == 'POST':
-        form = ProductoForm(request.POST)  # Eliminar instance= que no es válido para forms.Form
+        form = ProductoForm(request.POST, request.FILES)  # Eliminar instance= que no es válido para forms.Form
         if form.is_valid():
             with transaction.atomic():
                 # Actualizar campos del producto maestro (tblproducto)
@@ -346,6 +351,9 @@ def editar_producto(request, pk):
                 stock_minimo_value = form.cleaned_data.get('stock_minimo')
                 if stock_minimo_value is not None:
                     producto.stock_minimo = stock_minimo_value
+                
+                if form.cleaned_data.get('imagen'):
+                    producto.imagen = form.cleaned_data['imagen']
                 
                 producto.save()
                 logger.info(f"Producto maestro actualizado: {producto.nombre}, stock_minimo: {producto.stock_minimo}")

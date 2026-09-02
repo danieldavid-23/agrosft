@@ -94,6 +94,7 @@ def listar_productos_api(request):
             'precio': float(producto.precio) if hasattr(producto, 'precio') else float(producto.precio if hasattr(producto, 'precio') else 0),
             'stock': int(producto.cantidad) if hasattr(producto, 'cantidad') else producto.cantidad,
             'estado': producto.id_estado.estado if hasattr(producto, 'id_estado') else producto.estado,
+            'imagen': producto.id_producto.imagen.url if hasattr(producto, 'id_producto') and producto.id_producto.imagen else None,
             'fecha_creacion': producto.fecha_creacion.strftime('%d/%m/%Y %H:%M') if hasattr(producto, 'fecha_creacion') else ''
         })
     

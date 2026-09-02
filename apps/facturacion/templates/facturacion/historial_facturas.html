@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_tags %}
 {% block title %}Historial de Facturas - AgroSFT{% endblock %}
 {% block content %}
 <div class="container py-5">
@@ -21,7 +22,7 @@
         <tr>
           <td>{{ f.id_factura }}</td>
           <td>{{ f.creada_en|date:"d/m/Y H:i" }}</td>
-          <td>${{ f.total|floatformat:2 }}</td>
+          <td>{{ f.total|currency_cop }}</td>
           <td>
             <span class="badge bg-{% if f.estado == 'emitida' %}success{% else %}secondary{% endif %}">
               {{ f.get_estado_display }}

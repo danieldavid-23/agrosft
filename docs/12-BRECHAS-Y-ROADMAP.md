@@ -53,15 +53,15 @@
 
 ---
 
-#### 2. Fotos de Productos
+#### 2. Fotos de Productos — ✅ Implementado (2026-08-20)
 **Ficha dice**: "Subida de datos de productos (fotos, precios, stock, ubicación)"
 
-**No existe**: El modelo `Producto` no tiene campo de imagen. Solo `UserProfile` maneja fotos.
+**Implementado**: Campo `imagen` en `tblproducto` (VARCHAR(255) NULL) mapeado como `ImageField(upload_to='productos/')` en el modelo `Producto`. Upload vía `multipart/form-data` en crear/editar producto, validación de extensión (JPG/JPEG/PNG/WEBP) y tamaño (5MB) en formulario y modelo. Se muestra en marketplace, inventario, detalle y componentes Vue.
 
-**Propuesta**:
-- Agregar campo `imagen` a `tblproducto` o crear tabla `producto_imagen`
-- Integrar Pillow para redimensionado automático
-- Upload con preview en formulario
+**Pendiente (mejora futura)**:
+- Compresión/redimensionado automático con Pillow
+- Galería de múltiples imágenes por producto
+- Preview drag & drop en formulario
 
 **Impacto**: Mejora significativa la experiencia del comprador en el marketplace.
 
@@ -174,7 +174,7 @@
 
 ### Fase 2 — Funcionalidades Core
 - [ ] Implementar chat/mensajería entre usuarios
-- [ ] Agregar campo de imagen a productos
+- [x] Agregar campo de imagen a productos
 - [ ] Implementar notificaciones in-app
 - [ ] Completar password reset con email real
 

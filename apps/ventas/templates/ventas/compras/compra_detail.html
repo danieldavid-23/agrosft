@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_tags %}
 {% load ventas_extras %}
 
 {% block title %}Compra #{{ compra.id }}{% endblock %}
@@ -47,7 +48,7 @@
                 <div class="card-footer bg-white border-top">
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="text-muted">Total:</span>
-                        <span class="fs-4 fw-bold" style="color: var(--secondary-color)">${{ compra.total|floatformat:2 }}</span>
+                        <span class="fs-4 fw-bold" style="color: var(--secondary-color)">{{ compra.total|currency_cop }}</span>
                     </div>
                 </div>
             </div>
@@ -84,10 +85,10 @@
                                         <span class="badge" style="background-color: var(--primary-color)">{{ detalle.cantidad|abs_value|floatformat:0 }}</span>
                                     </td>
                                     <td class="px-4 py-3 align-middle text-end fw-semibold">
-                                        ${{ detalle.id_producto_usuario.precio|floatformat:2 }}
+                                        {{ detalle.id_producto_usuario.precio|currency_cop }}
                                     </td>
                                     <td class="px-4 py-3 align-middle text-end fw-bold">
-                                        <span style="color: var(--secondary-color)">${{ detalle.cantidad|abs_value|multiply:detalle.id_producto_usuario.precio|floatformat:2 }}</span>
+                                        <span style="color: var(--secondary-color)">{{ detalle.cantidad|abs_value|multiply:detalle.id_producto_usuario.precio|currency_cop }}</span>
                                     </td>
                                 </tr>
                                 {% empty %}

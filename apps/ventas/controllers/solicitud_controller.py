@@ -187,7 +187,7 @@ def detalle_solicitud(request, pk):
             'id': solicitud.id_movimiento,
             'fecha': solicitud.obtener_fecha(),
             'descripcion': getattr(solicitud, 'descripcion', 'Sin descripción'),
-            'total_productos': productos.count(),
+            'total_productos_mios': productos.count(),
             'total_estimado': total,
             'estado': estado,
             'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",

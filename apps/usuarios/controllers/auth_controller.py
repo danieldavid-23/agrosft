@@ -213,7 +213,7 @@ class PerfilView(View):
             messages.error(request, "La tabla de usuarios no existe en la base de datos.")
             return redirect('usuarios:login')
         
-        form = PerfilForm(request.POST, instance=request.user)
+        form = PerfilForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             

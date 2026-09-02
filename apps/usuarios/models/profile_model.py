@@ -3,6 +3,8 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import BaseUserManager
 import uuid
 from datetime import datetime
+from django.core.validators import FileExtensionValidator
+from core.utils.helpers import validate_image_size
 
 
 class TblusuariosManager(BaseUserManager):
@@ -234,7 +236,16 @@ class UserProfile(models.Model):
     """
     id_perfil = models.AutoField(primary_key=True, db_column='id_perfil')
     id_usuario = models.IntegerField(db_column='id_usuario')  # Referencia directa como ID
-    imagen_perfil = models.ImageField(db_column='imagen_perfil', blank=True, null=True, upload_to='profile_pictures/')
+    imagen_perfil = models.ImageField(
+        db_column='imagen_perfil', 
+        blank=True, 
+        null=True, 
+        upload_to='profile_pictures/',
+        validators=[
+            FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
+            validate_image_size
+        ]
+    )
     biografia = models.TextField(db_column='biografia', blank=True, null=True)
     sitio_web = models.URLField(db_column='sitio_web', blank=True, null=True)
     telefono_contacto = models.CharField(max_length=20, db_column='telefono_contacto', blank=True, null=True)

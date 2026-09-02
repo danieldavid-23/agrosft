@@ -280,7 +280,7 @@ La documentación SDD original (2026-06-17) fue generada mediante análisis de c
 
 1. **`tipo_movimiento`**: documentados 4 valores, pero la BD real tiene 5 (`cancelada`)
 2. **Triggers**: documentados 2, pero la BD real tiene 5 (3 separados para calificación)
-3. **Tablas inexistentes**: `user_profiles`, `user_devices`, `user_addresses` documentadas como tablas reales pero no existen en MariaDB
+3. **Tablas verificadas**: `user_profiles`, `user_devices`, `user_addresses` — se confirmó que **sí existen** en MariaDB con FK `ON DELETE CASCADE` a `tblusuarios`
 4. **Flujo de stock**: la descripción indicaba que `compra` descuenta stock, pero el trigger actual ignora `compra` y solo descuenta en `vendida`
 
 ### Decisión
@@ -289,7 +289,8 @@ Actualizar toda la documentación SDD para reflejar fielmente el estado real de 
 
 - Los 5 tipos de movimiento y su significado
 - Los 5 triggers activos con sus eventos específicos
-- Las tablas que existen solo como modelos Django sin respaldo en BD
+- Las tablas que existen solo como modelos Django sin respaldo en BD (SolicitudCompra, Venta, DetalleVenta, DetalleSolicitudCompra)
+- Las tablas `user_profiles`, `user_devices`, `user_addresses` confirmadas como existentes en MariaDB
 - El flujo real de stock: `compra`/`venta`/`rechazada`/`cancelada` no afectan stock; solo `vendida` descuenta
 
 ### Consecuencias
@@ -297,7 +298,8 @@ Actualizar toda la documentación SDD para reflejar fielmente el estado real de 
 - ✅ La documentación ahora es la fuente única de verdad (principio SDD #1)
 - ✅ Desarrolladores e IAs pueden entender la BD real sin acceso a phpMyAdmin
 - ✅ Las discrepancias entre código y BD están explícitamente documentadas
-- ❌ Las tablas `user_profiles`, `user_devices`, `user_addresses` quedan como modelos huérfanos sin funcionalidad real
+- ✅ Las tablas `user_profiles`, `user_devices`, `user_addresses` se confirmaron existentes y funcionales
+- ❌ Las tablas `SolicitudCompra`, `Venta`, `DetalleVenta`, `DetalleSolicitudCompra` quedan como modelos obsoletos sin respaldo en BD
 
 ### Archivos Afectados
 
@@ -306,6 +308,138 @@ Actualizar toda la documentación SDD para reflejar fielmente el estado real de 
 - `docs/USER_STORIES.md` — Agregado `Cancelada` al diagrama de flujo
 - `docs/03-BASE-DATOS.md` — Sincronizado con DATABASE.md
 - `docs/CHANGELOG.md` — Registro del cambio de documentación
+
+---
+
+## ADR-011: Sesiones por Cookie Firmada (signed_cookies)
+
+**Fecha**: 2026-06-30  
+**Estado**: Aceptada
+
+### Contexto
+
+Al intentar iniciar sesión en `/usuarios/login/`, Django lanzaba el error `ProgrammingError: Table 'agrosft.django_session' doesn't exist`. Esto ocurría porque:
+
+1. El backend de sesiones estaba configurado como `django.contrib.sessions.backends.db`
+2. La tabla `django_session` nunca fue creada en MariaDB (schema legacy, `managed=False`, migraciones deshabilitadas para apps personalizadas)
+3. Django intenta almacenar/recuperar sesiones en esta tabla al llamar a `login()`, específicamente al ejecutar `session.cycle_key()` → `session.create()` → `session.exists()`
+
+### Opciones Consideradas
+
+| Opción | Requisito | Problema |
+|---|---|---|
+| **Ejecutar `migrate sessions`** | Crear tabla `django_session` en BD | Contradice managed=False y la BD como fuente única de verdad externa |
+| **File-based sessions** | Sistema de archivos | Archivos huérfanos sin limpieza automática |
+| **Cache-based sessions** | Backend de caché | LocMemCache es volátil (se pierde al reiniciar servidor) |
+| **Signed cookie sessions** | Solo SECRET_KEY | Ninguno significativo |
+
+### Decisión
+
+Cambiar a `django.contrib.sessions.backends.signed_cookies`. Los datos de sesión se almacenan íntegramente en la cookie del navegador, firmados criptográficamente con `SECRET_KEY` de Django.
+
+### Consecuencias
+
+- ✅ **Sin dependencia de tabla `django_session`** — el error desaparece sin crear tablas en BD
+- ✅ **Sin archivos en disco** — a diferencia de file-based sessions
+- ✅ **Persistencia跨 requests** — el navegador conserva la cookie incluso si el servidor se reinicia (a diferencia de LocMemCache)
+- ✅ **Seguridad** — los datos están firmados con HMAC, no pueden ser manipulados por el cliente
+- ✅ **Google OAuth** — funciona sin cambios (solo almacena `_auth_user_id`, `_auth_user_backend`, `_auth_user_hash` en la cookie)
+- ✅ **Carrito en sesión** — datos pequeños (~200 bytes por item) caben en el límite de ~4KB de la cookie
+
+- ❌ **Límite de ~4KB** — si el carrito crece demasiado (50+ items), habría que migrarlo a localStorage del frontend
+- ❌ **Sesiones invalidadas al cambiar SECRET_KEY** — todos los usuarios pierden su sesión
+- ❌ **No apto para datos sensibles grandes** — los datos viajan en cada request HTTP
+
+### Archivos Afectados
+
+- `config/settings.py` — `SESSION_ENGINE` cambiado de `db` a `signed_cookies`
+
+---
+
+## ADR-012: Reversión de Solicitudes a Renderizado Django Server-Side
+
+**Fecha**: 2026-06-25  
+**Estado**: Aceptada
+
+### Contexto
+
+El módulo de solicitudes se había migrado a un componente Vue (`SolicitudApp.vue`) con datos mock y conexión AJAX a Django. Tras evaluar el mantenimiento, la duplicación de lógica y la complejidad añadida, se decidió revertir a la implementación original con templates y controller Django server-side.
+
+### Decisión
+
+Eliminar el módulo Vue de solicitudes (`SolicitudApp.vue`, `solicitudes/main.js`, entrada Vite) y mantener `solicitud_controller.py` + templates server-side como única implementación. Esto reemplaza la decisión ADR-003.
+
+### Consecuencias
+
+- ✅ Menor complejidad — lógica de negocio unificada en Django
+- ✅ Eliminación de datos mock — la fuente de datos es la BD real vía el controller
+- ✅ Menos código frontend que mantener (1 componente Vue menos)
+- ❌ Pérdida de interactividad SPA en esa pantalla (filtros/orden ahora recargan página)
+
+### Archivos Afectados
+
+- `frontend/src/solicitudes/SolicitudApp.vue` — Eliminado
+- `frontend/src/solicitudes/main.js` — Eliminado
+- `vite.config.js` — Eliminada entrada `solicitudes`
+- `apps/ventas/templates/ventas/solicitudes/solicitud_list.html` — Removido montaje Vue
+
+---
+
+## ADR-013: Soporte de Imágenes (Producto y Perfil de Usuario)
+
+**Fecha**: 2026-08-20  
+**Estado**: Aceptada
+
+### Contexto
+
+El proyecto requería soportar dos tipos de imágenes: foto de perfil de usuario (`user_profiles.imagen_perfil`) y foto de producto (`tblproducto.imagen`). Se necesitaba definir el mecanismo de almacenamiento, subida, validación y exposición pública de las mismas.
+
+### Consideraciones Clave
+
+1. **Sin migraciones Django**: el proyecto define `MIGRATION_MODULES = {app: None}` para las apps personalizadas y todos los modelos usan `managed = False`. El schema se gestiona externamente en MariaDB. Generar migraciones Django es inviable y violaría la regla de oro del proyecto (ver [[PROJECT_CONTEXT#6]]).
+2. **Columnas ya existentes en BD** (verificado en `information_schema` el 2026-08-20):
+   - `tblproducto.imagen` → `VARCHAR(255) NULL` (posición 7, tras `descripcion`)
+   - `user_profiles.imagen_perfil` → `VARCHAR(255) NULL`
+3. **Sin Django REST Framework**: el proyecto usa Django clásico con formularios; no hay serializers ni parsers DRF. Django maneja `multipart/form-data` nativamente pasando `request.FILES` a los formularios.
+4. **Validación**: los validators de modelo (`FileExtensionValidator` + `validate_image_size`) no se ejecutan en el flujo de `forms.Form`/`ModelForm.save()`; se deben repetir en los campos de los formularios para que `is_valid()` los aplique.
+
+### Opciones Consideradas
+
+| Opción | Decisión | Motivo |
+|---|---|---|
+| **Migración Django** | ❌ Rechazada | `MIGRATION_MODULES=None` + `managed=False`; la BD es la fuente de verdad externa |
+| **ALTER manual** | ✅ Columnas ya aplicadas | Verificado en `information_schema`; se documenta con script idempotente de referencia |
+| **DRF + serializers + parsers** | ❌ No aplica | El proyecto no usa DRF; Django Forms + `request.FILES` cubren el caso |
+| **Validación solo en modelo** | ❌ Rechazada | No se ejecuta en el flujo de formularios; se duplicó en los forms |
+| **upload_to 'perfiles/'** | ❌ Rechazada | Se conserva `profile_pictures/` existente para no romper rutas previas |
+
+### Decisión
+
+1. **Modelo**: `Producto.imagen` y `UserProfile.imagen_perfil` como `ImageField` con `validators=[FileExtensionValidator(['jpg','jpeg','png','webp']), validate_image_size]`.
+2. **Formularios**: replicar los mismos validators en `ProductoForm.imagen` y `PerfilForm.imagen_perfil` para validación server-side real.
+3. **Storage**: `MEDIA_URL='/media/'`, `MEDIA_ROOT=BASE_DIR/'media'` (ya configurados); servir media en desarrollo vía `static()` en `config/urls.py`.
+4. **BD**: sin cambios — ambas columnas ya existen. Script de referencia idempotente en `scripts/agregar_imagen_producto.sql`.
+5. **Templates**: los dicts del controller exponen la URL resuelta (`producto.imagen`); los templates que reciben modelos usan `producto.imagen.url`.
+
+### Consecuencias
+
+- ✅ Fotografías funcionales en marketplace, inventario, detalle y perfil
+- ✅ Validación consistente (extensión + 5MB) en servidor (modelo y formulario) y cliente (`accept` + JS)
+- ✅ Sin riesgo para triggers de stock/calificación ni FKs existentes
+- ❌ `editar_producto` no permite eliminar la imagen (solo reemplazar); pendiente de mejora
+- ❌ Compresión/redimensionado con Pillow pendiente (roadmap GAP-02)
+
+### Archivos Afectados
+
+- `apps/inventario/models/producto.py` — campo `imagen`
+- `apps/usuarios/models/profile_model.py` — campo `imagen_perfil`
+- `apps/inventario/forms/producto_form.py` — validators en `imagen`
+- `apps/usuarios/forms/auth_forms.py` — validators en `imagen_perfil`
+- `apps/inventario/controllers/producto_controller.py` — `request.FILES` y exposición de URL
+- `apps/usuarios/controllers/auth_controller.py` — guardado de imagen de perfil
+- `core/utils/helpers.py` — `validate_image_size`
+- Templates de inventario (`marketplace`, `producto_list`, `producto_detail`) — renderizado de imagen
+- `scripts/agregar_imagen_producto.sql` — script de referencia (nuevo)
 
 ---
 
@@ -323,6 +457,9 @@ Actualizar toda la documentación SDD para reflejar fielmente el estado real de 
 | ADR-008 | Docs Obsidian | Aceptada | Documentación |
 | ADR-009 | Sincronización docs con BD real | Aceptada | Documentación |
 | ADR-010 | Paleta Raíz y Confianza | Aceptada | Frontend / UI |
+| ADR-011 | Sesiones por cookie firmada | Aceptada | Sesiones / Auth |
+| ADR-012 | Solicitudes server-side (reversión) | Aceptada | Módulo ventas |
+| ADR-013 | Soporte de imágenes (producto + perfil) | Aceptada | Inventario / Usuarios |
 
 ---
 
