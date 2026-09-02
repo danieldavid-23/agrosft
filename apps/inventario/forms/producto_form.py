@@ -27,6 +27,10 @@ class ProductoForm(forms.Form):
         empty_label="Seleccione una categoría",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+    imagen = forms.ImageField(
+        widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'id_imagen', 'accept': 'image/*'}),
+        required=False
+    )
     
     # Campo stock_minimo (solo administradores pueden editar)
     stock_minimo = forms.IntegerField(
@@ -55,7 +59,7 @@ class ProductoForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=False  # Solo para ediciones por parte del admin
     )
-
+ 
     def __init__(self, *args, **kwargs):
         # Permitir inicializar con datos de ProductoUsuario
         initial_data = kwargs.pop('initial', {})

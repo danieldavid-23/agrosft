@@ -107,6 +107,8 @@ function dismissToast(id) {
               </li>
 
             <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center">
+
+            <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center">
                 <a class="btn btn-outline-secondary border-0 rounded-circle position-relative p-2" :href="urls.carrito" title="Carrito de Compras">
                   <i class="fas fa-shopping-cart fs-5"></i>
                   <span v-if="cart_count > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">

@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -271,12 +272,13 @@ def crear_producto(request):
                     'id_categoria': id_categoria,
                     'cantidad': 0,  # Valor predeterminado
                     'stock_minimo': stock_minimo,
-                    'estado': EstadoProducto.PENDIENTE.lower()  # Valor predeterminado
+                    'estado': EstadoProducto.PENDIENTE.lower(),  # Valor predeterminado
+                    'imagen': form.cleaned_data.get('imagen')
                 }
             )
             
-            # Guardar la imagen si fue subida y el producto se creó, o si se está reusando uno pero se subió imagen
-            if form.cleaned_data.get('imagen'):
+            # Si el producto ya existe y el usuario subió una imagen nueva, la actualizamos
+            if not created and form.cleaned_data.get('imagen'):
                 producto_existente.imagen = form.cleaned_data['imagen']
                 producto_existente.save()
             
@@ -347,13 +349,14 @@ def editar_producto(request, pk):
                 producto.descripcion = form.cleaned_data['descripcion']
                 producto.id_categoria = form.cleaned_data['id_categoria']
                 
+                # Actualizar imagen si se proporciona una nueva
+                if form.cleaned_data.get('imagen'):
+                    producto.imagen = form.cleaned_data['imagen']
+                
                 # TODOS los usuarios pueden editar stock_minimo
                 stock_minimo_value = form.cleaned_data.get('stock_minimo')
                 if stock_minimo_value is not None:
                     producto.stock_minimo = stock_minimo_value
-                
-                if form.cleaned_data.get('imagen'):
-                    producto.imagen = form.cleaned_data['imagen']
                 
                 producto.save()
                 logger.info(f"Producto maestro actualizado: {producto.nombre}, stock_minimo: {producto.stock_minimo}")
@@ -399,6 +402,7 @@ def editar_producto(request, pk):
             'descripcion': producto_usuario.id_producto.descripcion,
             'id_categoria': producto_usuario.id_producto.id_categoria,
             'stock_minimo': producto_usuario.id_producto.stock_minimo,
+            'imagen': producto_usuario.id_producto.imagen,
             'cantidad': producto_usuario.cantidad,  # Ahora es Decimal, no necesita conversión
             'precio': producto_usuario.precio,
             'id_estado': producto_usuario.id_estado,
