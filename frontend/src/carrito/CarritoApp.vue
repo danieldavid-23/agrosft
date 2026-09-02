@@ -122,9 +122,6 @@ async function eliminarItem(item) {
       </div>
       
       <div class="card-footer bg-transparent border-top-0 pb-4 px-4 d-flex justify-content-end gap-3 flex-wrap">
-        <a :href="urls.checkout_venta" class="btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center">
-          <i class="fas fa-hand-holding-dollar me-2 fs-5"></i>Venta Directa
-        </a>
         <a :href="urls.checkout" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center">
           <i class="fas fa-clipboard-check me-2 fs-5"></i>Crear Solicitud de Compra
         </a>

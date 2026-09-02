@@ -8,4 +8,5 @@ urlpatterns = [
     path('detalle/<int:factura_id>/', factura_controller.detalle_factura, name='detalle_factura'),
     path('historial/', factura_controller.historial_facturas, name='historial_facturas'),
     path('pdf/<int:factura_id>/', factura_controller.generar_pdf_factura, name='generar_pdf'),
+    path('generar_pedido/<int:movimiento_id>/', factura_controller.generar_factura_pedido, name='generar_factura_pedido'),
 ]

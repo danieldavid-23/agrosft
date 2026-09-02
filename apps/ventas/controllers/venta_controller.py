@@ -94,9 +94,10 @@ def detalle_venta(request, pk):
         'estado_visible': ESTADOS_VISIBLES.get(venta.id_tipo_movimiento.tipo, venta.id_tipo_movimiento.tipo.title()),
         'puede_marcar_vendido': venta.id_tipo_movimiento.tipo == 'venta',
         'puede_cancelar': venta.id_tipo_movimiento.tipo == 'venta',
-        'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}",
+        'comprador_nombre': f"{comprador.nombres} {comprador.apellidos}".strip() or comprador.correo,
         'comprador_email': comprador.correo,
-        'comprador_telefono': getattr(comprador, 'telefono', 'No proporcionado'),
+        'comprador_telefono': getattr(comprador, 'telefono', '') or '',
+        'whatsapp_link': f"https://wa.me/{''.join(c for c in str(comprador.telefono) if c.isdigit())}?text=Hola%20{comprador.nombres},%20te%20contacto%20sobre%20tu%20compra%20#{venta.id_movimiento}%20en%20AGROSFT" if getattr(comprador, 'telefono', None) and any(c.isdigit() for c in str(comprador.telefono)) else None,
         'total_estimado': total,
     }
     
@@ -107,8 +108,7 @@ def detalle_venta(request, pk):
 
 @login_required
 def crear_venta(request):
-    messages.info(request, 'Para crear una venta, acepta una solicitud de compra.')
-    return redirect('ventas:solicitud_list')
+    return redirect('inventario:crear')
 
 
 @login_required

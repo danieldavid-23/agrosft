@@ -1,128 +1,295 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load currency_tags %}
 
-{% block title %}Crear Producto - AGROSFT{% endblock %}
+{% block title %}Venta Directa - AGROSFT{% endblock %}
 
 {% block content %}
+<style>
+/* Estilos modernos para el selector interactivo de productos */
+.lista-productos-scroll {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 6px;
+}
+.lista-productos-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.lista-productos-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.producto-item-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+.producto-item-card:hover {
+    background: #f8fafc;
+    border-color: #38a169;
+    transform: translateY(-1px);
+}
+.producto-item-card.is-selected {
+    background: #f0fdf4 !important;
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 1px #16a34a;
+}
+.custom-pill-stock {
+    background-color: #ecfdf5 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.custom-pill-precio {
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+    border: 1px solid #bfdbfe !important;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.tarjeta-resumen-producto {
+    background: #ffffff;
+    border: 1px solid #86efac;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+</style>
+
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-success text-white rounded-top-4">
-                    <h2 class="mb-0">
-                        <i class="fas fa-plus-circle me-2"></i>Crear Nuevo Producto
-                    </h2>
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-success text-white py-3 px-4 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 d-flex align-items-center justify-content-center rounded-circle" style="width: 44px; height: 44px; background: rgba(255,255,255,0.18); font-size: 1.35rem;">
+                            <i class="fas fa-hand-holding-dollar"></i>
+                        </div>
+                        <div>
+                            <h2 class="mb-0 fs-4 fw-bold">Venta Directa</h2>
+                            <small class="text-white-50">Registra ventas inmediatas de tus productos y descuenta stock automáticamente</small>
+                        </div>
+                    </div>
+                    <a href="{% url 'ventas:venta_list' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                        <i class="fas fa-history me-1"></i> Historial
+                    </a>
                 </div>
+
                 <div class="card-body p-4">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" id="form-venta-directa">
                         {% csrf_token %}
-                        
-                        {% if form.non_field_errors %}
-                            <div class="alert alert-danger">
-                                {% for error in form.non_field_errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">Nombre del Producto *</label>
-                                {{ form.nombre }}
-                                {% if form.nombre.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.nombre.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.id_categoria.id_for_label }}" class="form-label fw-bold">Categoría *</label>
-                                {{ form.id_categoria }}
-                                {% if form.id_categoria.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.id_categoria.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-bold">Descripción</label>
-                            {{ form.descripcion }}
-                            {% if form.descripcion.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.descripcion.errors %}
-                                        {{ error }}
-                                    {% endfor %}
+                        <input type="hidden" name="producto_usuario_id" id="id_producto_usuario" value="">
+                        <!-- El precio se toma del producto registrado y se envía de forma transparente -->
+                        <input type="hidden" name="precio" id="id_precio" value="0">
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
-                            {% endif %}
-                        </div>
+                            {% endfor %}
+                        {% endif %}
 
-                                                
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.precio.id_for_label }}" class="form-label fw-bold">Precio ($)*</label>
-                                {{ form.precio }}
-                                {% if form.precio.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.precio.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.cantidad.id_for_label }}" class="form-label fw-bold">Cantidad *</label>
-                                {{ form.cantidad }}
-                                {% if form.cantidad.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.cantidad.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
+                        <!-- 1. Selector de Producto a Vender -->
+                        <div class="mb-4 p-4 rounded-4 border" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">
+                            <label class="form-label fw-bold text-success mb-1 d-flex align-items-center">
+                                <i class="fas fa-search me-2"></i> 1. Selecciona el producto a vender
+                            </label>
+                            <p class="text-muted small mb-3">Haz clic en el producto de tu inventario que deseas vender:</p>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="id_imagen" class="form-label fw-bold">Imagen del Producto</label>
-                                {{ form.imagen }}
-                                {% if form.imagen.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.imagen.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <div class="form-text small text-muted">Formatos sugeridos: JPG, PNG</div>
+                            <div class="position-relative mb-2">
+                                <input type="text" id="buscar-producto" class="form-control ps-5" placeholder="Buscar por nombre o categoría..." autocomplete="off">
+                                <i class="fas fa-search position-absolute" style="left: 18px; top: 12px; color: #94a3b8; font-size: 0.9rem;"></i>
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.stock_minimo.id_for_label }}" class="form-label fw-bold">Alerta Stock Mínimo</label>
-                                {{ form.stock_minimo }}
-                                {% if form.stock_minimo.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.stock_minimo.errors %}
-                                            {{ error }}
-                                        {% endfor %}
+                            <!-- Lista visual e interactiva de productos -->
+                            <div class="lista-productos-scroll" id="contenedor-items-productos">
+                                {% if mis_productos %}
+                                    <div class="px-2 py-1 small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                        Mis Productos en Inventario
                                     </div>
+                                    {% for pu in mis_productos %}
+                                        <div class="producto-item-card"
+                                             data-pu-id="{{ pu.id_producto_usuario }}"
+                                             data-producto-id="{{ pu.id_producto.id_producto }}"
+                                             data-nombre="{{ pu.id_producto.nombre }}"
+                                             data-categoria="{{ pu.id_producto.id_categoria.id_categoria }}"
+                                             data-categoria-nombre="{{ pu.id_producto.id_categoria.nombre }}"
+                                             data-stock="{{ pu.obtener_stock }}"
+                                             data-precio="{{ pu.precio|stringformat:'.2f' }}">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="fas fa-box text-success fs-5 me-1"></i>
+                                                <div>
+                                                    <div class="fw-bold text-dark">{{ pu.id_producto.nombre }}</div>
+                                                    <small class="text-muted">{{ pu.id_producto.id_categoria.nombre }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="custom-pill-stock">
+                                                    <i class="fas fa-cubes"></i> {{ pu.obtener_stock }} disp.
+                                                </span>
+                                                <span class="custom-pill-precio">
+                                                    <i class="fas fa-tag"></i> ${{ pu.precio|currency_cop }}
+                                                </span>
+                                                <i class="fas fa-check-circle text-success fs-5 d-none check-seleccionado"></i>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% if productos_existentes %}
+                                    <div class="px-2 py-1 mt-2 small fw-bold text-uppercase text-muted" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                                        Otros Productos Registrados (Catálogo)
+                                    </div>
+                                    {% for p in productos_existentes %}
+                                        <div class="producto-item-card"
+                                             data-pu-id=""
+                                             data-producto-id="{{ p.id_producto }}"
+                                             data-nombre="{{ p.nombre }}"
+                                             data-categoria="{{ p.id_categoria.id_categoria }}"
+                                             data-categoria-nombre="{{ p.id_categoria.nombre }}"
+                                             data-stock="999"
+                                             data-precio="0.00">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="fas fa-seedling text-muted fs-5 me-1"></i>
+                                                <div>
+                                                    <div class="fw-semibold text-secondary">{{ p.nombre }}</div>
+                                                    <small class="text-muted">{{ p.id_categoria.nombre }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-light text-muted border">Catálogo</span>
+                                                <i class="fas fa-check-circle text-success fs-5 d-none check-seleccionado"></i>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
                                 {% endif %}
                             </div>
+
+                            <!-- Tarjeta informativa del producto seleccionado (con colores de alto contraste sin fondo verde opaco) -->
+                            <div id="info-producto-seleccionado" class="d-none mt-3 tarjeta-resumen-producto">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 38px; height: 38px; background: #ecfdf5; color: #16a34a;">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold fs-6 text-dark" id="info-producto-nombre">Producto</div>
+                                            <small class="text-muted" id="info-producto-categoria">—</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="background-color: #ecfdf5; color: #166534; border: 1px solid #bbf7d0; padding: 6px 14px; border-radius: 30px; font-weight: 600; font-size: 0.85rem;">
+                                            <i class="fas fa-cubes me-1"></i> Stock disponible: <strong id="info-producto-stock">0 unidades</strong>
+                                        </div>
+                                        <div style="background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 6px 14px; border-radius: 30px; font-weight: 600; font-size: 0.85rem;">
+                                            <i class="fas fa-tag me-1"></i> Precio: <strong id="info-producto-precio">$0</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
+
+                        <!-- 2. Datos de la Venta (Sin descripción y sin campo de precio editable) -->
+                        <div class="mb-4 p-4 rounded-4" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+                            <label class="form-label fw-bold text-success d-flex align-items-center mb-3">
+                                <i class="fas fa-pen me-2"></i> 2. Confirma los datos de la venta
+                            </label>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_nombre" class="form-label fw-bold">Producto *</label>
+                                    <input type="text" name="nombre" id="id_nombre" class="form-control bg-light" placeholder="Selecciona un producto arriba" required readonly>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_categoria_select" class="form-label fw-bold">Categoría *</label>
+                                    <select name="id_categoria" id="id_categoria_select" class="form-select bg-light" required>
+                                        <option value="">Seleccione una categoría</option>
+                                        {% for c in categorias %}
+                                            <option value="{{ c.id_categoria }}">{{ c.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Cliente Comprador -->
+                            <div class="mb-3">
+                                <label for="cliente_id" class="form-label fw-bold d-flex justify-content-between">
+                                    <span>Cliente / Comprador</span>
+                                    <small class="text-muted fw-normal">Opcional para venta en sitio</small>
+                                </label>
+                                <select name="cliente_id" id="cliente_id" class="form-select bg-white">
+                                    <option value="">Cliente Mostrador / Venta Presencial</option>
+                                    {% for cl in clientes_disponibles %}
+                                        <option value="{{ cl.id_users }}">
+                                            {{ cl.get_full_name|default:cl.correo }} {% if cl.telefono %}({{ cl.telefono }}){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Cantidad a vender -->
+                            <div class="mb-3">
+                                <label for="id_cantidad" class="form-label fw-bold">Cantidad a vender *</label>
+                                <div class="input-group input-group-lg" style="max-width: 320px;">
+                                    <button type="button" class="btn btn-outline-secondary px-3" id="btn-minus">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" name="cantidad" id="id_cantidad" class="form-control text-center fw-bold fs-5" value="1" min="1" step="1" required>
+                                    <button type="button" class="btn btn-outline-secondary px-3" id="btn-plus">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text small mt-2" id="ayuda-stock">Ingresa la cantidad que vas a vender.</div>
+                            </div>
+
+                            <!-- Resumen Total en Tiempo Real con Alto Contraste -->
+                            <div class="card border-0 rounded-3 mt-3" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #bbf7d0 !important;">
+                                <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div>
+                                        <span class="text-muted small d-block text-uppercase fw-bold" style="letter-spacing: 0.5px;">TOTAL DE LA VENTA:</span>
+                                        <span class="fs-3 fw-bold text-success" id="resumen-total">$ 0</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="small fw-semibold text-dark">
+                                            <span id="resumen-unidades">1</span> unidad(es) × <span id="resumen-precio">$ 0</span>
+                                        </div>
+                                        <small class="text-muted">Precio asignado automáticamente del producto</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a href="{% url 'inventario:listar' %}" class="btn btn-secondary me-md-2">
+                            <a href="{% url 'ventas:venta_list' %}" class="btn btn-secondary me-md-2 rounded-pill px-4">
                                 <i class="fas fa-arrow-left me-2"></i>Cancelar
                             </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save me-2"></i>Guardar Producto
+                            <button type="submit" class="btn btn-success rounded-pill px-5 shadow-sm fw-bold">
+                                <i class="fas fa-check-circle me-2"></i>Registrar Venta Directa
                             </button>
                         </div>
                     </form>
@@ -131,4 +298,136 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.producto-item-card');
+    const buscar = document.getElementById('buscar-producto');
+    const infoBox = document.getElementById('info-producto-seleccionado');
+    const infoNombre = document.getElementById('info-producto-nombre');
+    const infoCategoria = document.getElementById('info-producto-categoria');
+    const infoStock = document.getElementById('info-producto-stock');
+    const infoPrecio = document.getElementById('info-producto-precio');
+
+    const nombreInput = document.getElementById('id_nombre');
+    const catSelect = document.getElementById('id_categoria_select');
+    const precioHidden = document.getElementById('id_precio');
+    const cantidadInput = document.getElementById('id_cantidad');
+    const puHiddenInput = document.getElementById('id_producto_usuario');
+    const ayudaStock = document.getElementById('ayuda-stock');
+
+    const resumenTotal = document.getElementById('resumen-total');
+    const resumenUnidades = document.getElementById('resumen-unidades');
+    const resumenPrecio = document.getElementById('resumen-precio');
+
+    const btnMinus = document.getElementById('btn-minus');
+    const btnPlus = document.getElementById('btn-plus');
+
+    let precioActual = 0;
+
+    function formatearCOP(val) {
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val || 0);
+    }
+
+    function recalcularTotal() {
+        const cant = parseInt(cantidadInput.value) || 0;
+        const total = cant * precioActual;
+        if (resumenTotal) resumenTotal.textContent = formatearCOP(total);
+        if (resumenUnidades) resumenUnidades.textContent = cant;
+        if (resumenPrecio) resumenPrecio.textContent = formatearCOP(precioActual);
+    }
+
+    function filtrarProductos() {
+        const q = (buscar ? buscar.value : '').toLowerCase().trim();
+        cards.forEach(function(card) {
+            const nombre = (card.dataset.nombre || '').toLowerCase();
+            const cat = (card.dataset.categoriaNombre || '').toLowerCase();
+            if (!q || nombre.includes(q) || cat.includes(q)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function seleccionarCard(card) {
+        cards.forEach(function(c) {
+            c.classList.remove('is-selected');
+            const chk = c.querySelector('.check-seleccionado');
+            if (chk) chk.classList.add('d-none');
+        });
+
+        card.classList.add('is-selected');
+        const check = card.querySelector('.check-seleccionado');
+        if (check) check.classList.remove('d-none');
+
+        const nombre = card.dataset.nombre || '';
+        const catId = card.dataset.categoria || '';
+        const catNombre = card.dataset.categoriaNombre || '—';
+        precioActual = parseFloat(card.dataset.precio || 0);
+        const stock = parseInt(card.dataset.stock || 0);
+        const puId = card.dataset.puId || '';
+
+        if (nombreInput) nombreInput.value = nombre;
+        if (catSelect && catId) catSelect.value = catId;
+        if (precioHidden) precioHidden.value = precioActual;
+        if (puHiddenInput) puHiddenInput.value = puId;
+
+        if (infoBox) {
+            infoBox.classList.remove('d-none');
+            if (infoNombre) infoNombre.textContent = nombre;
+            if (infoCategoria) infoCategoria.textContent = catNombre;
+            if (infoStock) infoStock.textContent = stock + ' unidades';
+            if (infoPrecio) infoPrecio.textContent = formatearCOP(precioActual);
+        }
+
+        if (cantidadInput && stock > 0 && stock !== 999) {
+            cantidadInput.max = stock;
+            if (parseInt(cantidadInput.value) > stock) {
+                cantidadInput.value = stock;
+            }
+            if (ayudaStock) ayudaStock.innerHTML = `<span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Stock disponible: ${stock} unidad(es)</span>`;
+        } else if (ayudaStock) {
+            ayudaStock.textContent = 'Ingresa la cantidad que vas a vender.';
+        }
+
+        recalcularTotal();
+    }
+
+    cards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            seleccionarCard(card);
+        });
+    });
+
+    if (btnMinus) {
+        btnMinus.addEventListener('click', function() {
+            let val = parseInt(cantidadInput.value) || 1;
+            if (val > 1) {
+                cantidadInput.value = val - 1;
+                recalcularTotal();
+            }
+        });
+    }
+
+    if (btnPlus) {
+        btnPlus.addEventListener('click', function() {
+            let val = parseInt(cantidadInput.value) || 1;
+            const max = parseInt(cantidadInput.max);
+            if (!max || val < max) {
+                cantidadInput.value = val + 1;
+                recalcularTotal();
+            }
+        });
+    }
+
+    if (buscar) buscar.addEventListener('input', filtrarProductos);
+    if (cantidadInput) cantidadInput.addEventListener('input', recalcularTotal);
+
+    // Auto-seleccionar primer producto por defecto
+    if (cards.length > 0) {
+        seleccionarCard(cards[0]);
+    }
+});
+</script>
 {% endblock %}

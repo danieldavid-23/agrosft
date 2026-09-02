@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.utils import timezone
 from django.core.cache import cache
+from decimal import Decimal
 from apps.inventario.models import Categoria, Producto, ProductoUsuario, Estado
 from apps.inventario.forms.producto_form import ProductoForm
 from apps.inventario.repositories.producto_repository import ProductoRepository
@@ -97,7 +98,7 @@ def listar_productos(request):
             'estado': pu.id_estado.estado,
             'categoria_nombre': pu.id_producto.id_categoria.nombre,
             'agricultor_id': pu.id_usuario.id_users,
-            'esta_agotado': pu.cantidad == 0,
+            'esta_agotado': pu.cantidad <= 0,
             'imagen': pu.id_producto.imagen.url if pu.id_producto.imagen else None,
             'es_mi_producto': True,
             'editUrl': reverse('inventario:editar', args=[pu.id_producto_usuario]),
@@ -211,7 +212,7 @@ def marketplace(request):
             'categoria_nombre': pu.id_producto.id_categoria.nombre,
             'agricultor_id': pu.id_usuario.id_users,
             'agricultor_nombre': f"{pu.id_usuario.nombres} {pu.id_usuario.apellidos}",
-            'esta_agotado': pu.cantidad == 0,
+            'esta_agotado': pu.cantidad <= 0,
             'imagen': pu.id_producto.imagen.url if pu.id_producto.imagen else None,
             'es_mi_producto': False,
             'detailUrl': reverse('inventario:detalle', args=[pu.id_producto_usuario]),
@@ -251,80 +252,152 @@ def marketplace(request):
 
 @login_required
 def crear_producto(request):
+    """
+    Vista de Venta Directa: Permite a un productor registrar una venta directa
+    de productos de su inventario, descontando stock real y registrando el movimiento.
+    """
     if request.method == 'POST':
-        form = ProductoForm(request.POST, request.FILES)
-        if form.is_valid():
-            # Verificar si el producto ya existe en el catálogo maestro
-            nombre_producto = form.cleaned_data['nombre']
-            descripcion = form.cleaned_data['descripcion']
-            id_categoria = form.cleaned_data['id_categoria']
-            
-            # Obtener stock_minimo del formulario o usar valor por defecto
-            stock_minimo = form.cleaned_data.get('stock_minimo', 5)
-            if stock_minimo is None:
-                stock_minimo = 5
-            
-            # Buscar si ya existe un producto con el mismo nombre
-            producto_existente, created = Producto.objects.get_or_create(
-                nombre=nombre_producto,
+        producto_usuario_id = request.POST.get('producto_usuario_id')
+        cantidad_raw = request.POST.get('cantidad', 1)
+        precio_raw = request.POST.get('precio')
+        cliente_id = request.POST.get('cliente_id')
+        nombre_producto = request.POST.get('nombre', '').strip()
+        
+        try:
+            cantidad = int(cantidad_raw)
+            if cantidad <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            messages.error(request, 'La cantidad a vender debe ser un número entero mayor a 0.')
+            return redirect('inventario:crear')
+
+        pu = None
+        # 1. Buscar el ProductoUsuario en el inventario del vendedor
+        if producto_usuario_id:
+            pu = ProductoUsuario.objects.filter(
+                id_producto_usuario=producto_usuario_id,
+                id_usuario=request.user
+            ).select_related('id_producto', 'id_producto__id_categoria').first()
+
+        if not pu and nombre_producto:
+            pu = ProductoUsuario.objects.filter(
+                id_producto__nombre__iexact=nombre_producto,
+                id_usuario=request.user
+            ).select_related('id_producto', 'id_producto__id_categoria').first()
+
+        # Si aún no existe en el inventario del usuario pero existe en el catálogo maestro
+        if not pu:
+            categoria_id = request.POST.get('id_categoria')
+            categoria = Categoria.objects.filter(pk=categoria_id).first() or Categoria.objects.first()
+            prod_master, _ = Producto.objects.get_or_create(
+                nombre=nombre_producto or 'Producto Agrícola',
                 defaults={
-                    'descripcion': descripcion,
-                    'id_categoria': id_categoria,
-                    'cantidad': 0,  # Valor predeterminado
-                    'stock_minimo': stock_minimo,
-                    'estado': EstadoProducto.PENDIENTE.lower(),  # Valor predeterminado
-                    'imagen': form.cleaned_data.get('imagen')
+                    'id_categoria': categoria,
+                    'cantidad': 0,
+                    'stock_minimo': 5,
+                    'estado': EstadoProducto.APROBADO.lower()
                 }
             )
-            
-            # Si el producto ya existe y el usuario subió una imagen nueva, la actualizamos
-            if not created and form.cleaned_data.get('imagen'):
-                producto_existente.imagen = form.cleaned_data['imagen']
-                producto_existente.save()
-            
-            # Si el producto ya existe y es admin, actualizar stock_minimo
-            if not created and (request.user.is_staff or request.user.is_superuser):
-                producto_existente.stock_minimo = stock_minimo
-                producto_existente.save()
-            
-            # Crear la relación específica del usuario con el producto (producto_usuario)
-            producto_usuario = ProductoUsuario()
-            producto_usuario.id_producto = producto_existente
-            # Corrección: usar directamente request.user, que ya es un objeto Tblusuarios
-            producto_usuario.id_usuario = request.user
-            # NOTA: cantidad se inicializa en 0, el trigger de BD la actualizará al insertar el movimiento
-            producto_usuario.cantidad = 0
-            producto_usuario.precio = form.cleaned_data['precio']
-            producto_usuario.id_estado = Estado.objects.get(estado=EstadoProducto.PENDIENTE)  # Estado inicial
-            producto_usuario.save()
-            
-            # Registrar el movimiento inicial de stock (abastecimiento/venta)
-            cantidad_inicial = form.cleaned_data['cantidad']
-            if cantidad_inicial > 0:
+            estado_aprobado = Estado.objects.filter(estado__iexact='aprobado').first() or Estado.objects.first()
+            precio_val = Decimal(str(precio_raw)) if precio_raw else Decimal('0.00')
+            pu = ProductoUsuario.objects.create(
+                id_producto=prod_master,
+                id_usuario=request.user,
+                cantidad=Decimal(str(cantidad)), # Le asignamos la cantidad para que pueda venderse
+                precio=precio_val,
+                id_estado=estado_aprobado
+            )
+
+        # 2. Validar stock disponible
+        stock_actual = int(pu.cantidad)
+        if cantidad > stock_actual:
+            messages.error(
+                request,
+                f'Stock insuficiente para "{pu.id_producto.nombre}". '
+                f'Stock disponible: {stock_actual} unidad(es), intentas vender: {cantidad}.'
+            )
+            return redirect('inventario:crear')
+
+        # 3. Actualizar precio si se ingresó uno específico
+        if precio_raw:
+            try:
+                precio_ingresado = Decimal(str(precio_raw))
+                if precio_ingresado > 0 and precio_ingresado != pu.precio:
+                    pu.precio = precio_ingresado
+                    pu.save(update_fields=['precio'])
+            except Exception:
+                pass
+
+        # 4. Determinar el cliente comprador
+        comprador = None
+        if cliente_id:
+            comprador = Tblusuarios.objects.filter(pk=cliente_id).first()
+        if not comprador:
+            # Selecciona un cliente registrado distinto al vendedor, o el propio usuario como venta directa mostrador
+            comprador = Tblusuarios.objects.exclude(pk=request.user.pk).first() or request.user
+
+        # 5. Registrar la transacción de venta directa
+        try:
+            with transaction.atomic():
+                # Movimiento inicial como venta
                 tipo_venta, _ = TipoMovimiento.objects.get_or_create(tipo='venta')
                 movimiento = Movimiento.objects.create(
                     id_tipo_movimiento=tipo_venta,
-                    id_usuario=request.user
+                    id_usuario=comprador
                 )
+
+                # Detalle con cantidad negativa (según diseño BD para salidas/ventas)
                 ProductoUsuarioMovimiento.objects.create(
                     id_movimiento=movimiento,
-                    id_producto_usuario=producto_usuario,
-                    cantidad=cantidad_inicial
+                    id_producto_usuario=pu,
+                    cantidad=-cantidad
                 )
-            
-            logger.info(f"Product created by user {request.user.pk}: {producto_existente.nombre}")
-            messages.success(request, '¡Producto creado exitosamente!')
-            return redirect('inventario:listar')
-    else:
-        form = ProductoForm()
 
+                # Cambiar a 'vendida' para activar trigger trg_descontar_stock_vendida
+                tipo_vendida, _ = TipoMovimiento.objects.get_or_create(tipo='vendida')
+                movimiento.id_tipo_movimiento = tipo_vendida
+                movimiento.save()
+
+            messages.success(
+                request,
+                f'¡Venta Directa #{movimiento.id_movimiento} registrada con éxito! '
+                f'Se vendieron {cantidad} unidad(es) de "{pu.id_producto.nombre}".'
+            )
+            return redirect('ventas:venta_detail', pk=movimiento.id_movimiento)
+
+        except Exception as e:
+            logger.exception("Error al registrar venta directa")
+            messages.error(request, f'Error al procesar la venta directa: {str(e)}')
+            return redirect('inventario:crear')
+
+    # GET: Cargar datos para el formulario de Venta Directa
+    form = ProductoForm()
     categorias = get_categorias_cached()
     estados = get_estados_cached()
+    
+    # Productos del inventario del propio vendedor (con stock disponible)
+    mis_productos = ProductoUsuario.objects.filter(
+        id_usuario=request.user,
+        id_producto__eliminado=False
+    ).select_related('id_producto', 'id_producto__id_categoria').order_by('id_producto__nombre')
+
+    # Clientes disponibles para asignar la venta
+    clientes_disponibles = Tblusuarios.objects.exclude(
+        pk=request.user.pk
+    ).order_by('nombres', 'apellidos')
+
+    # Catálogo general de respaldo
+    productos_existentes = Producto.objects.filter(
+        eliminado=False
+    ).select_related('id_categoria').order_by('nombre')
     
     return render(request, 'inventario/crear_producto.html', {
         'form': form,
         'categorias': categorias,
-        'estados': estados
+        'estados': estados,
+        'mis_productos': mis_productos,
+        'clientes_disponibles': clientes_disponibles,
+        'productos_existentes': productos_existentes
     })
 
 @login_required

@@ -6,48 +6,55 @@
 
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex align-items-center mb-4">
-        <a href="{% url 'ventas:venta_list' %}" class="btn btn-light rounded-circle me-3">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <div>
-            <h2 class="mb-1 d-flex align-items-center gap-2">
-                Venta #{{ venta.id }}
-                {% if venta.estado == 'vendida' %}
-                    <span class="badge bg-success fs-6 rounded-pill">
-                        <i class="fas fa-check-circle me-1"></i>Vendido
-                    </span>
-                {% elif venta.estado == 'cancelada' %}
-                    <span class="badge bg-danger fs-6 rounded-pill">
-                        <i class="fas fa-times-circle me-1"></i>Cancelada
-                    </span>
-                {% else %}
-                    <span class="badge bg-warning text-dark fs-6 rounded-pill">
-                        <i class="fas fa-clock me-1"></i>En proceso
-                    </span>
-                {% endif %}
-            </h2>
-            <p class="text-muted mb-0">Detalles de la venta generada.</p>
-            {% if venta.puede_marcar_vendido or venta.puede_cancelar %}
-            <div class="d-flex flex-wrap gap-2 mt-2">
-                {% if venta.puede_marcar_vendido %}
-                <form method="post" action="{% url 'ventas:venta_marcar_vendida' venta.id %}" onsubmit="return confirm('¿Confirmar que esta venta fue completada?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success rounded-pill">
-                        <i class="fas fa-check me-1"></i> Marcar como Vendida
-                    </button>
-                </form>
-                {% endif %}
-                {% if venta.puede_cancelar %}
-                <form method="post" action="{% url 'ventas:venta_cancelar' venta.id %}" onsubmit="return confirm('¿Estás seguro de cancelar esta venta?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger rounded-pill">
-                        <i class="fas fa-times me-1"></i> Cancelar Venta
-                    </button>
-                </form>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'ventas:venta_list' %}" class="btn btn-light rounded-circle me-3 shadow-sm">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h2 class="mb-1 d-flex align-items-center gap-2">
+                    Venta #{{ venta.id }}
+                    {% if venta.estado == 'vendida' %}
+                        <span class="badge bg-success fs-6 rounded-pill">
+                            <i class="fas fa-check-circle me-1"></i>Vendido
+                        </span>
+                    {% elif venta.estado == 'cancelada' %}
+                        <span class="badge bg-danger fs-6 rounded-pill">
+                            <i class="fas fa-times-circle me-1"></i>Cancelada
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark fs-6 rounded-pill">
+                            <i class="fas fa-clock me-1"></i>En proceso
+                        </span>
+                    {% endif %}
+                </h2>
+                <p class="text-muted mb-0">Detalles de la venta generada.</p>
+                {% if venta.puede_marcar_vendido or venta.puede_cancelar %}
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    {% if venta.puede_marcar_vendido %}
+                    <form method="post" action="{% url 'ventas:venta_marcar_vendida' venta.id %}" onsubmit="return confirm('¿Confirmar que esta venta fue completada?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success rounded-pill">
+                            <i class="fas fa-check me-1"></i> Marcar como Vendida
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if venta.puede_cancelar %}
+                    <form method="post" action="{% url 'ventas:venta_cancelar' venta.id %}" onsubmit="return confirm('¿Estás seguro de cancelar esta venta?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger rounded-pill">
+                            <i class="fas fa-times me-1"></i> Cancelar Venta
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
-            {% endif %}
+        </div>
+        <div>
+            <a href="{% url 'inventario:crear' %}" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold">
+                <i class="fas fa-plus-circle me-1"></i> Venta Directa
+            </a>
         </div>
     </div>
 
@@ -62,16 +69,27 @@
                         <li class="list-group-item px-0 pt-0">
                             <span class="text-muted small d-block">Comprador</span>
                             <span class="fw-bold">{{ venta.comprador_nombre }}</span>
+                            {% if venta.comprador_email %}
                             <br><small class="text-muted">{{ venta.comprador_email }}</small>
-                            <br><small class="text-success"><i class="fab fa-whatsapp"></i> {{ venta.comprador_telefono }}</small>
+                            {% endif %}
+                            {% if venta.whatsapp_link %}
+                            <div class="mt-2">
+                                <a href="{{ venta.whatsapp_link }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
+                                    <i class="fab fa-whatsapp me-1"></i> Contactar por WhatsApp
+                                </a>
+                            </div>
+                            {% elif venta.comprador_telefono %}
+                            <small class="text-muted d-block mt-1"><i class="fas fa-phone me-1"></i> {{ venta.comprador_telefono }}</small>
+                            {% endif %}
                         </li>
                         <li class="list-group-item px-0">
                             <span class="text-muted small d-block">Fecha de Venta</span>
                             <span class="fw-bold">{{ venta.fecha|date:"d/m/Y H:i"|default:'N/A' }}</span>
                         </li>
-                        <li class="list-group-item px-0 border-bottom-0 pb-0">
-                            <span class="text-muted small d-block">Descripción</span>
-                            <span class="fw-bold">{{ venta.descripcion }}</span>
+                        <li class="list-group-item px-0 border-bottom-0 pb-0 pt-3">
+                            <a href="{% url 'inventario:crear' %}" class="btn btn-outline-success w-100 rounded-pill">
+                                <i class="fas fa-plus-circle me-1"></i> Registrar Venta Directa
+                            </a>
                         </li>
                     </ul>
                 </div>
