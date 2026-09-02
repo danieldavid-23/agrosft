@@ -308,6 +308,22 @@ Configurado vía `social-auth-app-django`:
 
 ---
 
+## 7.1 Media Storage (Imágenes)
+
+| Configuración | Valor | Notas |
+|---|---|---|
+| `MEDIA_URL` | `/media/` | Base pública de archivos subidos |
+| `MEDIA_ROOT` | `BASE_DIR / 'media'` | Directorio físico de almacenamiento |
+| `Producto.imagen` | `ImageField(upload_to='productos/')` | Fotografía del producto en `tblproducto` |
+| `UserProfile.imagen_perfil` | `ImageField(upload_to='profile_pictures/')` | Foto de perfil en `user_profiles` |
+
+- En desarrollo (`DEBUG=True`), `config/urls.py` sirve los media con `static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)`.
+- Los controllers de producto y perfil pasan `request.FILES` a los formularios para recibir archivos (`multipart/form-data`).
+- Validación: extensiones `jpg/jpeg/png/webp` (`FileExtensionValidator`) y tamaño máximo 5MB (`core.utils.helpers.validate_image_size`), aplicada en **modelos** y **formularios**.
+- Los valores en BD son rutas `VARCHAR(255)`; los templates Vue y Django usan `.url` sobre los campos `ImageField` o la URL ya resuelta en los dicts del controller.
+
+---
+
 ## 8. Patrones de Diseño
 
 | Patrón | Uso | Ejemplo |

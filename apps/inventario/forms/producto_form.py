@@ -1,4 +1,6 @@
 from django import forms
+from django.core.validators import FileExtensionValidator
+from core.utils.helpers import validate_image_size
 from apps.inventario.models import Producto, Categoria, ProductoUsuario, Estado
 
 
@@ -11,6 +13,14 @@ class ProductoForm(forms.Form):
     descripcion = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descripción del producto'}),
         required=False
+    )
+    imagen = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        validators=[
+            FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
+            validate_image_size
+        ]
     )
     id_categoria = forms.ModelChoiceField(
         queryset=Categoria.objects.filter(activo=True),
@@ -65,7 +75,8 @@ class ProductoForm(forms.Form):
                 self.fields['descripcion'].initial = producto.descripcion
                 self.fields['id_categoria'].initial = producto.id_categoria
                 self.fields['stock_minimo'].initial = producto.stock_minimo
-                self.fields['imagen'].initial = getattr(producto, 'imagen', None)
+                if hasattr(producto, 'imagen'):
+                    self.fields['imagen'].initial = producto.imagen
             elif 'nombre' in initial_data:
                 # Si se pasaron valores directamente
                 self.fields['nombre'].initial = initial_data.get('nombre', '')

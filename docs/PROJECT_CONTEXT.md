@@ -2,7 +2,7 @@
 
 > Fuente principal de contexto global del proyecto.  
 > **Metodología**: Specification-Driven Development (SDD)  
-> **Última actualización**: 2026-06-17
+> **Última actualización**: 2026-08-20
 
 ---
 
@@ -106,8 +106,8 @@ graph TB
 
 | Módulo | App Django | Descripción | Estado |
 |---|---|---|---|
-| **Usuarios** | `apps.usuarios` | Autenticación, registro, perfil, términos | ✅ Funcional |
-| **Inventario** | `apps.inventario` | Catálogo de productos, CRUD, marketplace | ✅ Funcional |
+| **Usuarios** | `apps.usuarios` | Autenticación, registro, perfil (con foto), términos | ✅ Funcional |
+| **Inventario** | `apps.inventario` | Catálogo de productos (con foto), CRUD, marketplace | ✅ Funcional |
 | **Ventas** | `apps.ventas` | Carrito, solicitudes, ventas, calificaciones | ✅ Funcional |
 | **Clientes** | `apps.clientes` | Historial de compradores | ✅ Funcional |
 | **Core** | `core` | Clases base, middleware, utilidades | ✅ Funcional |

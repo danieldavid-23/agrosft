@@ -9,6 +9,7 @@
 
 - Las respuestas AJAX usan `JsonResponse` con header `X-Requested-With: XMLHttpRequest`
 - Formularios estándar envían `application/x-www-form-urlencoded` con CSRF token
+- Los endpoints de subida de archivos (`imagen`, `imagen_perfil`) requieren `Content-Type: multipart/form-data`
 - Todas las rutas protegidas requieren `@login_required` (excepto auth y carrito)
 - Formato de fechas: `YYYY-MM-DD HH:MM` | Zona horaria: `America/Bogota`
 
@@ -81,7 +82,7 @@ POST /usuarios/perfil/
 | `nombres` | string | Sí | Nombres |
 | `apellidos` | string | Sí | Apellidos |
 | `telefono` | string | No | Teléfono |
-| `imagen_perfil` | file | No | Imagen JPG/PNG |
+| `imagen_perfil` | file | No | Imagen JPG/JPEG/PNG/WEBP (máx. 5MB) |
 | `remove_photo` | string | No | `'true'` para eliminar foto |
 
 **Response (AJAX)**:
@@ -135,6 +136,7 @@ GET /inventario/
       "precio": 8000.0,
       "stock": 50,
       "estado": "Aprobado",
+      "imagen": "/media/productos/tomate_cherry.jpg",
       "editUrl": "/inventario/producto/1/editar/",
       "deleteUrl": "/inventario/producto/1/eliminar/"
     }
@@ -164,6 +166,7 @@ GET /inventario/marketplace/
       "nombre": "Papa Pastusa",
       "precio": 3000.0,
       "stock": 100,
+      "imagen": "/media/productos/papa_pastusa.jpg",
       "agricultor_nombre": "Juan Pérez",
       "detailUrl": "/inventario/producto/5/"
     }
@@ -183,12 +186,13 @@ GET  /inventario/producto/nuevo/
 POST /inventario/producto/nuevo/
 ```
 
-**Request Body (POST)**:
+**Request Body (POST, `multipart/form-data`)**:
 
 | Campo | Tipo | Requerido | Descripción |
 |---|---|---|---|
 | `nombre` | string | Sí | Nombre del producto |
 | `descripcion` | string | No | Descripción |
+| `imagen` | file | No | Fotografía JPG/JPEG/PNG/WEBP (máx. 5MB) |
 | `id_categoria` | int | Sí | ID de categoría |
 | `precio` | decimal | Sí | Precio unitario |
 | `cantidad` | int | Sí | Stock inicial |
@@ -205,7 +209,7 @@ GET  /inventario/producto/<pk>/editar/
 POST /inventario/producto/<pk>/editar/
 ```
 
-**Request Body**: Igual que Crear Producto.
+**Request Body**: Igual que Crear Producto (`multipart/form-data`). Si se envía un nuevo `imagen`, reemplaza la actual; si no se envía, se conserva la existente.
 
 ---
 

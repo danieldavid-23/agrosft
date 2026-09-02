@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_tags %}
 
 {% block title %}Eliminar Producto - AGROST{% endblock %}
 
@@ -23,7 +24,7 @@
                         <h4 class="text-success mb-2">{{ producto.nombre }}</h4>
                         <p class="text-muted mb-2">{{ producto.descripcion|truncatechars:100 }}</p>
                         <div class="d-flex justify-content-center gap-3">
-                            <span class="badge bg-info">${{ producto_usuario.precio|floatformat:2 }}</span>
+                            <span class="badge bg-info">{{ producto_usuario.precio|currency_cop }}</span>
                             <span class="badge bg-secondary">{{ producto.id_categoria.nombre }}</span>
                             <span class="badge {% if producto_usuario.cantidad > 0 %}bg-success{% else %}bg-danger{% endif %}">
                                 Stock: {{ producto_usuario.cantidad }}

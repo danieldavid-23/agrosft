@@ -40,6 +40,7 @@
 | RF-I12 | El sistema debe registrar movimiento de stock al crear/editar productos | Alta | ✅ Implementado |
 | RF-I13 | El sistema debe alertar cuando el stock esté por debajo del mínimo | Media | 🔶 Parcial (badge visual) |
 | RF-I14 | El sistema debe permitir verificar stock vía API endpoint | Baja | ✅ Implementado |
+| RF-I15 | El sistema debe permitir subir una fotografía por producto (JPG, JPEG, PNG, WEBP; máx. 5MB) | Alta | ✅ Implementado |
 
 ### 1.3 Módulo de Ventas
 
@@ -137,14 +138,17 @@ Requisitos identificados en la ficha del proyecto SENA que **no están implement
 
 | ID | Requisito | Prioridad | Complejidad |
 |---|---|---|---|
+| ~~GAP-02~~ | ~~Fotografías de productos~~ | — | — |
 | GAP-01 | Chat/mensajería entre comprador y vendedor | Alta | Alta |
-| GAP-02 | Fotografías de productos | Alta | Media |
 | GAP-03 | Geolocalización de productos y agricultores | Media | Media |
 | GAP-04 | Notificaciones push en tiempo real | Media | Alta |
 | GAP-05 | Precios por volumen (descuentos por cantidad) | Media | Media |
 | GAP-06 | Verificación de agricultores | Baja | Media |
 | GAP-07 | Alertas de mercado (precios, disponibilidad) | Baja | Alta |
 | GAP-08 | Reportes y estadísticas avanzadas | Baja | Media |
+
+> [!note] GAP-02 resuelto
+> **Fotografías de productos** fue implementado (2026-08-20). Ver [[REQUIREMENTS#RF-I15]] y [[USER_STORIES#US-15]]. Detalles técnicos en [[DECISIONS#ADR-012]].
 
 > Ver [[ROADMAP]] para el plan de implementación de estas brechas.
 

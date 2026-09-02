@@ -100,6 +100,7 @@
 
 **Criterios de Aceptación**:
 - [x] Formulario solicita: nombre, descripción, categoría, precio, cantidad, stock mínimo
+- [x] Permite subir una fotografía del producto (JPG/JPEG/PNG/WEBP, máx. 5MB)
 - [x] Si el producto ya existe en el catálogo, reutiliza el registro maestro
 - [x] Crea relación ProductoUsuario con estado "Pendiente"
 - [x] Si cantidad > 0, registra movimiento inicial de stock
@@ -182,6 +183,28 @@ graph TD
 
 **Implementación**: `apps/inventario/controllers/producto_controller.py` → `marketplace()`  
 **Frontend**: `frontend/src/marketplace/MarketApp.vue`
+
+---
+
+### US-15: Fotografía de Producto
+
+**Como** agricultor,  
+**quiero** adjuntar una fotografía a mi producto,  
+**para** que los compradores puedan verlo visualmente en el marketplace.
+
+**Requisitos relacionados**: [[REQUIREMENTS#RF-I15]]
+
+**Criterios de Aceptación**:
+- [x] Formulario de crear/editar producto incluye campo de imagen (`enctype="multipart/form-data"`)
+- [x] Acepta extensiones JPG, JPEG, PNG y WEBP
+- [x] Rechaza archivos mayores a 5MB (validación server-side en formulario y modelo)
+- [x] La imagen se almacena en `MEDIA_ROOT/productos/` y se sirve vía `MEDIA_URL /media/`
+- [x] La imagen se muestra en marketplace, inventario, detalle y componentes Vue (`MarketApp.vue`, `InventarioApp.vue`)
+- [x] Al reutilizar un producto del catálogo maestro, la imagen queda asociada a la publicación
+- [x] La edición permite reemplazar la imagen mostrando la actual
+
+**Implementación**: `apps/inventario/forms/producto_form.py`, `apps/inventario/controllers/producto_controller.py` → `crear_producto()` / `editar_producto()`  
+**Modelo**: `apps.inventario.models.producto.Producto.imagen`
 
 ---
 

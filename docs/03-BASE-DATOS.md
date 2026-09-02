@@ -68,6 +68,7 @@ graph TB
 | `id_productos` | INT AUTO_INCREMENT | `AutoField` (PK) | ID producto |
 | `nombre` | VARCHAR(45) | `CharField` | Nombre del producto |
 | `descripcion` | TEXT | `TextField` | Descripción (nullable) |
+| `imagen` | VARCHAR(255) | `ImageField` | Ruta/URL de imagen del producto |
 | `cantidad` | INT | `IntegerField` | Stock global (calculado) |
 | `fecha_creacion` | DATETIME | `DateTimeField` | Auto al crear |
 | `tblcategoria_idt_categoria` | INT (FK) | `ForeignKey` | Categoría |

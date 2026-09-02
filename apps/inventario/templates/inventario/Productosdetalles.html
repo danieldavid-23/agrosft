@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_tags %}
 {% load static %}
 
 {% block title %}Detalle del Producto - {{ producto.id_producto.nombre }}{% endblock %}
@@ -30,7 +31,7 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h5>Precio:</h5>
-                            <p class="mb-0 fw-bold text-success">${{ producto.precio|floatformat:2 }}</p>
+                            <p class="mb-0 fw-bold text-success">{{ producto.precio|currency_cop }}</p>
                         </div>
                         <div class="col-md-6">
                             <h5>Cantidad Disponible:</h5>
@@ -42,6 +43,12 @@
                         </div>
                     </div>
                     
+                    {% if producto.id_producto.imagen %}
+                    <div class="mb-4 text-center">
+                        <img src="{{ producto.id_producto.imagen.url }}" alt="{{ producto.id_producto.nombre }}" class="img-fluid rounded-3 shadow-sm" style="max-height: 350px;">
+                    </div>
+                    {% endif %}
+
                     <h5>Descripción:</h5>
                     <p>{{ producto.id_producto.descripcion }}</p>
                     
@@ -88,7 +95,7 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <h5 class="card-title">{{ p.id_producto.nombre }}</h5>
-                        <p class="card-text">${{ p.precio|floatformat:2 }}</p>
+                        <p class="card-text">{{ p.precio|currency_cop }}</p>
                         {% if p.id_producto_usuario %}
                         <a href="{% url 'inventario:detalle' p.id_producto_usuario %}" class="btn btn-sm btn-outline-primary">Ver detalles</a>
                         {% endif %}

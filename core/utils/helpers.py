@@ -5,6 +5,15 @@ Provides safe type conversions, shared constants, and utility functions.
 import logging
 import re
 import urllib.parse
+from django.core.exceptions import ValidationError
+
+def validate_image_size(value):
+    """
+    Validates that the uploaded image size is less than 5MB.
+    """
+    limit_mb = 5
+    if value.size > limit_mb * 1024 * 1024:
+        raise ValidationError(f'El tamaño máximo permitido es {limit_mb}MB.')
 
 logger = logging.getLogger(__name__)
 

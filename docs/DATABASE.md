@@ -55,8 +55,8 @@ erDiagram
 | Columna | Tipo | Nullable | Default | Descripción |
 |---|---|---|---|---|
 | `id_perfil` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
-| `id_usuario` | INT | No | — | FK lógica a tblusuarios |
-| `imagen_perfil` | VARCHAR (path) | Yes | NULL | Ruta de imagen |
+| `id_usuario` | INT (FK) | No | — | FK a tblusuarios (UNIQUE) |
+| `imagen_perfil` | VARCHAR(255) | Yes | NULL | Ruta de imagen de perfil |
 | `biografia` | TEXT | Yes | NULL | Biografía del usuario |
 | `sitio_web` | VARCHAR | Yes | NULL | URL personal |
 | `telefono_contacto` | VARCHAR(20) | Yes | NULL | Teléfono alternativo |
@@ -69,8 +69,8 @@ erDiagram
 
 **Modelo Django**: `apps.usuarios.models.profile_model.UserProfile`
 
-> [!warning] Tabla inexistente en MariaDB
-> La tabla `user_profiles` **no existe** en la base de datos real de MariaDB. El modelo Django tiene `managed = False` pero apunta a una tabla que nunca fue creada en el schema legacy. Las funcionalidades de perfil extendido (biografía, sitio_web, notificaciones) no están operativas.
+> [!note] Tabla funcional en MariaDB
+> La tabla `user_profiles` **existe** en MariaDB con FK `ON DELETE CASCADE` a `tblusuarios`. Permite perfil extendido (imagen, bio, sitio_web, notificaciones).
 
 ---
 
@@ -97,6 +97,7 @@ erDiagram
 | `id_productos` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
 | `nombre` | VARCHAR(45) | No | — | Nombre del producto |
 | `descripcion` | TEXT | Yes | NULL | Descripción detallada |
+| `imagen` | VARCHAR(255) | Yes | NULL | Ruta/URL de la imagen del producto |
 | `cantidad` | INT | No | 0 | Stock global de referencia |
 | `fecha_creacion` | DATETIME | No | CURRENT_TIMESTAMP | Fecha de creación |
 | `tblcategoria_idt_categoria` | INT (FK) | No | — | FK a tblcategoria |
@@ -216,8 +217,8 @@ erDiagram
 
 **Modelo Django**: `apps.usuarios.models.profile_model.UserDevice`
 
-> [!warning] Tabla inexistente en MariaDB
-> La tabla `user_devices` **no existe** en la base de datos real. Modelo Django con `managed = False` sin respaldo en BD.
+> [!note] Tabla funcional en MariaDB
+> La tabla `user_devices` **existe** en MariaDB con FK `ON DELETE CASCADE` a `tblusuarios`.
 
 ---
 
@@ -238,8 +239,8 @@ erDiagram
 
 **Modelo Django**: `apps.usuarios.models.profile_model.UserAddress`
 
-> [!warning] Tabla inexistente en MariaDB
-> La tabla `user_addresses` **no existe** en la base de datos real. Modelo Django con `managed = False` sin respaldo en BD.
+> [!note] Tabla funcional en MariaDB
+> La tabla `user_addresses` **existe** en MariaDB con FK `ON DELETE CASCADE` a `tblusuarios`.
 
 ---
 
