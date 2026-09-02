@@ -11,10 +11,15 @@ const props = defineProps({
 })
 
 const showMobileMenu = ref(false)
+const showDropdown = ref(false)
 const toasts = ref([])
 
 function toggleMobile() {
   showMobileMenu.value = !showMobileMenu.value
+}
+
+function toggleDropdown() {
+  showDropdown.value = !showDropdown.value
 }
 
 function isActive(href) {
@@ -116,7 +121,7 @@ function dismissToast(id) {
                 <i v-else class="fas fa-user-circle fs-5 me-1 align-middle" style="color: var(--primary-color)"></i>
                 {{ user.nombre_corto || user.correo }}
               </a>
-              <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: var(--radius-md);">
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0" :class="{ show: showDropdown }" style="border-radius: var(--radius-md);">
                 <li><a class="dropdown-item py-2" :href="urls.perfil"><i class="fas fa-id-card fa-fw text-muted me-2"></i> Mi Perfil</a></li>
                 <li><a class="dropdown-item py-2" :href="urls.historial"><i class="fas fa-history fa-fw text-muted me-2"></i> Mi historial</a></li>
                 <li><a class="dropdown-item py-2" :href="urls.cambiar_password"><i class="fas fa-key fa-fw text-muted me-2"></i> Seguridad</a></li>
