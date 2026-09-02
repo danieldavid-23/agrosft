@@ -17,6 +17,10 @@ class ProductoForm(forms.Form):
         empty_label="Seleccione una categoría",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+    imagen = forms.ImageField(
+        widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'id_imagen', 'accept': 'image/*'}),
+        required=False
+    )
     
     # Campo stock_minimo (solo administradores pueden editar)
     stock_minimo = forms.IntegerField(
@@ -45,7 +49,7 @@ class ProductoForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=False  # Solo para ediciones por parte del admin
     )
-
+ 
     def __init__(self, *args, **kwargs):
         # Permitir inicializar con datos de ProductoUsuario
         initial_data = kwargs.pop('initial', {})
@@ -61,12 +65,14 @@ class ProductoForm(forms.Form):
                 self.fields['descripcion'].initial = producto.descripcion
                 self.fields['id_categoria'].initial = producto.id_categoria
                 self.fields['stock_minimo'].initial = producto.stock_minimo
+                self.fields['imagen'].initial = getattr(producto, 'imagen', None)
             elif 'nombre' in initial_data:
                 # Si se pasaron valores directamente
                 self.fields['nombre'].initial = initial_data.get('nombre', '')
                 self.fields['descripcion'].initial = initial_data.get('descripcion', '')
                 self.fields['id_categoria'].initial = initial_data.get('id_categoria')
                 self.fields['stock_minimo'].initial = initial_data.get('stock_minimo', 5)
+                self.fields['imagen'].initial = initial_data.get('imagen')
             
             # Datos específicos del ProductoUsuario
             self.fields['cantidad'].initial = initial_data.get('cantidad', 0)

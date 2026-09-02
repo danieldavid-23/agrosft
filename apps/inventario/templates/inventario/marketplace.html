@@ -18,6 +18,17 @@
     {{ marketplace_json|json_script:"marketplace-data" }}
     <div id="vue-marketplace"></div>
     <script type="module" src="{% static 'dist/marketplace.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var vueEl = document.getElementById('vue-marketplace');
+            var fallbackEl = document.getElementById('django-marketplace-fallback');
+            if (vueEl && fallbackEl && vueEl.children.length > 0) {
+                fallbackEl.style.display = 'none';
+            }
+        });
+    </script>
+    
+    <div id="django-marketplace-fallback">
     <!-- Grid de Productos -->
     <div class="row g-4">
         {% for producto in productos %}
@@ -28,7 +39,7 @@
                 <!-- Imagen del producto -->
                 <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
                     {% if producto.imagen %}
-                    <img src="{{ producto.imagen.url }}" class="product-image" alt="{{ producto.nombre }}">
+                    <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}">
                     {% else %}
                     <div class="d-flex justify-content-center align-items-center h-100 bg-white" style="min-height: 220px;">
                                                 <div class="p-4 rounded-circle" style="background-color: var(--primary-light)">
@@ -149,5 +160,6 @@
         </ul>
     </nav>
     {% endif %}
+    </div>
 </div>
 {% endblock %}

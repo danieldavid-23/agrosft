@@ -334,13 +334,19 @@ def admin_categoria_toggle(request, pk):
 @_require_staff
 def admin_reporte_usuarios_csv(request):
     """Descarga la lista de usuarios como CSV."""
+    from apps.inventario.models.producto import ProductoUsuario
+
     response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
     response['Content-Disposition'] = f'attachment; filename="reporte_usuarios_{timezone.now().strftime("%Y%m%d")}.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['ID', 'Nombres', 'Apellidos', 'Correo', 'Teléfono', 'Staff', 'Superadmin', 'Activo', 'Fecha Registro'])
+    writer.writerow(['ID', 'Nombres', 'Apellidos', 'Correo', 'Teléfono', 'Staff', 'Superadmin',
+                      'Activo', 'Fecha Registro', 'Último Login', 'Antigüedad (días)', 'Productos Publicados'])
 
-    for u in Tblusuarios.objects.all().order_by('id_users'):
+    hoy = timezone.now()
+    for u in Tblusuarios.objects.prefetch_related('productousuario_set').order_by('id_users'):
+        productos_count = u.productousuario_set.count()
+        antiguedad = (hoy - u.fecha_creacion).days if u.fecha_creacion else ''
         writer.writerow([
             u.id_users,
             u.nombres,
@@ -351,6 +357,9 @@ def admin_reporte_usuarios_csv(request):
             'Sí' if u.is_superuser else 'No',
             'Sí' if u.is_active else 'No',
             u.fecha_creacion.strftime('%Y-%m-%d %H:%M') if u.fecha_creacion else '',
+            u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else 'Nunca',
+            antiguedad,
+            productos_count,
         ])
 
     log_admin_action(request, 'Descargar Reporte', 'Reporte de Usuarios CSV')
@@ -360,14 +369,21 @@ def admin_reporte_usuarios_csv(request):
 @_require_staff
 def admin_reporte_productos_csv(request):
     """Descarga el catálogo de productos como CSV."""
-    from apps.inventario.models.producto import Producto
+    from apps.inventario.models.producto import Producto, ProductoUsuario
+
     response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
     response['Content-Disposition'] = f'attachment; filename="reporte_productos_{timezone.now().strftime("%Y%m%d")}.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['ID', 'Nombre', 'Categoría', 'Cantidad', 'Stock Mínimo', 'Estado', 'Eliminado', 'Fecha Creación'])
+    writer.writerow(['ID', 'Nombre', 'Categoría', 'Cantidad Total', 'Stock Mínimo', 'Estado',
+                      'Fecha Creación', 'Vendedor', 'Precio', 'Stock del Vendedor', 'Calificación Promedio'])
 
     for p in Producto.objects.select_related('id_categoria').filter(eliminado=False).order_by('id_producto'):
+        listing = ProductoUsuario.objects.filter(id_producto=p).select_related('id_usuario').first()
+        vendedor = listing.id_usuario.get_full_name() if listing else ''
+        precio = listing.precio if listing else ''
+        stock_vendedor = listing.cantidad if listing else ''
+        calificacion = listing.calificacion_promedio if listing else ''
         writer.writerow([
             p.id_producto,
             p.nombre,
@@ -375,8 +391,11 @@ def admin_reporte_productos_csv(request):
             p.cantidad,
             p.stock_minimo,
             p.estado,
-            'No',
             p.fecha_creacion.strftime('%Y-%m-%d %H:%M') if p.fecha_creacion else '',
+            vendedor,
+            precio,
+            stock_vendedor,
+            calificacion,
         ])
 
     log_admin_action(request, 'Descargar Reporte', 'Reporte de Productos CSV')
@@ -385,13 +404,22 @@ def admin_reporte_productos_csv(request):
 
 @_require_staff
 def admin_reporte_ventas_csv(request):
-    """Descarga el historial de ventas como CSV."""
+    """Descarga el historial de ventas como CSV. Soporta filtro por fechas: ?desde=YYYY-MM-DD&hasta=YYYY-MM-DD"""
     from apps.ventas.models.movimiento import ProductoUsuarioMovimiento
+    from apps.facturacion.models import Factura
+
+    desde = request.GET.get('desde')
+    hasta = request.GET.get('hasta')
+
     response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-    response['Content-Disposition'] = f'attachment; filename="reporte_ventas_{timezone.now().strftime("%Y%m%d")}.csv"'
+    filename = f"reporte_ventas_{timezone.now().strftime('%Y%m%d')}"
+    if desde and hasta:
+        filename += f"_{desde}_a_{hasta}"
+    response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['ID', 'Fecha', 'Tipo', 'Producto', 'Vendedor', 'Comprador', 'Cantidad', 'Precio Unit.', 'Total'])
+    writer.writerow(['ID', 'Fecha', 'Tipo', 'Producto', 'Vendedor', 'Comprador',
+                      'Cantidad', 'Precio Unit.', 'Total', 'ID Factura', 'Estado Factura'])
 
     transacciones = ProductoUsuarioMovimiento.objects.select_related(
         'id_producto_usuario',
@@ -401,12 +429,35 @@ def admin_reporte_ventas_csv(request):
         'id_movimiento__id_usuario'
     ).order_by('-fecha_movimiento')
 
+    if desde:
+        try:
+            from django.utils.dateparse import parse_date
+            fd = parse_date(desde)
+            if fd:
+                transacciones = transacciones.filter(fecha_movimiento__date__gte=fd)
+        except (ValueError, TypeError):
+            pass
+
+    if hasta:
+        try:
+            from django.utils.dateparse import parse_date
+            fh = parse_date(hasta)
+            if fh:
+                transacciones = transacciones.filter(fecha_movimiento__date__lte=fh)
+        except (ValueError, TypeError):
+            pass
+
     for tx in transacciones:
         es_venta = tx.cantidad < 0
         tipo = "Venta" if es_venta else "Abastecimiento"
         cant = abs(tx.cantidad)
         precio = tx.id_producto_usuario.precio
         total = cant * precio
+
+        factura = Factura.objects.filter(movimiento=tx.id_movimiento).first()
+        factura_id = factura.id_factura if factura else ''
+        factura_estado = factura.estado if factura else ''
+
         writer.writerow([
             tx.id_movimiento_usuario,
             tx.fecha_movimiento.strftime('%Y-%m-%d %H:%M') if tx.fecha_movimiento else '',
@@ -417,6 +468,8 @@ def admin_reporte_ventas_csv(request):
             cant,
             precio,
             total,
+            factura_id,
+            factura_estado,
         ])
 
     log_admin_action(request, 'Descargar Reporte', 'Reporte de Ventas CSV')

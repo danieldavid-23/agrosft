@@ -8,6 +8,17 @@
     {{ inventario_json|json_script:"inventario-data" }}
     <div id="vue-inventario"></div>
     <script type="module" src="{% static 'dist/inventario.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var vueEl = document.getElementById('vue-inventario');
+            var fallbackEl = document.getElementById('django-inventario-fallback');
+            if (vueEl && fallbackEl && vueEl.children.length > 0) {
+                fallbackEl.style.display = 'none';
+            }
+        });
+    </script>
+    
+    <div id="django-inventario-fallback">
     <!-- Encabezado Premium -->
     <div class="row align-items-center mb-5">
         <div class="col-md-8">
@@ -77,7 +88,7 @@
                 <!-- Imagen del producto -->
                 <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
                     {% if producto.imagen %}
-                    <img src="{{ producto.imagen.url }}" class="product-image" alt="{{ producto.nombre }}">
+                    <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}">
                     {% else %}
                     <div class="d-flex justify-content-center align-items-center h-100 bg-white" style="min-height: 220px;">
                         <div class="bg-success bg-opacity-10 p-4 rounded-circle">
@@ -192,5 +203,6 @@
         </div>
     </div>
     {% endif %}
+    </div>
 </div>
 {% endblock %}

@@ -77,6 +77,7 @@ class Producto(models.Model):
     )
     stock_minimo = models.IntegerField(default=5, db_column='stock_minimo')
     estado = models.CharField(max_length=20, default='pendiente', db_column='estado')
+    imagen = models.ImageField(db_column='imagen', blank=True, null=True, upload_to='productos/')
     eliminado = models.BooleanField(default=False, db_column='eliminado')
     fecha_eliminacion = models.DateTimeField(null=True, blank=True, db_column='fecha_eliminacion')
     eliminado_por_id = models.IntegerField(null=True, blank=True, db_column='eliminado_por_id')

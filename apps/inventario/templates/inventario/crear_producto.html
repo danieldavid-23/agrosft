@@ -88,6 +88,33 @@
                                 {% endif %}
                             </div>
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_imagen" class="form-label fw-bold">Imagen del Producto</label>
+                                {{ form.imagen }}
+                                {% if form.imagen.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.imagen.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text small text-muted">Formatos sugeridos: JPG, PNG</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.stock_minimo.id_for_label }}" class="form-label fw-bold">Alerta Stock Mínimo</label>
+                                {{ form.stock_minimo }}
+                                {% if form.stock_minimo.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.stock_minimo.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <a href="{% url 'inventario:listar' %}" class="btn btn-secondary me-md-2">
