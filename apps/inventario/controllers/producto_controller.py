@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -276,12 +277,8 @@ def crear_producto(request):
                 }
             )
             
-<<<<<<< HEAD
-            # Si se subió una imagen, actualizar y guardar el producto maestro
-=======
-            # Guardar la imagen si fue subida y el producto se creó, o si se está reusando uno pero se subió imagen
->>>>>>> 8f41d7881de691c6541f906bdf5dd8a54720ac58
-            if form.cleaned_data.get('imagen'):
+            # Si el producto ya existe y el usuario subió una imagen nueva, la actualizamos
+            if not created and form.cleaned_data.get('imagen'):
                 producto_existente.imagen = form.cleaned_data['imagen']
                 producto_existente.save()
             
@@ -360,9 +357,6 @@ def editar_producto(request, pk):
                 stock_minimo_value = form.cleaned_data.get('stock_minimo')
                 if stock_minimo_value is not None:
                     producto.stock_minimo = stock_minimo_value
-                
-                if form.cleaned_data.get('imagen'):
-                    producto.imagen = form.cleaned_data['imagen']
                 
                 producto.save()
                 logger.info(f"Producto maestro actualizado: {producto.nombre}, stock_minimo: {producto.stock_minimo}")
