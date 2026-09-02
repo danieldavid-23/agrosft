@@ -30,3 +30,6 @@ db.sqlite3
 *.swp
 *.swo
 *~
+node_modules/
+daniel/
+nul

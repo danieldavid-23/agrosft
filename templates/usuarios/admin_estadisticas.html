@@ -107,16 +107,20 @@
             </span>
         </div>
         <div class="card-body p-4">
-            <div class="row g-3">
+            <div class="row g-4">
                 <div class="col-md-4">
                     <a href="{% url 'usuarios:admin_reporte_usuarios_csv' %}" class="card h-100 text-decoration-none hover-card p-3">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-3 p-3 bg-primary bg-opacity-10 text-primary">
                                 <i class="fas fa-users-gear fa-xl"></i>
                             </div>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-1">Reporte de Usuarios</h6>
-                                <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Descargar lista de cuentas, roles y estados.</p>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <h6 class="fw-bold text-dark mb-0">Reporte de Usuarios</h6>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">{{ total_usuarios }} registros</span>
+                                </div>
+                                <p class="text-muted mb-2 small" style="font-size: 0.8rem;">Cuentas, roles, ultimo acceso y productos publicados.</p>
+                                <span class="small text-primary"><i class="fas fa-download me-1"></i>Descargar CSV</span>
                             </div>
                         </div>
                     </a>
@@ -127,25 +131,45 @@
                             <div class="rounded-3 p-3 bg-success bg-opacity-10 text-success">
                                 <i class="fas fa-cubes fa-xl"></i>
                             </div>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-1">Catálogo de Productos</h6>
-                                <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Inventario general de productos del sistema.</p>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <h6 class="fw-bold text-dark mb-0">Catálogo de Productos</h6>
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill">{{ total_productos }} registros</span>
+                                </div>
+                                <p class="text-muted mb-2 small" style="font-size: 0.8rem;">Inventario con vendedor, precio y calificación.</p>
+                                <span class="small text-success"><i class="fas fa-download me-1"></i>Descargar CSV</span>
                             </div>
                         </div>
                     </a>
                 </div>
                 <div class="col-md-4">
-                    <a href="{% url 'usuarios:admin_reporte_ventas_csv' %}" class="card h-100 text-decoration-none hover-card p-3">
+                    <div class="card h-100 hover-card p-3" style="cursor: default;">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rounded-3 p-3 bg-warning bg-opacity-10 text-warning">
                                 <i class="fas fa-receipt fa-xl"></i>
                             </div>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-1">Historial de Ventas</h6>
-                                <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Transacciones, montos e información de abasto.</p>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <h6 class="fw-bold text-dark mb-0">Historial de Ventas</h6>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill">{{ total_ventas_count }} registros</span>
+                                </div>
+                                <p class="text-muted mb-2 small" style="font-size: 0.8rem;">Transacciones, facturas y montos totales.</p>
+                                <form method="get" action="{% url 'usuarios:admin_reporte_ventas_csv' %}" class="d-flex gap-2 align-items-center flex-wrap">
+                                    <div class="d-flex gap-1 align-items-center">
+                                        <label class="small text-muted" style="font-size: 0.7rem;">Desde:</label>
+                                        <input type="date" name="desde" class="form-control form-control-sm" style="width: 120px; font-size: 0.75rem;">
+                                    </div>
+                                    <div class="d-flex gap-1 align-items-center">
+                                        <label class="small text-muted" style="font-size: 0.7rem;">Hasta:</label>
+                                        <input type="date" name="hasta" class="form-control form-control-sm" style="width: 120px; font-size: 0.75rem;">
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-download me-1"></i>CSV
+                                    </button>
+                                </form>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </div>
             </div>
         </div>

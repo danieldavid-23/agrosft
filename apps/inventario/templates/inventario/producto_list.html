@@ -9,6 +9,17 @@
     {{ inventario_json|json_script:"inventario-data" }}
     <div id="vue-inventario"></div>
     <script type="module" src="{% static 'dist/inventario.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var vueEl = document.getElementById('vue-inventario');
+            var fallbackEl = document.getElementById('django-inventario-fallback');
+            if (vueEl && fallbackEl && vueEl.children.length > 0) {
+                fallbackEl.style.display = 'none';
+            }
+        });
+    </script>
+    
+    <div id="django-inventario-fallback">
     <!-- Encabezado Premium -->
     <div class="row align-items-center mb-5">
         <div class="col-md-8">
@@ -193,5 +204,6 @@
         </div>
     </div>
     {% endif %}
+    </div>
 </div>
 {% endblock %}
