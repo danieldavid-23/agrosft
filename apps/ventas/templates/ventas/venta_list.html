@@ -10,6 +10,11 @@
             <h2 class="mb-1"><i class="fas fa-file-invoice-dollar me-2" style="color: var(--primary-color)"></i>Historial de Ventas</h2>
             <p class="text-muted mb-0">Gestione y visualice las ventas registradas en el sistema.</p>
         </div>
+        <div>
+            <a href="{% url 'inventario:crear' %}" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold">
+                <i class="fas fa-plus-circle me-1"></i> Venta Directa
+            </a>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm rounded-lg">
@@ -32,7 +37,13 @@
                             <td class="px-4 py-3 align-middle fw-bold text-muted">#{{ venta.id }}</td>
                             <td class="px-4 py-3 align-middle">
                                 <div class="fw-bold">{{ venta.cliente.nombres }} {{ venta.cliente.apellidos }}</div>
-                                <small class="text-success"><i class="fab fa-whatsapp"></i> {{ venta.cliente.telefono|default:'No proporcionado' }}</small>
+                                {% if venta.cliente.telefono %}
+                                <a href="https://wa.me/{{ venta.cliente.telefono|cut:' '|cut:'+'|cut:'-' }}" target="_blank" class="badge bg-success text-decoration-none mt-1">
+                                    <i class="fab fa-whatsapp me-1"></i> {{ venta.cliente.telefono }}
+                                </a>
+                                {% else %}
+                                <small class="text-muted">Sin teléfono</small>
+                                {% endif %}
                             </td>
                             <td class="px-4 py-3 align-middle">{{ venta.fecha_venta|date:"d/m/Y H:i"|default:'N/A' }}</td>
                             <td class="px-4 py-3 align-middle">

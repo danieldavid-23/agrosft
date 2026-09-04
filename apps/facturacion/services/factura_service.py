@@ -67,3 +67,52 @@ class FacturaService:
     @staticmethod
     def historial_usuario(usuario):
         return Factura.objects.filter(usuario=usuario).select_related('movimiento').order_by('-creada_en')
+
+    @staticmethod
+    @transaction.atomic
+    def obtener_o_crear_factura_desde_movimiento(usuario, movimiento: Movimiento) -> Factura:
+        factura = Factura.objects.filter(movimiento=movimiento, usuario=usuario).first()
+        if factura:
+            return factura
+
+        detalles = ProductoUsuarioMovimiento.objects.filter(
+            id_movimiento=movimiento
+        ).select_related(
+            'id_producto_usuario__id_producto',
+            'id_producto_usuario__id_usuario'
+        )
+
+        total = Decimal('0.00')
+        items_data = []
+        for d in detalles:
+            pu = d.id_producto_usuario
+            cantidad = Decimal(str(abs(d.cantidad)))
+            precio = Decimal(str(pu.precio))
+            subtotal = cantidad * precio
+            total += subtotal
+            items_data.append({
+                'producto': pu.id_producto,
+                'descripcion': f"{pu.id_producto.nombre} - {pu.id_usuario.get_full_name()}",
+                'cantidad': cantidad,
+                'precio_unitario': precio,
+                'subtotal': subtotal,
+            })
+
+        factura = Factura.objects.create(
+            usuario=usuario,
+            movimiento=movimiento,
+            total=total,
+            estado='emitida',
+            payer_email=usuario.correo,
+        )
+        for it in items_data:
+            ItemFactura.objects.create(
+                factura=factura,
+                producto=it['producto'],
+                descripcion=it['descripcion'],
+                cantidad=it['cantidad'],
+                precio_unitario=it['precio_unitario'],
+                subtotal=it['subtotal'],
+            )
+        return factura
+

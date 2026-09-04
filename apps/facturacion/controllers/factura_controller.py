@@ -76,3 +76,12 @@ def generar_pdf_factura(request, factura_id):
     response = HttpResponse(result.getvalue(), content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="factura_{factura_id}.pdf"'
     return response
+
+
+@login_required
+def generar_factura_pedido(request, movimiento_id):
+    from apps.ventas.models.movimiento import Movimiento
+    movimiento = get_object_or_404(Movimiento, id_movimiento=movimiento_id, id_usuario=request.user)
+    factura = FacturaService.obtener_o_crear_factura_desde_movimiento(request.user, movimiento)
+    return redirect('facturacion:generar_pdf', factura_id=factura.id_factura)
+

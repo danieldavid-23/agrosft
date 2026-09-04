@@ -8,45 +8,54 @@ from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento
 @login_required
 def listar_clientes(request):
     """
-    Vista que muestra el historial de clientes que han realizado compras
-    o tienen procesos de compra activos
-    Solo usa la tabla tblproductos_has_tblusuarios_has_movimiento
+    Vista que muestra el historial de clientes que le han comprado al vendedor autenticado.
     """
-    # Obtener todos los usuarios que han realizado movimientos (compras/ventas)
-    usuarios_con_movimientos = Tblusuarios.objects.filter(
-        movimientos__isnull=False
-    ).distinct().annotate(
-        total_movimientos=Count('movimientos'),
-        total_compras=Count(
-            'movimientos',
-            filter=Q(movimientos__id_tipo_movimiento__tipo='compra')
-        ),
-        total_ventas=Count(
-            'movimientos',
-            filter=Q(movimientos__id_tipo_movimiento__tipo='venta')
-        )
+    vendedor = request.user
+    
+    # Obtener detalles de movimientos válidos donde el producto pertenece al vendedor
+    # y el comprador es otro usuario (excluyendo ventas canceladas)
+    detalles_compras = ProductoUsuarioMovimiento.objects.filter(
+        id_producto_usuario__id_usuario=vendedor,
+        id_movimiento__id_tipo_movimiento__tipo__in=['compra', 'venta', 'vendida']
+    ).exclude(
+        id_movimiento__id_usuario=vendedor
+    ).select_related(
+        'id_movimiento__id_usuario',
+        'id_movimiento__id_tipo_movimiento',
+        'id_producto_usuario'
     )
     
-    # Preparar datos para el template
-    clientes_data = []
-    for usuario in usuarios_con_movimientos:
-        clientes_data.append({
-            'id': usuario.id_users,
-            'nombre': usuario.get_full_name(),
-            'correo': usuario.correo,
-            'telefono': usuario.telefono or 'No registrado',
-            'total_movimientos': usuario.total_movimientos,
-            'total_compras': usuario.total_compras,
-            'total_ventas': usuario.total_ventas,
-            'es_vendedor': usuario.total_ventas > 0,
-            'es_comprador': usuario.total_compras > 0,
-        })
+    # Agrupar compras por cliente único
+    clientes_dict = {}
+    movimientos_por_cliente = {}
+
+    for detalle in detalles_compras:
+        cliente = detalle.id_movimiento.id_usuario
+        c_id = cliente.id_users
+        if c_id not in clientes_dict:
+            clientes_dict[c_id] = {
+                'id': c_id,
+                'nombre': cliente.get_full_name() or cliente.correo,
+                'correo': cliente.correo,
+                'telefono': cliente.telefono or '',
+                'total_compras_conmigo': 0,
+            }
+            movimientos_por_cliente[c_id] = set()
+
+        # Contar pedidos únicos
+        mov_id = detalle.id_movimiento_id
+        if mov_id not in movimientos_por_cliente[c_id]:
+            movimientos_por_cliente[c_id].add(mov_id)
+            clientes_dict[c_id]['total_compras_conmigo'] += 1
     
-    # Ordenar por cantidad de movimientos (más activos primero)
-    clientes_data.sort(key=lambda x: x['total_movimientos'], reverse=True)
+    clientes_data = list(clientes_dict.values())
+    clientes_data.sort(key=lambda x: x['total_compras_conmigo'], reverse=True)
+    total_pedidos = sum(len(s) for s in movimientos_por_cliente.values())
     
     return render(request, 'clientes/listar_clientes.html', {
-        'clientes': clientes_data
+        'clientes': clientes_data,
+        'total_clientes': len(clientes_data),
+        'total_pedidos': total_pedidos
     })
 
 @login_required

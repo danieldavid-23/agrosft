@@ -163,9 +163,10 @@ class ProductoUsuario(models.Model):
         return f"{self.id_producto.nombre} - {self.id_usuario.nombres} {self.id_usuario.apellidos}"
     
     def obtener_stock(self):
-        """Retorna el stock como entero para compatibilidad con templates"""
+        """Retorna el stock como entero no negativo para compatibilidad con templates"""
         from core.utils.helpers import safe_int
-        return safe_int(self.cantidad)
+        val = safe_int(self.cantidad)
+        return max(0, val)
 
 
 class Calificacion(models.Model):

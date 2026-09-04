@@ -51,6 +51,7 @@ class ProductoForm(forms.Form):
     precio = forms.DecimalField(
         max_digits=10,
         decimal_places=2,
+        required=False,  # Opcional en venta directa de un producto ya registrado (se toma su precio existente)
         widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Precio unitario'})
     )
     id_estado = forms.ModelChoiceField(

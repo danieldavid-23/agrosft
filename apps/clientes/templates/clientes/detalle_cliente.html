@@ -73,12 +73,12 @@
             </div>
         </div>
 
-        <!-- Acciones -->
+        <!-- Acciones y Navegación -->
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 rounded-4">
                 <div class="card-header bg-white">
                     <h5 class="fw-bold mb-0">
-                        <i class="fas fa-cogs text-secondary me-2"></i>Acciones
+                        <i class="fas fa-arrow-left text-secondary me-2"></i>Navegación
                     </h5>
                 </div>
                 <div class="card-body p-4">
@@ -86,12 +86,11 @@
                         <a href="{% url 'clientes:cliente_list' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Volver a la Lista
                         </a>
-                        <button class="btn btn-primary">
-                            <i class="fas fa-edit me-2"></i>Editar Cliente
-                        </button>
-                        <button class="btn btn-danger">
-                            <i class="fas fa-trash me-2"></i>Eliminar Cliente
-                        </button>
+                        {% if cliente.telefono %}
+                        <a href="https://wa.me/{{ cliente.telefono|cut:' '|cut:'+'|cut:'-' }}" target="_blank" class="btn btn-success">
+                            <i class="fab fa-whatsapp me-2"></i>Contactar por WhatsApp
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
