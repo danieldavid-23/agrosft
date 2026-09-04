@@ -7,6 +7,18 @@
 
 ## [Unreleased]
 
+### Fixed (2026-09-04)
+- **Corrección de errores y validación completa en "Cambiar Contraseña" (`cambiar_password.html`)**:
+  - `apps/usuarios/controllers/auth_controller.py`: Implementado `update_session_auth_hash(request, request.user)` para evitar el cierre involuntario de sesión tras el cambio exitoso de contraseña.
+  - `apps/usuarios/controllers/auth_controller.py`: Añadidas las validaciones de negocio en el backend (mínimo 8 caracteres, no solo números, y contraseña diferente a la actual).
+  - `apps/usuarios/templates/usuarios/cambiar_password.html`: Corregido el color de sombra en foco (cambiado de azul a verde bosque `rgba(60, 141, 60, 0.15)`), mejorado el estilo de alertas de error y añadido script de validación client-side en tiempo real.
+
+### Changed (2026-09-04)
+- **Homologación de colores en los apartados "Registrarse" y "Seguridad" al color verde bosque de "Mi Perfil" (`var(--primary-color)`)**:
+  - `apps/usuarios/templates/usuarios/registro.html`: Actualizado el degradado del encabezado y sombras de botones al color principal `linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%)`.
+  - `apps/usuarios/templates/usuarios/cambiar_password.html`: Actualizado el encabezado y el botón principal del apartado "Seguridad" para usar el mismo tema de color verde de "Mi Perfil".
+  - Recompilación de assets frontend con Vite (`npm run build`).
+
 ### Removed (2026-09-02)
 - **Eliminación del botón "Venta Directa" en el Carrito de Compras**:
   - `frontend/src/carrito/CarritoApp.vue`: Eliminado el botón "Venta Directa" del pie del carrito de compras.

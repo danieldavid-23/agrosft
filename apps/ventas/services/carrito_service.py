@@ -53,12 +53,17 @@ class Carrito:
 
         for item in list(carrito.values()):
             if 'producto' in item:
-                item['precio'] = Decimal(item['precio'])
-                item['subtotal'] = item['precio'] * item['cantidad']
+                precio_dec = Decimal(str(item['precio']))
+                item['precio'] = int(precio_dec) if precio_dec % 1 == 0 else precio_dec
+                subtotal_dec = item['precio'] * item['cantidad']
+                item['subtotal'] = int(subtotal_dec) if subtotal_dec % 1 == 0 else subtotal_dec
                 yield item
 
     def get_total_precio(self):
-        return sum(item['subtotal'] for item in self)
-        
+        total = sum(item['subtotal'] for item in self)
+        if isinstance(total, (int, float, Decimal)) and total % 1 == 0:
+            return int(total)
+        return total
+
     def __len__(self):
         return sum(item['cantidad'] for item in self)

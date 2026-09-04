@@ -18,13 +18,17 @@ def detalle_carrito(request):
     carrito = Carrito(request)
     items = []
     for item in carrito:
-        pu = item['producto']
+        pu = item.get('producto')
+        if not pu:
+            continue
+        precio_val = item['precio']
+        subtotal_val = item['subtotal']
         items.append({
             'producto_id': pu.id_producto_usuario,
             'nombre': pu.id_producto.nombre,
-            'precio': float(item['precio']),
+            'precio': int(precio_val) if precio_val % 1 == 0 else float(precio_val),
             'cantidad': item['cantidad'],
-            'subtotal': float(item['subtotal']),
+            'subtotal': int(subtotal_val) if subtotal_val % 1 == 0 else float(subtotal_val),
             'urls': {
                 'actualizar': reverse('ventas:carrito_actualizar', args=[pu.id_producto_usuario]),
                 'eliminar': reverse('ventas:carrito_eliminar', args=[pu.id_producto_usuario]),

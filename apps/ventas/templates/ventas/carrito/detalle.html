@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static currency_tags %}
 
 {% block title %}Carrito de Compras{% endblock %}
 
@@ -45,7 +45,7 @@
                                     {{ item.producto.id_producto.nombre }}
                                 </div>
                             </td>
-                            <td class="text-center text-muted fw-medium" style="padding: 1.25rem 0.5rem; border-bottom: 1px solid rgba(214, 216, 204, 0.4);">${{ item.precio }}</td>
+                            <td class="text-center text-muted fw-medium" style="padding: 1.25rem 0.5rem; border-bottom: 1px solid rgba(214, 216, 204, 0.4);">{{ item.precio|currency_cop }}</td>
                             <td style="padding: 1.25rem 0.5rem; border-bottom: 1px solid rgba(214, 216, 204, 0.4);">
                                 <form action="{% url 'ventas:carrito_actualizar' item.producto.id_producto_usuario %}" method="post" class="d-flex m-0">
                                     {% csrf_token %}
@@ -61,7 +61,7 @@
                                     <noscript><button type="submit" class="btn btn-sm btn-primary ms-2">Actualizar</button></noscript>
                                 </form>
                             </td>
-                            <td class="text-end fw-bold" style="color: var(--primary-dark); padding: 1.25rem 0.5rem; border-bottom: 1px solid rgba(214, 216, 204, 0.4);">${{ item.subtotal }}</td>
+                            <td class="text-end fw-bold" style="color: var(--primary-dark); padding: 1.25rem 0.5rem; border-bottom: 1px solid rgba(214, 216, 204, 0.4);">{{ item.subtotal|currency_cop }}</td>
                             <td class="text-center" style="padding: 1.25rem 0.5rem; border-bottom: 1px solid rgba(214, 216, 204, 0.4);">
                                 <form action="{% url 'ventas:carrito_eliminar' item.producto.id_producto_usuario %}" method="post" class="d-inline">
                                     {% csrf_token %}
@@ -82,14 +82,14 @@
                 </a>
                 <div class="text-end p-3 rounded-4 shadow-sm" style="background-color: var(--primary-light); border: 1px solid rgba(60, 141, 60, 0.15); display: flex; align-items: center; justify-content: space-between; min-width: 300px;">
                     <span class="text-muted text-uppercase fw-bold me-3" style="letter-spacing: 0.05em; font-size: 0.85rem;">Total Estimado:</span>
-                    <span class="fs-2 fw-bolder" style="color: var(--primary-color);">${{ carrito.get_total_precio }}</span>
+                    <span class="fs-2 fw-bolder" style="color: var(--primary-color);">{{ carrito.get_total_precio|currency_cop }}</span>
                 </div>
             </div>
         </div>
         
         <div class="card-footer bg-transparent border-top-0 pb-4 px-4 d-flex justify-content-end gap-3 flex-wrap">
-            <a href="{% url 'facturacion:crear_factura' %}" class="btn rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center text-white" style="background-color: var(--primary-color); border-color: var(--primary-color);" onmouseover="this.style.backgroundColor='var(--primary-hover)'; this.style.borderColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary-color)'; this.style.borderColor='var(--primary-color)'">
-                <i class="fas fa-file-invoice me-2 fs-5"></i>Generar Factura
+            <a href="{% url 'ventas:carrito_checkout' %}" class="btn rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center text-white" style="background-color: var(--primary-color); border-color: var(--primary-color);" onmouseover="this.style.backgroundColor='var(--primary-hover)'; this.style.borderColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary-color)'; this.style.borderColor='var(--primary-color)'">
+                <i class="fas fa-clipboard-check me-2 fs-5"></i>Crear Solicitud de Compra
             </a>
         </div>
     </div>

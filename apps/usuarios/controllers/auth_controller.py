@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib import messages
 from django.views.generic import CreateView, FormView, View
 from django.urls import reverse_lazy
@@ -299,13 +299,33 @@ class CambiarPasswordView(View):
             messages.error(request, "La columna de contraseña no existe en la base de datos.")
             return redirect('usuarios:login')
         
-        current_password = request.POST.get('current_password')
-        new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
+        current_password = request.POST.get('current_password', '').strip()
+        new_password = request.POST.get('new_password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+        
+        # Validar campos vacíos
+        if not current_password or not new_password or not confirm_password:
+            messages.error(request, 'Por favor, completa todos los campos del formulario.')
+            return self.get(request)
         
         # Verificar contraseña actual
         if not request.user.check_password(current_password):
             messages.error(request, 'La contraseña actual es incorrecta.')
+            return self.get(request)
+        
+        # Verificar longitud mínima
+        if len(new_password) < 8:
+            messages.error(request, 'La nueva contraseña debe tener al menos 8 caracteres.')
+            return self.get(request)
+        
+        # Verificar que no sea solo números
+        if new_password.isdigit():
+            messages.error(request, 'La nueva contraseña no puede consistir únicamente de números.')
+            return self.get(request)
+        
+        # Verificar que sea diferente a la contraseña actual
+        if current_password == new_password:
+            messages.error(request, 'La nueva contraseña debe ser diferente a la contraseña actual.')
             return self.get(request)
         
         # Verificar que las nuevas contraseñas coincidan
@@ -313,9 +333,10 @@ class CambiarPasswordView(View):
             messages.error(request, 'Las nuevas contraseñas no coinciden.')
             return self.get(request)
         
-        # Cambiar la contraseña
+        # Cambiar la contraseña y actualizar el hash de sesión para evitar cierre de sesión
         request.user.set_password(new_password)
         request.user.save()
+        update_session_auth_hash(request, request.user)
         
         messages.success(request, 'Contraseña cambiada exitosamente.')
         return redirect('usuarios:perfil')

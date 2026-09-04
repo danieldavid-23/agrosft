@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load currency_tags %}
 
-{% block title %}Checkout - Realizar Pedido{% endblock %}
+{% block title %}Checkout - Carrito{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -67,12 +68,12 @@
                                 <h6 class="my-0">{{ item.producto.nombre }}</h6>
                                 <small class="text-muted">Cantidad: {{ item.cantidad }}</small>
                             </div>
-                            <span class="text-muted">${{ item.subtotal }}</span>
+                            <span class="text-muted">{{ item.subtotal|currency_cop }}</span>
                         </li>
                         {% endfor %}
                         <li class="list-group-item d-flex justify-content-between bg-light">
-                            <strong>Total (USD)</strong>
-                            <strong>${{ carrito.get_total_precio }}</strong>
+                            <strong>Total (COP)</strong>
+                            <strong>{{ carrito.get_total_precio|currency_cop }}</strong>
                         </li>
                     </ul>
                 </div>
