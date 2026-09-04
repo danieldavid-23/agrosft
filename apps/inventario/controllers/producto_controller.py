@@ -125,6 +125,7 @@ def listar_productos(request):
         'urls': {
             'listar': reverse('inventario:listar'),
             'crear': reverse('inventario:crear'),
+            'venta_directa': reverse('inventario:venta_directa'),
             'eliminar': reverse('inventario:eliminar', args=[0]),
             'titulo': 'Mi Inventario',
             'subtitulo': 'Gestiona tus productos registrados',
@@ -248,10 +249,94 @@ def marketplace(request):
         'marketplace_json': json.dumps(marketplace_data),
     })
 
-# Eliminado, ya que se está usando la vista genérica de Django
 
 @login_required
 def crear_producto(request):
+    """
+    Vista para registrar un nuevo producto agrícola en el catálogo y en el inventario del usuario.
+    Usa el formulario ProductoForm y la plantilla producto_form.html.
+    """
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # 1. Determinar el estado inicial
+                    estado_obj = form.cleaned_data.get('id_estado')
+                    if not estado_obj:
+                        estado_obj = Estado.objects.filter(estado__iexact='aprobado').first() or Estado.objects.first()
+                    estado_str = estado_obj.estado.lower() if estado_obj else 'aprobado'
+
+                    # 2. Crear producto maestro en tblproducto
+                    producto = Producto.objects.create(
+                        nombre=form.cleaned_data['nombre'],
+                        descripcion=form.cleaned_data.get('descripcion') or '',
+                        id_categoria=form.cleaned_data['id_categoria'],
+                        cantidad=form.cleaned_data['cantidad'],
+                        stock_minimo=form.cleaned_data.get('stock_minimo') or 5,
+                        estado=estado_str,
+                        imagen=form.cleaned_data.get('imagen')
+                    )
+
+                    # 3. Crear relación en tblproductos_has_tblusuarios (ProductoUsuario)
+                    precio_val = form.cleaned_data.get('precio')
+                    if precio_val is None:
+                        precio_val = Decimal('0.00')
+
+                    pu = ProductoUsuario.objects.create(
+                        id_producto=producto,
+                        id_usuario=request.user,
+                        id_estado=estado_obj,
+                        cantidad=Decimal(str(form.cleaned_data['cantidad'])),
+                        precio=precio_val
+                    )
+
+                    # 4. Registrar movimiento inicial de ingreso
+                    try:
+                        tipo_ingreso = TipoMovimiento.objects.filter(tipo__in=['compra', 'ingreso']).first()
+                        if not tipo_ingreso:
+                            tipo_ingreso, _ = TipoMovimiento.objects.get_or_create(tipo='compra')
+                        movimiento = Movimiento.objects.create(
+                            id_tipo_movimiento=tipo_ingreso,
+                            id_usuario=request.user
+                        )
+                        ProductoUsuarioMovimiento.objects.create(
+                            id_movimiento=movimiento,
+                            id_producto_usuario=pu,
+                            cantidad=form.cleaned_data['cantidad']
+                        )
+                    except Exception as e_mov:
+                        logger.warning(f"No se pudo registrar movimiento inicial: {e_mov}")
+
+                    messages.success(
+                        request,
+                        f'¡Producto "{producto.nombre}" registrado exitosamente en tu inventario!'
+                    )
+                    return redirect('inventario:listar')
+
+            except Exception as e:
+                logger.exception("Error al crear producto")
+                messages.error(request, f'Error al registrar el producto: {str(e)}')
+        else:
+            logger.error(f"Errores de validación al crear producto: {form.errors}")
+            messages.error(request, 'Por favor corrige los errores indicados en el formulario.')
+    else:
+        estado_aprobado = Estado.objects.filter(estado__iexact='aprobado').first() or Estado.objects.first()
+        form = ProductoForm(initial={'id_estado': estado_aprobado, 'stock_minimo': 5, 'cantidad': 1})
+
+    categorias = get_categorias_cached()
+    estados = get_estados_cached()
+
+    return render(request, 'inventario/producto_form.html', {
+        'form': form,
+        'accion': 'crear',
+        'categorias': categorias,
+        'estados': estados,
+    })
+
+
+@login_required
+def venta_directa(request):
     """
     Vista de Venta Directa: Permite a un productor registrar una venta directa
     de productos de su inventario, descontando stock real y registrando el movimiento.
@@ -269,7 +354,7 @@ def crear_producto(request):
                 raise ValueError()
         except (ValueError, TypeError):
             messages.error(request, 'La cantidad a vender debe ser un número entero mayor a 0.')
-            return redirect('inventario:crear')
+            return redirect('inventario:venta_directa')
 
         pu = None
         # 1. Buscar el ProductoUsuario en el inventario del vendedor
@@ -316,7 +401,7 @@ def crear_producto(request):
                 f'Stock insuficiente para "{pu.id_producto.nombre}". '
                 f'Stock disponible: {stock_actual} unidad(es), intentas vender: {cantidad}.'
             )
-            return redirect('inventario:crear')
+            return redirect('inventario:venta_directa')
 
         # 3. Actualizar precio si se ingresó uno específico
         if precio_raw:
@@ -368,7 +453,7 @@ def crear_producto(request):
         except Exception as e:
             logger.exception("Error al registrar venta directa")
             messages.error(request, f'Error al procesar la venta directa: {str(e)}')
-            return redirect('inventario:crear')
+            return redirect('inventario:venta_directa')
 
     # GET: Cargar datos para el formulario de Venta Directa
     form = ProductoForm()
@@ -399,6 +484,7 @@ def crear_producto(request):
         'clientes_disponibles': clientes_disponibles,
         'productos_existentes': productos_existentes
     })
+
 
 @login_required
 def editar_producto(request, pk):

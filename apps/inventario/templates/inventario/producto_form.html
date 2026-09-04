@@ -166,17 +166,6 @@
                             </div>
                         </div>
 
-                        <!-- Advertencia Pendiente -->
-                        {% if accion == 'crear' %}
-                        <div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 mt-4 mb-0 d-flex gap-3 align-items-center rounded-3">
-                            <i class="fas fa-user-shield fs-4 text-warning"></i>
-                            <div>
-                                <h6 class="alert-heading fw-bold mb-1">Revisión Requerida</h6>
-                                <p class="mb-0 small">Los productos nuevos estarán en estado "Pendiente" hasta que un administrador verifique la publicación y los estandares de calidad.</p>
-                            </div>
-                        </div>
-                        {% endif %}
-
                         <!-- Botones Grandes -->
                         <div class="d-flex flex-column flex-sm-row gap-3 mt-5 pt-4 border-top">
                             <a href="{% url 'inventario:listar' %}" 
