@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+### Removed (2026-09-02)
+- **Eliminación del botón "Venta Directa" en el Carrito de Compras**:
+  - `frontend/src/carrito/CarritoApp.vue`: Eliminado el botón "Venta Directa" del pie del carrito de compras.
+  - `apps/ventas/templates/ventas/carrito/detalle.html`: Eliminado el botón "Venta Directa" de la plantilla Django del carrito.
+  - Recompilación de assets frontend mediante Vite (`npm run build`).
+- **Eliminación completa de los enlaces a "Mi historial / Historial de términos"**:
+  - `frontend/src/layout/NavbarApp.vue`: Se eliminó el ítem de navegación "Mi historial" del menú desplegable de usuario.
+  - `apps/usuarios/templates/usuarios/perfil.html`: Se removieron los enlaces hacia el historial de términos en la barra lateral y en la tarjeta de términos.
+  - `apps/usuarios/templates/usuarios/terminos.html`: Se eliminó el botón "Ver mi Historial".
+  - Recompilación de assets frontend mediante Vite (`npm run build`).
+
 ### Added (2026-08-20)
 - **Soporte de imágenes en productos y perfil de usuario** (ver [[DECISIONS#ADR-013]]):
   - `apps/inventario/models/producto.py`: campo `imagen` como `ImageField(upload_to='productos/')` con validación de extensión (JPG/JPEG/PNG/WEBP) y tamaño máx. 5MB

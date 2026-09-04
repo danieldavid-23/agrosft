@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 
 
 class CustomUserCreationForm(UserCreationForm):
-    correo = forms.EmailField(required=True, label='Correo ElectrÃ³nico')
+    correo = forms.EmailField(required=True, label='Correo Electrónico')
     nombres = forms.CharField(max_length=255, required=True, label='Nombres')  # Ajustado al tamaño real
     apellidos = forms.CharField(max_length=255, required=True, label='Apellidos')
     telefono = forms.CharField(max_length=20, required=False, label='Teléfono')
@@ -35,7 +35,7 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
     nombres = forms.CharField(max_length=255, required=True, label='Nombres', widget=forms.TextInput(attrs={'class': 'form-control'}))
     apellidos = forms.CharField(max_length=255, required=True, label='Apellidos', widget=forms.TextInput(attrs={'class': 'form-control'}))
     telefono = forms.CharField(max_length=20, required=True, label='Teléfono', widget=forms.TextInput(attrs={'class': 'form-control'}))
-    correo = forms.EmailField(required=True, label='Correo ElectrÃ³nico', widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    correo = forms.EmailField(required=True, label='Correo Electrónico', widget=forms.EmailInput(attrs={'class': 'form-control'}))
     password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     password2 = forms.CharField(label='Confirmar Contraseña', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
@@ -71,7 +71,7 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
         if correo:
             correo = correo.lower().strip()
             if Tblusuarios.objects.filter(correo=correo).exists():
-                raise forms.ValidationError('Este correo electrÃ³nico ya estÃ¡ registrado.')
+                raise forms.ValidationError('Este correo Electrónico ya está registrado.')
         return correo
 
     def save(self, commit=True):
@@ -91,7 +91,7 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(label='Correo electrÃ³nico', max_length=255)  # Ajustado al tamaño real
+    username = forms.CharField(label='Correo electrónico', max_length=255)  # Ajustado al tamaño real
     password = forms.CharField(label='Contraseña', widget=forms.PasswordInput)
 
     def clean(self):
@@ -177,7 +177,7 @@ class AdminUsuarioForm(forms.ModelForm):
             if self.instance and self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
-                raise forms.ValidationError('Este correo electrÃ³nico ya estÃ¡ registrado.')
+                raise forms.ValidationError('Este correo electrónico ya está registrado.')
         return correo
 
     def clean(self):
@@ -205,7 +205,7 @@ RegistroForm = RegistroTblusuariosForm
 class PasswordResetRequestForm(forms.Form):
     """Formulario para solicitar restablecimiento de contraseña"""
     email = forms.EmailField(
-        label='Correo ElectrÃ³nico',
+        label='Correo Electrónico',
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
             'placeholder': 'tucorreo@ejemplo.com'

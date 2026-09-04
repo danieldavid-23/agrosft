@@ -464,9 +464,6 @@
                 <a href="{% url 'usuarios:cambiar_password' %}" class="sidebar-action-btn">
                     <i class="fas fa-key"></i> Cambiar contraseña
                 </a>
-                <a href="{% url 'usuarios:historial' %}" class="sidebar-action-btn">
-                    <i class="fas fa-history"></i> Historial de términos
-                </a>
                 <a href="{% url 'usuarios:logout' %}" class="sidebar-action-btn danger" onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();">
                     <i class="fas fa-sign-out-alt"></i> Cerrar sesión
                 </a>
@@ -580,12 +577,9 @@
                         <i class="fas fa-file-alt"></i> Términos y Condiciones
                     </div>
                 </div>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0;">
                     Revisa tu conformidad e historial de aceptación de los términos del servicio.
                 </p>
-                <a href="{% url 'usuarios:historial' %}" class="info-card-link">
-                    <i class="fas fa-history me-1"></i> Ver historial de términos
-                </a>
             </div>
         </div>
     </div>

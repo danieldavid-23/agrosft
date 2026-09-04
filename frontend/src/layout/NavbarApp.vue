@@ -107,8 +107,6 @@ function dismissToast(id) {
               </li>
 
             <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center">
-
-            <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center">
                 <a class="btn btn-outline-secondary border-0 rounded-circle position-relative p-2" :href="urls.carrito" title="Carrito de Compras">
                   <i class="fas fa-shopping-cart fs-5"></i>
                   <span v-if="cart_count > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
@@ -125,7 +123,6 @@ function dismissToast(id) {
               </a>
               <ul class="dropdown-menu dropdown-menu-end shadow border-0" :class="{ show: showDropdown }" style="border-radius: var(--radius-md);">
                 <li><a class="dropdown-item py-2" :href="urls.perfil"><i class="fas fa-id-card fa-fw text-muted me-2"></i> Mi Perfil</a></li>
-                <li><a class="dropdown-item py-2" :href="urls.historial"><i class="fas fa-history fa-fw text-muted me-2"></i> Mi historial</a></li>
                 <li><a class="dropdown-item py-2" :href="urls.cambiar_password"><i class="fas fa-key fa-fw text-muted me-2"></i> Seguridad</a></li>
                 <li><a class="dropdown-item py-2" :href="urls.facturacion_historial"><i class="fas fa-file-invoice-dollar fa-fw text-muted me-2"></i> Mis Facturas</a></li>
                 <li><hr class="dropdown-divider"></li>
