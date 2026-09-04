@@ -54,3 +54,22 @@ class ItemFactura(models.Model):
 
     def __str__(self):
         return f'{self.descripcion} x{self.cantidad}'
+
+    @property
+    def nombre_producto_limpio(self):
+        if self.producto and self.producto.nombre:
+            return self.producto.nombre
+        if self.descripcion and ' - ' in self.descripcion:
+            return self.descripcion.split(' - ')[0].strip()
+        return self.descripcion
+
+    @property
+    def cantidad_formateada(self):
+        try:
+            val = float(self.cantidad)
+            if val.is_integer():
+                return int(val)
+            return f"{val:g}".replace('.', ',')
+        except (ValueError, TypeError):
+            return self.cantidad
+

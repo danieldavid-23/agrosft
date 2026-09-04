@@ -71,6 +71,13 @@ function dismissToast(id) {
     toasts.value = toasts.value.filter(t => t.id !== id)
   }, 400)
 }
+
+function getToastTitle(tags) {
+  if (tags === 'success') return 'Éxito'
+  if (tags === 'danger' || tags === 'error') return 'Error'
+  if (tags === 'warning') return 'Atención'
+  return 'Información'
+}
 </script>
 
 <template>
@@ -146,8 +153,8 @@ function dismissToast(id) {
     </div>
   </nav>
 
-  <!-- Notifications -->
-  <div class="notification-container">
+  <!-- Notifications Premium -->
+  <div class="notification-container" aria-live="polite" aria-atomic="true">
     <div
       v-for="toast in toasts"
       :key="toast.id"
@@ -155,21 +162,35 @@ function dismissToast(id) {
       :class="{
         show: toast.visible,
         hide: !toast.visible,
-        'alert-success': toast.tags === 'success',
-        'alert-danger': toast.tags === 'danger' || toast.tags === 'error',
-        'alert-warning': toast.tags === 'warning',
-        'alert-info': toast.tags === 'info'
+        'toast-success': toast.tags === 'success',
+        'toast-danger': toast.tags === 'danger' || toast.tags === 'error',
+        'toast-warning': toast.tags === 'warning',
+        'toast-info': toast.tags === 'info'
       }"
       role="alert"
     >
-      <div class="d-flex align-items-center gap-2 w-100">
-        <i v-if="toast.tags === 'success'" class="fas fa-check-circle text-success fs-5"></i>
-        <i v-else-if="toast.tags === 'danger' || toast.tags === 'error'" class="fas fa-exclamation-circle text-danger fs-5"></i>
-        <i v-else-if="toast.tags === 'warning'" class="fas fa-exclamation-triangle text-warning fs-5"></i>
-        <i v-else class="fas fa-info-circle text-info fs-5"></i>
-        <div class="flex-grow-1 text-dark" style="font-size: 0.9rem; font-weight: 500;">{{ toast.text }}</div>
-        <button type="button" class="btn-close ms-2" style="font-size: 0.75rem;" @click="dismissToast(toast.id)"></button>
+      <div class="toast-body-wrapper d-flex align-items-center gap-3 w-100">
+        <div class="toast-icon-circle flex-shrink-0">
+          <i v-if="toast.tags === 'success'" class="fas fa-check"></i>
+          <i v-else-if="toast.tags === 'danger' || toast.tags === 'error'" class="fas fa-exclamation"></i>
+          <i v-else-if="toast.tags === 'warning'" class="fas fa-exclamation-triangle"></i>
+          <i v-else class="fas fa-info"></i>
+        </div>
+        <div class="toast-content flex-grow-1">
+          <div class="toast-title">{{ getToastTitle(toast.tags) }}</div>
+          <div class="toast-message">{{ toast.text }}</div>
+        </div>
+        <button
+          type="button"
+          class="toast-close-btn flex-shrink-0"
+          @click="dismissToast(toast.id)"
+          title="Cerrar notificación"
+          aria-label="Cerrar"
+        >
+          <i class="fas fa-times"></i>
+        </button>
       </div>
+      <div class="toast-progress"></div>
     </div>
   </div>
 </template>

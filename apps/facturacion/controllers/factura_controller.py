@@ -36,7 +36,7 @@ def crear_factura(request):
 @login_required
 def detalle_factura(request, factura_id):
     factura = get_object_or_404(Factura, id_factura=factura_id, usuario=request.user)
-    items = factura.items.select_related('producto').all()
+    items = factura.items.select_related('producto', 'producto__id_categoria').all()
     return render(request, 'facturacion/detalle_factura.html', {
         'factura': factura,
         'items': items,
@@ -54,7 +54,7 @@ def historial_facturas(request):
 @login_required
 def generar_pdf_factura(request, factura_id):
     factura = get_object_or_404(Factura, id_factura=factura_id, usuario=request.user)
-    items = factura.items.select_related('producto').all()
+    items = factura.items.select_related('producto', 'producto__id_categoria').all()
 
     html = render_to_string('facturacion/factura_pdf.html', {
         'factura': factura,
@@ -63,7 +63,7 @@ def generar_pdf_factura(request, factura_id):
 
     result = io.BytesIO()
     from xhtml2pdf import pisa
-    pisa_status = pisa.CreatePDF(io.StringIO(html), dest=result)
+    pisa_status = pisa.CreatePDF(html, dest=result, encoding='utf-8')
 
     if pisa_status.err:
         logger.error("Error al generar PDF de factura #%s", factura_id)
@@ -73,8 +73,10 @@ def generar_pdf_factura(request, factura_id):
     factura.pdf_generado = True
     factura.save(update_fields=['pdf_generado'])
 
+    num_factura = f"FAC-{factura.id_factura:06d}"
+    disposition_type = 'attachment' if request.GET.get('descargar') == '1' else 'inline'
     response = HttpResponse(result.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="factura_{factura_id}.pdf"'
+    response['Content-Disposition'] = f'{disposition_type}; filename="Factura_{num_factura}.pdf"'
     return response
 
 

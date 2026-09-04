@@ -32,7 +32,7 @@ class FacturaService:
             )
             items_data.append({
                 'producto': pu.id_producto,
-                'descripcion': f"{pu.id_producto.nombre} - {pu.id_usuario.get_full_name()}",
+                'descripcion': pu.id_producto.nombre,
                 'cantidad': cantidad,
                 'precio_unitario': precio,
                 'subtotal': subtotal,
@@ -92,7 +92,7 @@ class FacturaService:
             total += subtotal
             items_data.append({
                 'producto': pu.id_producto,
-                'descripcion': f"{pu.id_producto.nombre} - {pu.id_usuario.get_full_name()}",
+                'descripcion': pu.id_producto.nombre,
                 'cantidad': cantidad,
                 'precio_unitario': precio,
                 'subtotal': subtotal,
