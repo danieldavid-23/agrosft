@@ -6,6 +6,7 @@ from apps.inventario.repositories.producto_repository import ProductoRepository
 from apps.inventario.controllers.producto_controller import (
     listar_productos as controller_listar_productos,
     crear_producto as controller_crear_producto,
+    venta_directa as controller_venta_directa,
     editar_producto as controller_editar_producto,
     eliminar_producto as controller_eliminar_producto
 )
@@ -42,6 +43,12 @@ def producto_detail(request, pk):
 def producto_create(request):
     """Vista para crear un nuevo producto"""
     return controller_crear_producto(request)
+
+
+@login_required
+def venta_directa(request):
+    """Vista para registrar una venta directa"""
+    return controller_venta_directa(request)
 
 
 @login_required

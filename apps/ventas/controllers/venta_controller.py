@@ -108,7 +108,7 @@ def detalle_venta(request, pk):
 
 @login_required
 def crear_venta(request):
-    return redirect('inventario:crear')
+    return redirect('inventario:venta_directa')
 
 
 @login_required

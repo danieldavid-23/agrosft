@@ -1,6 +1,6 @@
 from django.urls import path
 from .views.producto_views import (
-    producto_list, producto_detail, producto_create, producto_update, producto_delete
+    producto_list, producto_detail, producto_create, producto_update, producto_delete, venta_directa
 )
 from .controllers.producto_controller import (
     api_verificar_stock, aprobar_producto, rechazar_producto, marketplace
@@ -14,6 +14,7 @@ urlpatterns = [
     path('marketplace/', marketplace, name='marketplace'),  # Inicio - Productos de otros
     path('producto/<int:pk>/', producto_detail, name='detalle'),
     path('producto/nuevo/', producto_create, name='crear'),
+    path('venta-directa/', venta_directa, name='venta_directa'),
     path('producto/<int:pk>/editar/', producto_update, name='editar'),
     path('producto/<int:pk>/eliminar/', producto_delete, name='eliminar'),
     path('producto/<int:producto_id>/aprobar/', aprobar_producto, name='aprobar'),

@@ -14,22 +14,18 @@ class ProductoForm(forms.Form):
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descripción del producto'}),
         required=False
     )
-    imagen = forms.ImageField(
-        required=False,
-        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-        validators=[
-            FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
-            validate_image_size
-        ]
-    )
     id_categoria = forms.ModelChoiceField(
         queryset=Categoria.objects.filter(activo=True),
         empty_label="Seleccione una categoría",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     imagen = forms.ImageField(
+        required=False,
         widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'id_imagen', 'accept': 'image/*'}),
-        required=False
+        validators=[
+            FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
+            validate_image_size
+        ]
     )
     
     # Campo stock_minimo (solo administradores pueden editar)
