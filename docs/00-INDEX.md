@@ -38,6 +38,7 @@
 | 10 | [[10-API-ENDPOINTS]] | Referencia completa de todas las rutas URL del sistema |
 | 11 | [[11-CONVENCIONES]] | Estándares de código, nomenclatura y prácticas del proyecto |
 | 12 | [[12-BRECHAS-Y-ROADMAP]] | Funcionalidades faltantes vs. ficha del proyecto y plan de evolución |
+| 13 | [[13-MODULO-FACTURACION]] | Facturación contable, comprobantes y exportación oficial en PDF |
 
 ---
 
@@ -92,7 +93,8 @@ agrosft/
 │   ├── usuarios/        → [[04-MODULO-USUARIOS]]
 │   ├── inventario/      → [[05-MODULO-INVENTARIO]]
 │   ├── ventas/          → [[06-MODULO-VENTAS]]
-│   └── clientes/        → [[07-MODULO-CLIENTES]]
+│   ├── clientes/        → [[07-MODULO-CLIENTES]]
+│   └── facturacion/     → [[13-MODULO-FACTURACION]]
 ├── frontend/src/        → [[08-FRONTEND]] (componentes Vue 3)
 ├── templates/           → Template base de Django
 ├── static/dist/         → Assets compilados por Vite

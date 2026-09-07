@@ -1,360 +1,703 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Registro de Usuario - AgroSFT{% endblock %}
 
 {% block content %}
 <style>
-    .register-wrapper {
-        min-height: calc(100vh - 200px);
+    /* ============================================================
+       AGROSFT AUTH — Registro (auto-contenido, no depende del bundle)
+       ============================================================ */
+    .auth-page {
+        min-height: calc(100vh - 170px);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 2rem 1rem;
+        font-family: 'Inter', sans-serif;
     }
-    .register-card {
-        max-width: 680px;
-        width: 100%;
-        background: #ffffff;
-        border-radius: 24px;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
+    .auth-page * {
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
     }
-    .register-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-        padding: 2.5rem 3rem;
-        color: white;
-        text-align: center;
-    }
-    .register-header i {
-        font-size: 2.5rem;
-        margin-bottom: 0.75rem;
-        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
-    }
-    .register-header h2 {
-        font-size: 1.75rem;
-        font-weight: 800;
-        margin-bottom: 0.25rem;
-    }
-    .register-header p {
-        opacity: 0.85;
-        font-size: 0.95rem;
-        margin-bottom: 0;
-    }
-    .register-body {
-        padding: 2.5rem 3rem;
-    }
-    .form-group-modern {
-        margin-bottom: 1.25rem;
-    }
-    .form-group-modern label {
-        display: block;
-        font-weight: 600;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: var(--text-muted);
-        margin-bottom: 0.5rem;
-    }
-    .input-icon-wrapper {
-        position: relative;
-    }
-    .input-icon-wrapper i.field-icon {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-        font-size: 0.95rem;
-        transition: color 0.2s;
-        pointer-events: none;
-    }
-    .input-icon-wrapper input {
-        width: 100%;
-        padding: 14px 16px 14px 46px;
-        border: 2px solid var(--border-color);
-        border-radius: 14px;
-        font-size: 0.95rem;
-        color: var(--text-main);
-        background: #f8fafc;
-        transition: all 0.3s ease;
-    }
-    .input-icon-wrapper input:focus {
-        border-color: var(--primary-color);
-        background: #ffffff;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-        outline: none;
-    }
-    .input-icon-wrapper input:focus ~ i.field-icon {
-        color: var(--primary-color);
-    }
-    .password-toggle {
-        position: absolute;
-        right: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: 0.95rem;
-        padding: 0;
-    }
-    .password-toggle:hover { color: var(--primary-color); }
-    .alert-modern {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        border-radius: 14px;
-        padding: 14px 18px;
-        color: #991b1b;
-        font-size: 0.9rem;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 1.25rem;
-    }
-    .btn-register {
-        width: 100%;
-        padding: 14px;
-        border: none;
-        border-radius: 14px;
-        font-size: 1rem;
-        font-weight: 700;
-        color: white;
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-        box-shadow: 0 4px 12px rgba(60, 141, 60, 0.3);
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    .btn-register:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(60, 141, 60, 0.4);
-    }
-    .btn-cancel {
-        width: 100%;
-        padding: 14px;
-        border: 2px solid var(--border-color);
-        border-radius: 14px;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        background: white;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        text-decoration: none;
-        display: block;
-        text-align: center;
-    }
-    .btn-cancel:hover {
-        border-color: var(--text-muted);
-        color: var(--text-main);
-    }
-    .terms-check {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        margin: 1.5rem 0;
-    }
-    .terms-check input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        margin-top: 2px;
-        accent-color: var(--primary-color);
-        cursor: pointer;
-        flex-shrink: 0;
-    }
-    .terms-check label {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        cursor: pointer;
-    }
-    .terms-check label a {
-        color: var(--primary-color);
-        font-weight: 600;
+    .auth-page a {
         text-decoration: none;
     }
-    .terms-check label a:hover { text-decoration: underline; }
-    .login-link {
-        text-align: center;
-        margin-top: 1.5rem;
-        font-size: 0.9rem;
-        color: var(--text-muted);
+    .auth-page button {
+        appearance: none;
+        -webkit-appearance: none;
+        font-family: 'Inter', sans-serif;
     }
-    .login-link a {
-        color: var(--primary-color);
-        font-weight: 600;
-        text-decoration: none;
-    }
-    .login-link a:hover { text-decoration: underline; }
-    .password-strength {
-        margin-top: 8px;
-    }
-    .strength-bar {
-        height: 4px;
-        border-radius: 2px;
-        background: var(--border-color);
-        overflow: hidden;
-    }
-    .strength-bar-fill {
-        height: 100%;
-        border-radius: 2px;
-        transition: width 0.3s, background 0.3s;
-        width: 0%;
-    }
-    .strength-text {
-        font-size: 0.75rem;
-        margin-top: 4px;
-        font-weight: 500;
+    .auth-page input {
+        appearance: none;
+        -webkit-appearance: none;
     }
 
-    @media (max-width: 576px) {
-        .register-body { padding: 1.5rem; }
-        .register-header { padding: 2rem 1.5rem; }
+    /* ── Card contenedor ── */
+    .auth-card {
+        width: 100%;
+        max-width: 740px;
+        background: #ffffff;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow:
+            0 1px 2px rgba(16, 40, 20, 0.04),
+            0 4px 10px rgba(16, 40, 20, 0.05),
+            0 20px 50px rgba(16, 40, 20, 0.10);
+    }
+
+    /* ── Header verde ── */
+    .auth-hero {
+        background: linear-gradient(165deg, #2e7d33 0%, #1f6326 45%, #133f18 100%);
+        padding: 2rem 2.25rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .auth-hero::before {
+        content: '';
+        position: absolute;
+        top: -45%;
+        right: -25%;
+        width: 120%;
+        height: 120%;
+        background:
+            radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.08) 0%, transparent 55%),
+            radial-gradient(ellipse at 85% 70%, rgba(255,255,255,0.04) 0%, transparent 45%);
+        pointer-events: none;
+    }
+    .auth-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -100px;
+        right: -80px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .auth-hero-logo {
+        width: 68px;
+        height: 68px;
+        background: #ffffff;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+    .auth-hero-logo img {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: contain;
+        display: block;
+    }
+    .auth-hero-logo i {
+        color: #ffffff;
+        font-size: 1.35rem;
+    }
+    .auth-hero h2 {
+        margin: 0 0 0.25rem 0;
+        color: #ffffff;
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        position: relative;
+        z-index: 1;
+    }
+    .auth-hero p {
+        margin: 0;
+        color: rgba(255,255,255,0.82);
+        font-size: 0.88rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ── Body ── */
+    .auth-form {
+        padding: 2.25rem 2.5rem;
+    }
+    .auth-form-inner {
+        width: 100%;
+    }
+
+    /* ── Campos ── */
+    .auth-field {
+        margin-bottom: 1.15rem;
+    }
+    .auth-field-label {
+        display: block;
+        margin-bottom: 0.45rem;
+        color: #52635a;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+    }
+    .auth-input-wrap {
+        position: relative;
+    }
+    .auth-input-wrap > i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #93a095;
+        font-size: 0.9rem;
+        pointer-events: none;
+        z-index: 1;
+        transition: color 0.2s ease;
+    }
+    .auth-input-wrap input {
+        width: 100%;
+        height: 48px;
+        padding: 0 46px 0 44px;
+        border: 1.5px solid #dce2dd;
+        border-radius: 12px;
+        background-color: #f7f9f7;
+        color: #27402d;
+        font-size: 0.93rem;
+        font-weight: 500;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        outline: none;
+    }
+    .auth-input-wrap input::placeholder {
+        color: #a5aea8;
+        font-weight: 400;
+    }
+    .auth-input-wrap input:hover {
+        border-color: #c6cfc8;
+    }
+    .auth-input-wrap input:focus {
+        border-color: #3C8D3C;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 4px rgba(60, 141, 60, 0.14);
+    }
+    .auth-input-wrap input:focus ~ i,
+    .auth-input-wrap input:focus + i {
+        color: #3C8D3C;
+    }
+    .auth-input-wrap input.is-invalid {
+        border-color: #e35d5d;
+        background-color: #fff7f7;
+    }
+    .auth-input-wrap input.is-invalid:focus {
+        box-shadow: 0 0 0 4px rgba(227, 93, 93, 0.12);
+    }
+    .auth-input-wrap input.is-invalid ~ i,
+    .auth-input-wrap input.is-invalid + i {
+        color: #e35d5d;
+    }
+
+    /* Toggle contraseña */
+    .auth-pw-toggle {
+        position: absolute;
+        right: 7px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #93a095;
+        font-size: 0.9rem;
+        cursor: pointer;
+        padding: 0;
+        border-radius: 8px;
+        transition: color 0.2s ease, background 0.2s ease;
+        z-index: 1;
+    }
+    .auth-pw-toggle:hover,
+    .auth-pw-toggle:focus-visible {
+        color: #3C8D3C;
+        background: rgba(60, 141, 60, 0.10);
+        outline: none;
+    }
+
+    /* Mensaje de error de campo */
+    .auth-field-error {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+        color: #c53030;
+        font-size: 0.8rem;
+        font-weight: 500;
+        line-height: 1.4;
+        animation: authfadein 0.25s ease;
+    }
+    .auth-field-error i {
+        margin-top: 1px;
+        font-size: 0.78rem;
+        flex-shrink: 0;
+    }
+
+    /* Banner error global */
+    .auth-alert {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-bottom: 1.25rem;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 0.86rem;
+        font-weight: 500;
+        line-height: 1.45;
+        animation: authslide 0.3s ease;
+    }
+    .auth-alert i {
+        flex-shrink: 0;
+        font-size: 0.95rem;
+    }
+    .auth-alert-error {
+        background: #fef2f2;
+        border: 1px solid #f5c2c2;
+        border-left: 4px solid #dc2626;
+        color: #9f2d2d;
+    }
+
+    /* ── Indicador de fortaleza ── */
+    .auth-strength {
+        margin-top: 0.6rem;
+    }
+    .auth-strength-track {
+        height: 5px;
+        border-radius: 3px;
+        background: #e5eae6;
+        overflow: hidden;
+    }
+    .auth-strength-bar {
+        height: 100%;
+        width: 0%;
+        border-radius: 3px;
+        transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.35s ease;
+    }
+    .auth-strength-label {
+        margin-top: 0.35rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        min-height: 1.1em;
+        transition: color 0.25s ease;
+    }
+    .auth-reqs {
+        margin-top: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.9rem;
+    }
+    .auth-req {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.74rem;
+        color: #9aa59e;
+        transition: color 0.2s ease;
+    }
+    .auth-req i {
+        font-size: 0.6rem;
+    }
+    .auth-req.met {
+        color: #2f855a;
+    }
+
+    /* Coincidencia contraseñas */
+    .auth-match {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        animation: authfadein 0.25s ease;
+    }
+    .auth-match i {
+        font-size: 0.78rem;
+    }
+
+    /* ── Términos y condiciones ── */
+    .auth-terms {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin: 1.4rem 0 1.6rem 0;
+        padding: 0.85rem 1rem;
+        background: #f7f9f7;
+        border: 1.5px solid #dce2dd;
+        border-radius: 12px;
+        transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .auth-terms:hover {
+        border-color: #c2cbc5;
+    }
+    .auth-terms input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 19px;
+        height: 19px;
+        margin: 1px 0 0 0;
+        flex-shrink: 0;
+        border: 2px solid #c2cbc5;
+        border-radius: 5px;
+        background: #ffffff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .auth-terms input[type="checkbox"]:checked {
+        background: #3C8D3C;
+        border-color: #3C8D3C;
+    }
+    .auth-terms input[type="checkbox"]:checked::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', 'FontAwesome';
+        font-weight: 900;
+        color: #ffffff;
+        font-size: 11px;
+    }
+    .auth-terms label {
+        color: #5a6a61;
+        font-size: 0.86rem;
+        line-height: 1.5;
+        cursor: pointer;
+    }
+    .auth-terms label a {
+        color: #3C8D3C;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+    .auth-terms label a:hover {
+        color: #25632C;
+        text-decoration: underline;
+    }
+
+    /* ── Botones ── */
+    .auth-btn-primary {
+        width: 100%;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #3C8D3C 0%, #25632C 100%);
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(60, 141, 60, 0.30);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .auth-btn-primary::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+        transition: left 0.5s ease;
+    }
+    .auth-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(60, 141, 60, 0.40);
+    }
+    .auth-btn-primary:hover::after {
+        left: 100%;
+    }
+    .auth-btn-primary:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(60, 141, 60, 0.30);
+    }
+    .auth-btn-primary:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    .auth-btn-primary .auth-spinner {
+        display: none;
+        width: 18px;
+        height: 18px;
+        border: 2.5px solid rgba(255,255,255,0.35);
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        animation: authspin 0.7s linear infinite;
+    }
+    .auth-btn-primary.is-loading {
+        pointer-events: none;
+    }
+    .auth-btn-primary.is-loading .auth-spinner {
+        display: inline-block;
+    }
+
+    .auth-btn-secondary {
+        width: 100%;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 1.5px solid #dce2dd;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #5a6a61;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+    .auth-btn-secondary:hover {
+        border-color: #b8c2bb;
+        background: #fafbfa;
+        color: #27402d;
+    }
+
+    .auth-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    .auth-actions .auth-btn-primary,
+    .auth-actions .auth-btn-secondary {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* ── Pie ── */
+    .auth-footer {
+        margin-top: 1.25rem;
+        text-align: center;
+        color: #74837a;
+        font-size: 0.88rem;
+    }
+    .auth-footer a {
+        color: #3C8D3C;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+    .auth-footer a:hover {
+        color: #25632C;
+        text-decoration: underline;
+    }
+
+    /* ── Animaciones ── */
+    @keyframes authfadein {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes authslide {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes authspin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+        .auth-page { padding: 1.25rem 0.75rem; }
+        .auth-card { border-radius: 18px; }
+        .auth-form { padding: 1.5rem 1.25rem; }
+        .auth-hero { padding: 1.5rem 1.25rem; }
+        .auth-actions { flex-direction: column-reverse; }
+        .auth-actions .auth-btn-primary,
+        .auth-actions .auth-btn-secondary { flex: none; width: 100%; }
+        .auth-reqs { flex-direction: column; gap: 0.25rem; }
     }
 </style>
 
-<div class="register-wrapper">
-    <div class="register-card">
-        <div class="register-header">
-            <i class="fas fa-user-plus"></i>
+<div class="auth-page">
+    <div class="auth-card">
+        <!-- Header verde -->
+        <div class="auth-hero">
+            <div class="auth-hero-logo">
+                <img src="{% static 'img/agrosft_o.svg' %}" alt="AgroSFT">
+            </div>
             <h2>Crear Cuenta</h2>
             <p>Únete a AgroSFT y gestiona tus productos agrícolas</p>
         </div>
-        <div class="register-body">
-            {% if form.non_field_errors %}
-                <div class="alert-modern">
-                    <i class="fas fa-exclamation-circle"></i>
-                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-                </div>
-            {% endif %}
 
-            <form method="post" novalidate>
-                {% csrf_token %}
+        <!-- Body -->
+        <div class="auth-form">
+            <div class="auth-form-inner">
+                {% if form.non_field_errors %}
+                    <div class="auth-alert auth-alert-error" role="alert">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</span>
+                    </div>
+                {% endif %}
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group-modern">
-                            <label for="id_nombres">Nombres</label>
-                            <div class="input-icon-wrapper">
-                                <input type="text" name="nombres" id="id_nombres" 
-                                       value="{{ form.nombres.value|default:'' }}" placeholder="Tu nombre" required>
-                                <i class="fas fa-user field-icon"></i>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-field-label" for="id_nombres">Nombres</label>
+                                <div class="auth-input-wrap">
+                                    <input type="text" name="nombres" id="id_nombres"
+                                           value="{{ form.nombres.value|default:'' }}" placeholder="Tu nombre" required
+                                           {% if form.nombres.errors %}class="is-invalid"{% endif %}>
+                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                </div>
+                                {% if form.nombres.errors %}
+                                    <div class="auth-field-error">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                        <span>{% for e in form.nombres.errors %}{{ e }}{% endfor %}</span>
+                                    </div>
+                                {% endif %}
                             </div>
-                            {% if form.nombres.errors %}
-                                <small class="text-danger mt-1 d-block">{% for e in form.nombres.errors %}{{ e }}{% endfor %}</small>
-                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-field-label" for="id_apellidos">Apellidos</label>
+                                <div class="auth-input-wrap">
+                                    <input type="text" name="apellidos" id="id_apellidos"
+                                           value="{{ form.apellidos.value|default:'' }}" placeholder="Tus apellidos" required
+                                           {% if form.apellidos.errors %}class="is-invalid"{% endif %}>
+                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                </div>
+                                {% if form.apellidos.errors %}
+                                    <div class="auth-field-error">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                        <span>{% for e in form.apellidos.errors %}{{ e }}{% endfor %}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group-modern">
-                            <label for="id_apellidos">Apellidos</label>
-                            <div class="input-icon-wrapper">
-                                <input type="text" name="apellidos" id="id_apellidos" 
-                                       value="{{ form.apellidos.value|default:'' }}" placeholder="Tus apellidos" required>
-                                <i class="fas fa-user field-icon"></i>
-                            </div>
-                            {% if form.apellidos.errors %}
-                                <small class="text-danger mt-1 d-block">{% for e in form.apellidos.errors %}{{ e }}{% endfor %}</small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group-modern">
-                            <label for="id_telefono">Teléfono</label>
-                            <div class="input-icon-wrapper">
-                                <input type="text" name="telefono" id="id_telefono" 
-                                       value="{{ form.telefono.value|default:'' }}" placeholder="300 123 4567">
-                                <i class="fas fa-phone field-icon"></i>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-field-label" for="id_telefono">Teléfono</label>
+                                <div class="auth-input-wrap">
+                                    <input type="text" name="telefono" id="id_telefono"
+                                           value="{{ form.telefono.value|default:'' }}" placeholder="300 123 4567"
+                                           {% if form.telefono.errors %}class="is-invalid"{% endif %}>
+                                    <i class="fas fa-phone" aria-hidden="true"></i>
+                                </div>
+                                {% if form.telefono.errors %}
+                                    <div class="auth-field-error">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                        <span>{% for e in form.telefono.errors %}{{ e }}{% endfor %}</span>
+                                    </div>
+                                {% endif %}
                             </div>
-                            {% if form.telefono.errors %}
-                                <small class="text-danger mt-1 d-block">{% for e in form.telefono.errors %}{{ e }}{% endfor %}</small>
-                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-field-label" for="id_correo">Correo electrónico</label>
+                                <div class="auth-input-wrap">
+                                    <input type="email" name="correo" id="id_correo"
+                                           value="{{ form.correo.value|default:'' }}" placeholder="tucorreo@ejemplo.com" required
+                                           {% if form.correo.errors %}class="is-invalid"{% endif %}>
+                                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                                </div>
+                                {% if form.correo.errors %}
+                                    <div class="auth-field-error">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                        <span>{% for e in form.correo.errors %}{{ e }}{% endfor %}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group-modern">
-                            <label for="id_correo">Correo electrónico</label>
-                            <div class="input-icon-wrapper">
-                                <input type="email" name="correo" id="id_correo" 
-                                       value="{{ form.correo.value|default:'' }}" placeholder="tucorreo@ejemplo.com" required>
-                                <i class="fas fa-envelope field-icon"></i>
-                            </div>
-                            {% if form.correo.errors %}
-                                <small class="text-danger mt-1 d-block">{% for e in form.correo.errors %}{{ e }}{% endfor %}</small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group-modern">
-                            <label for="id_password1">Contraseña</label>
-                            <div class="input-icon-wrapper">
-                                <input type="password" name="password1" id="id_password1" placeholder="Mínimo 8 caracteres" required>
-                                <i class="fas fa-lock field-icon"></i>
-                                <button type="button" class="password-toggle" onclick="togglePw('id_password1', this)">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-field-label" for="id_password1">Contraseña</label>
+                                <div class="auth-input-wrap">
+                                    <input type="password" name="password1" id="id_password1" placeholder="Mínimo 8 caracteres" required
+                                           {% if form.password1.errors %}class="is-invalid"{% endif %}>
+                                    <i class="fas fa-lock" aria-hidden="true"></i>
+                                    <button type="button" class="auth-pw-toggle" onclick="togglePw('id_password1', this)"
+                                            aria-label="Mostrar u ocultar contraseña">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="auth-strength">
+                                    <div class="auth-strength-track"><div class="auth-strength-bar" id="strength-fill"></div></div>
+                                    <div class="auth-strength-label" id="strength-text"></div>
+                                </div>
+                                <div class="auth-reqs" id="pw-reqs">
+                                    <span class="auth-req" id="req-length"><i class="fas fa-circle"></i>8+ caracteres</span>
+                                    <span class="auth-req" id="req-upper"><i class="fas fa-circle"></i>Mayúscula</span>
+                                    <span class="auth-req" id="req-number"><i class="fas fa-circle"></i>Número</span>
+                                    <span class="auth-req" id="req-special"><i class="fas fa-circle"></i>Símbolo</span>
+                                </div>
+                                {% if form.password1.errors %}
+                                    <div class="auth-field-error">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                        <span>{% for e in form.password1.errors %}{{ e }}{% endfor %}</span>
+                                    </div>
+                                {% endif %}
                             </div>
-                            <div class="password-strength">
-                                <div class="strength-bar"><div class="strength-bar-fill" id="strength-fill"></div></div>
-                                <div class="strength-text" id="strength-text"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="auth-field">
+                                <label class="auth-field-label" for="id_password2">Confirmar contraseña</label>
+                                <div class="auth-input-wrap">
+                                    <input type="password" name="password2" id="id_password2" placeholder="Repite tu contraseña" required
+                                           {% if form.password2.errors %}class="is-invalid"{% endif %}>
+                                    <i class="fas fa-lock" aria-hidden="true"></i>
+                                    <button type="button" class="auth-pw-toggle" onclick="togglePw('id_password2', this)"
+                                            aria-label="Mostrar u ocultar contraseña">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="auth-match" id="password-match-feedback" style="display:none;"></div>
+                                {% if form.password2.errors %}
+                                    <div class="auth-field-error">
+                                        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                        <span>{% for e in form.password2.errors %}{{ e }}{% endfor %}</span>
+                                    </div>
+                                {% endif %}
                             </div>
-                            {% if form.password1.errors %}
-                                <small class="text-danger mt-1 d-block">{% for e in form.password1.errors %}{{ e }}{% endfor %}</small>
-                            {% endif %}
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group-modern">
-                            <label for="id_password2">Confirmar contraseña</label>
-                            <div class="input-icon-wrapper">
-                                <input type="password" name="password2" id="id_password2" placeholder="Repite tu contraseña" required>
-                                <i class="fas fa-lock field-icon"></i>
-                                <button type="button" class="password-toggle" onclick="togglePw('id_password2', this)">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <div id="password-match-feedback" style="margin-top:6px; font-size:0.8rem; display:none;"></div>
-                            {% if form.password2.errors %}
-                                <small class="text-danger mt-1 d-block">{% for e in form.password2.errors %}{{ e }}{% endfor %}</small>
-                            {% endif %}
-                        </div>
+
+                    <div class="auth-terms">
+                        <input type="checkbox" name="acepto_terminos" id="acepto_terminos" required>
+                        <label for="acepto_terminos">
+                            He leído y acepto los <a href="{% url 'usuarios:terminos' %}" target="_blank">Términos y Condiciones</a>
+                        </label>
                     </div>
-                </div>
 
-                <div class="terms-check">
-                    <input type="checkbox" name="acepto_terminos" id="acepto_terminos" required>
-                    <label for="acepto_terminos">
-                        He leído y acepto los <a href="{% url 'usuarios:terminos' %}" target="_blank">Términos y Condiciones</a>
-                    </label>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-md-6 order-md-2">
-                        <button type="submit" class="btn-register">
-                            <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                    <div class="auth-actions">
+                        <a href="{% url 'usuarios:login' %}" class="auth-btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Ya tengo cuenta
+                        </a>
+                        <button type="submit" class="auth-btn-primary" id="register-btn">
+                            <span class="auth-spinner"></span>
+                            <span><i class="fas fa-user-plus me-2"></i>Crear Cuenta</span>
                         </button>
                     </div>
-                    <div class="col-md-6 order-md-1">
-                        <a href="{% url 'usuarios:login' %}" class="btn-cancel">Ya tengo cuenta</a>
-                    </div>
-                </div>
-            </form>
+                </form>
 
-            <div class="login-link">
-                ¿Ya tienes cuenta? <a href="{% url 'usuarios:login' %}">Inicia sesión aquí</a>
+                <div class="auth-footer">
+                    ¿Ya tienes cuenta? <a href="{% url 'usuarios:login' %}">Inicia sesión aquí</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Toggle password visibility
     function togglePw(inputId, btn) {
         const input = document.getElementById(inputId);
         const icon = btn.querySelector('i');
@@ -367,23 +710,50 @@
         }
     }
 
-    // Password strength meter
     const pw1 = document.getElementById('id_password1');
     const pw2 = document.getElementById('id_password2');
     const fill = document.getElementById('strength-fill');
     const text = document.getElementById('strength-text');
     const feedback = document.getElementById('password-match-feedback');
 
+    const reqLength = document.getElementById('req-length');
+    const reqUpper = document.getElementById('req-upper');
+    const reqNumber = document.getElementById('req-number');
+    const reqSpecial = document.getElementById('req-special');
+
+    function updateReq(el, met) {
+        if (!el) return;
+        const icon = el.querySelector('i');
+        if (met) {
+            el.classList.add('met');
+            icon.classList.replace('fa-circle', 'fa-check-circle');
+        } else {
+            el.classList.remove('met');
+            icon.classList.replace('fa-check-circle', 'fa-circle');
+        }
+    }
+
     if (pw1) {
         pw1.addEventListener('input', function() {
             const val = this.value;
             let strength = 0;
-            if (val.length >= 8) strength++;
-            if (/[A-Z]/.test(val)) strength++;
-            if (/[0-9]/.test(val)) strength++;
-            if (/[^A-Za-z0-9]/.test(val)) strength++;
 
-            const colors = ['#dc2626', '#d97706', '#2563eb', '#1e3a8a'];
+            const hasLen = val.length >= 8;
+            const hasUpper = /[A-Z]/.test(val);
+            const hasNumber = /[0-9]/.test(val);
+            const hasSpecial = /[^A-Za-z0-9]/.test(val);
+
+            if (hasLen) strength++;
+            if (hasUpper) strength++;
+            if (hasNumber) strength++;
+            if (hasSpecial) strength++;
+
+            updateReq(reqLength, hasLen);
+            updateReq(reqUpper, hasUpper);
+            updateReq(reqNumber, hasNumber);
+            updateReq(reqSpecial, hasSpecial);
+
+            const colors = ['#e53e3e', '#d69e2e', '#3182ce', '#2f855a'];
             const labels = ['Débil', 'Regular', 'Buena', 'Fuerte'];
             const widths = ['25%', '50%', '75%', '100%'];
 
@@ -409,17 +779,16 @@
         if (!pw1 || !pw2) return;
         const p1 = pw1.value, p2 = pw2.value;
         if (p2.length === 0) { feedback.style.display = 'none'; return; }
-        feedback.style.display = 'block';
+        feedback.style.display = 'flex';
         if (p1 === p2) {
-            feedback.innerHTML = '<i class="fas fa-check-circle me-1"></i>Las contraseñas coinciden';
-            feedback.style.color = '#2563eb';
+            feedback.innerHTML = '<i class="fas fa-check-circle"></i>Las contraseñas coinciden';
+            feedback.style.color = '#2f855a';
         } else {
-            feedback.innerHTML = '<i class="fas fa-times-circle me-1"></i>Las contraseñas no coinciden';
-            feedback.style.color = '#ef4444';
+            feedback.innerHTML = '<i class="fas fa-times-circle"></i>Las contraseñas no coinciden';
+            feedback.style.color = '#c53030';
         }
     }
 
-    // Name validation (letters only)
     ['id_nombres', 'id_apellidos'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', function() {
@@ -427,10 +796,20 @@
         });
     });
 
-    // Phone validation (numbers only)
     const tel = document.getElementById('id_telefono');
     if (tel) tel.addEventListener('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '');
     });
+
+    (function() {
+        const form = document.querySelector('.auth-form form');
+        const btn = document.getElementById('register-btn');
+        if (form && btn) {
+            form.addEventListener('submit', function() {
+                btn.classList.add('is-loading');
+                btn.disabled = true;
+            });
+        }
+    })();
 </script>
 {% endblock %}

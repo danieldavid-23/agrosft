@@ -5,7 +5,7 @@
                             <td>{{ producto.id_producto.id_categoria.nombre }}</td>
                             <td>
                                 <span class="badge {% if producto.id_producto.cantidad <= producto.id_producto.stock_minimo %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                                    {{ producto.cantidad }}
+                                    {{ producto.cantidad|floatformat:0 }}
                                 </span>
                             </td>
                             <td>{{ producto.precio|currency_cop }}</td>

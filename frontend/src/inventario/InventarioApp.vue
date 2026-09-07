@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { getCSRFToken } from '../shared/csrf.js'
 
 const props = defineProps({
@@ -98,6 +98,7 @@ function getActiveIndex(prodId) {
 }
 
 function getImages(producto) {
+  if (!producto) return []
   if (producto.imagenes && producto.imagenes.length > 0) {
     return producto.imagenes
   }
@@ -135,6 +136,60 @@ function setImage(producto, index, e) {
   }
   activeIndexes.value = { ...activeIndexes.value, [producto.id]: index }
 }
+
+// Lógica de Visor Lightbox para ver todas las fotos
+const lightboxActive = ref(false)
+const lightboxProduct = ref(null)
+const lightboxIndex = ref(0)
+
+function openLightbox(producto, initialIndex = 0, e) {
+  if (e) {
+    e.stopPropagation()
+    e.preventDefault()
+  }
+  const imgs = getImages(producto)
+  if (imgs.length === 0) return
+  lightboxProduct.value = producto
+  lightboxIndex.value = Math.max(0, Math.min(initialIndex, imgs.length - 1))
+  lightboxActive.value = true
+  document.body.style.overflow = 'hidden'
+}
+
+function closeLightbox() {
+  lightboxActive.value = false
+  lightboxProduct.value = null
+  document.body.style.overflow = ''
+}
+
+function lightboxNext() {
+  if (!lightboxProduct.value) return
+  const imgs = getImages(lightboxProduct.value)
+  if (imgs.length <= 1) return
+  lightboxIndex.value = (lightboxIndex.value + 1) % imgs.length
+}
+
+function lightboxPrev() {
+  if (!lightboxProduct.value) return
+  const imgs = getImages(lightboxProduct.value)
+  if (imgs.length <= 1) return
+  lightboxIndex.value = (lightboxIndex.value - 1 + imgs.length) % imgs.length
+}
+
+function onKeydown(e) {
+  if (!lightboxActive.value) return
+  if (e.key === 'Escape') closeLightbox()
+  else if (e.key === 'ArrowRight') lightboxNext()
+  else if (e.key === 'ArrowLeft') lightboxPrev()
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+})
 </script>
 
 <template>
@@ -209,16 +264,28 @@ function setImage(producto, index, e) {
       <div class="card h-100 hover-card border-0 rounded-4 position-relative">
         <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
           <template v-if="getImages(producto).length > 0">
-            <a :href="producto.detailUrl || `/inventario/producto/${producto.id}/`" class="image-wrapper d-block text-decoration-none">
+            <!-- Clic en la imagen abre la galería completa / Lightbox -->
+            <div
+              class="image-wrapper d-block position-relative cursor-pointer"
+              @click="openLightbox(producto, getActiveIndex(producto.id), $event)"
+              role="button"
+              :title="'Clic para ver todas las fotos (' + getImages(producto).length + ')'"
+            >
               <img
                 :src="getImages(producto)[getActiveIndex(producto.id)]"
                 class="product-image"
                 :alt="producto.nombre"
                 loading="lazy"
               >
-            </a>
+              <!-- Overlay indicador de galería al pasar el ratón -->
+              <div class="ver-fotos-overlay d-flex align-items-center justify-content-center">
+                <span class="badge bg-dark bg-opacity-75 rounded-pill px-3 py-2 text-white shadow-sm border border-light border-opacity-25">
+                  <i class="fas fa-expand me-1"></i>Ver todas las fotos ({{ getImages(producto).length }})
+                </span>
+              </div>
+            </div>
 
-            <!-- Controles de Carrusel (cuando hay > 1 imagen) -->
+            <!-- Controles de Carrusel en la tarjeta (cuando hay > 1 imagen) -->
             <template v-if="getImages(producto).length > 1">
               <button
                 type="button"
@@ -248,8 +315,12 @@ function setImage(producto, index, e) {
                 ></span>
               </div>
 
-              <!-- Contador de fotos -->
-              <div class="carousel-counter badge bg-dark bg-opacity-75 rounded-pill text-white shadow-sm">
+              <!-- Contador de fotos clickable -->
+              <div
+                class="carousel-counter badge bg-dark bg-opacity-75 rounded-pill text-white shadow-sm cursor-pointer"
+                @click.stop.prevent="openLightbox(producto, getActiveIndex(producto.id), $event)"
+                title="Ver galería completa"
+              >
                 <i class="fas fa-camera me-1"></i>{{ getActiveIndex(producto.id) + 1 }}/{{ getImages(producto).length }}
               </div>
             </template>
@@ -341,9 +412,123 @@ function setImage(producto, index, e) {
       </li>
     </ul>
   </nav>
+
+  <!-- Modal Lightbox Galería de Fotos Interactiva -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div
+        v-if="lightboxActive && lightboxProduct"
+        class="custom-lightbox-backdrop"
+        @click.self="closeLightbox"
+      >
+        <div class="custom-lightbox-dialog">
+          <!-- Barra Superior -->
+          <div class="lightbox-header d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <h5 class="fw-bold text-white mb-0 text-truncate" style="max-width: 55vw;">
+                {{ lightboxProduct.nombre }}
+              </h5>
+              <span class="badge bg-success rounded-pill px-3 py-1" style="font-size: 0.75rem;">
+                {{ lightboxProduct.categoria_nombre }}
+              </span>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-dark bg-opacity-75 text-white border border-light border-opacity-25 rounded-pill px-3 py-2 fw-bold">
+                <i class="fas fa-camera me-1 text-success"></i>Foto {{ lightboxIndex + 1 }} de {{ getImages(lightboxProduct).length }}
+              </span>
+              <button
+                type="button"
+                class="btn-lightbox-close"
+                @click="closeLightbox"
+                title="Cerrar (Esc)"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Visor Central de la Imagen -->
+          <div class="lightbox-body position-relative d-flex align-items-center justify-content-center">
+            <!-- Flecha Anterior -->
+            <button
+              v-if="getImages(lightboxProduct).length > 1"
+              type="button"
+              class="lightbox-arrow-btn lightbox-arrow-prev"
+              @click.stop="lightboxPrev"
+              title="Foto anterior (←)"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <!-- Imagen Principal -->
+            <div class="lightbox-image-container">
+              <img
+                :src="getImages(lightboxProduct)[lightboxIndex]"
+                :alt="lightboxProduct.nombre"
+                class="lightbox-main-img"
+              >
+            </div>
+
+            <!-- Flecha Siguiente -->
+            <button
+              v-if="getImages(lightboxProduct).length > 1"
+              type="button"
+              class="lightbox-arrow-btn lightbox-arrow-next"
+              @click.stop="lightboxNext"
+              title="Foto siguiente (→)"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- Tira de Miniaturas (Filmstrip) -->
+          <div
+            v-if="getImages(lightboxProduct).length > 1"
+            class="lightbox-thumbnails-strip mt-3"
+          >
+            <div
+              v-for="(thumbUrl, idx) in getImages(lightboxProduct)"
+              :key="idx"
+              class="lightbox-thumb-item"
+              :class="{ active: idx === lightboxIndex }"
+              @click="lightboxIndex = idx"
+              :title="'Ver foto ' + (idx + 1)"
+            >
+              <img :src="thumbUrl" :alt="'Miniatura ' + (idx + 1)">
+            </div>
+          </div>
+
+          <!-- Barra Inferior con Acciones -->
+          <div class="lightbox-footer d-flex flex-wrap justify-content-between align-items-center mt-3 pt-3 border-top border-secondary border-opacity-25">
+            <div class="text-white-50 small">
+              <i class="fas fa-keyboard me-1 text-light"></i>Usa <kbd class="bg-dark text-white border border-secondary px-2 py-0">←</kbd> <kbd class="bg-dark text-white border border-secondary px-2 py-0">→</kbd> para navegar o <kbd class="bg-dark text-white border border-secondary px-2 py-0">Esc</kbd> para salir
+            </div>
+            <div class="d-flex gap-2">
+              <a
+                :href="lightboxProduct.editUrl"
+                class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold"
+              >
+                <i class="fas fa-edit me-1"></i>Editar Producto
+              </a>
+              <a
+                :href="lightboxProduct.detailUrl || `/inventario/producto/${lightboxProduct.id}/`"
+                class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+              >
+                <i class="fas fa-eye me-1"></i>Ver Detalle Completo
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
-<style scoped>
+<style>
+.cursor-pointer {
+  cursor: pointer;
+}
 .hover-card {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   top: 0;
@@ -376,8 +561,24 @@ function setImage(producto, index, e) {
   transition: transform 0.4s ease;
 }
 .hover-card:hover .product-image {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
+.ver-fotos-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.hover-card:hover .ver-fotos-overlay {
+  opacity: 1;
+}
+
 .carousel-nav-btn {
   position: absolute;
   top: 50%;
@@ -385,27 +586,27 @@ function setImage(producto, index, e) {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   color: #1f2937;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
   cursor: pointer;
-  z-index: 2;
-  opacity: 0;
+  z-index: 4;
+  opacity: 0.85;
   transition: opacity 0.25s ease, background-color 0.2s, transform 0.2s;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 .hover-card:hover .carousel-nav-btn {
   opacity: 1;
 }
 .carousel-nav-btn:hover {
   background: #ffffff;
-  transform: translateY(-50%) scale(1.1);
-  color: var(--primary-color, #3C8D3C);
+  transform: translateY(-50%) scale(1.15);
+  color: #22c55e;
 }
 .btn-prev { left: 8px; }
 .btn-next { right: 8px; }
@@ -417,9 +618,9 @@ function setImage(producto, index, e) {
   transform: translateX(-50%);
   display: flex;
   gap: 5px;
-  z-index: 2;
+  z-index: 4;
   padding: 3px 8px;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   border-radius: 20px;
 }
@@ -443,7 +644,11 @@ function setImage(producto, index, e) {
   font-size: 0.7rem;
   padding: 0.25rem 0.5rem;
   backdrop-filter: blur(4px);
-  z-index: 2;
+  z-index: 4;
+  transition: transform 0.2s ease;
+}
+.carousel-counter:hover {
+  transform: scale(1.05);
 }
 .line-clamp-2 {
   display: -webkit-box;
@@ -452,4 +657,159 @@ function setImage(producto, index, e) {
   overflow: hidden;
 }
 .fw-black { font-weight: 800; }
+
+/* Lightbox Modal Estilizado */
+.custom-lightbox-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 15, 29, 0.94);
+  backdrop-filter: blur(12px);
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.custom-lightbox-dialog {
+  width: 100%;
+  max-width: 950px;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-lightbox-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-lightbox-close:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  transform: rotate(90deg);
+}
+
+.lightbox-body {
+  width: 100%;
+  min-height: 360px;
+  max-height: 64vh;
+}
+
+.lightbox-image-container {
+  max-width: 100%;
+  max-height: 64vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.lightbox-main-img {
+  max-width: 100%;
+  max-height: 64vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.2s ease;
+}
+
+.lightbox-arrow-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.lightbox-arrow-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  color: #111827;
+  transform: translateY(-50%) scale(1.12);
+}
+
+.lightbox-arrow-prev {
+  left: -20px;
+}
+
+.lightbox-arrow-next {
+  right: -20px;
+}
+
+@media (max-width: 768px) {
+  .lightbox-arrow-prev { left: 5px; }
+  .lightbox-arrow-next { right: 5px; }
+}
+
+.lightbox-thumbnails-strip {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 8px 4px;
+}
+
+.lightbox-thumb-item {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  opacity: 0.55;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.lightbox-thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lightbox-thumb-item:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.lightbox-thumb-item.active {
+  opacity: 1;
+  border-color: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+  transform: scale(1.06);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>
+

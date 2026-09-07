@@ -189,7 +189,7 @@
               <h5>Cantidad Disponible:</h5>
               <p class="mb-0">
                 <span class="badge {% if producto.cantidad <= producto.id_producto.stock_minimo %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                  {{ producto.cantidad }}
+                  {{ producto.cantidad|floatformat:0 }}
                 </span>
               </p>
             </div>

@@ -3,12 +3,16 @@
 {% load static %}
 
 {% block title %}{{ titulo|default:'Mi Inventario' }} - AGROST{% endblock %}
+ 
+{% block extra_css %}
+<link href="{% static 'dist/css/inventario.css' %}?_v=3" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
     {{ inventario_json|json_script:"inventario-data" }}
     <div id="vue-inventario"></div>
-    <script type="module" src="{% static 'dist/inventario.js' %}"></script>
+    <script type="module" src="{% static 'dist/inventario.js' %}?_v=3"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var vueEl = document.getElementById('vue-inventario');
@@ -86,11 +90,35 @@
             <!-- Card de Producto con Hover Premium -->
             <div class="card h-100 hover-card border-0 rounded-4 position-relative">
                 
-                <!-- Imagen del producto -->
-                <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
-                    {% if producto.imagen %}
-                    <a href="{% url 'inventario:detalle' producto.id %}" class="d-block text-decoration-none">
-                        <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}">
+                <!-- Imagen del producto / Carrusel interactivo -->
+                <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative" data-card-carousel>
+                    {% if producto.imagenes and producto.imagenes|length > 1 %}
+                        <div class="card-carousel-slides w-100 h-100 position-relative">
+                            {% for img_url in producto.imagenes %}
+                            <a href="{% url 'inventario:detalle' producto.id %}" 
+                               class="d-block text-decoration-none card-carousel-slide {% if forloop.first %}active{% else %}d-none{% endif %}" 
+                               data-index="{{ forloop.counter0 }}" 
+                               style="width: 100%; height: 100%;">
+                                <img src="{{ img_url }}" class="product-image" alt="{{ producto.nombre }}" loading="lazy">
+                            </a>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Botones de navegación del carrusel -->
+                        <button type="button" class="carousel-nav-btn btn-prev shadow-sm" onclick="navegarCarruselCard(this, -1, event)" title="Imagen anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button type="button" class="carousel-nav-btn btn-next shadow-sm" onclick="navegarCarruselCard(this, 1, event)" title="Siguiente imagen">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+
+                        <!-- Contador de fotos -->
+                        <div class="carousel-counter-badge position-absolute bottom-0 start-0 m-2 px-2 py-1 rounded-pill bg-dark bg-opacity-75 text-white" style="font-size: 0.7rem; z-index: 4; pointer-events: none;">
+                            <i class="fas fa-camera me-1"></i><span class="curr-slide">1</span>/{{ producto.imagenes|length }}
+                        </div>
+                    {% elif producto.imagen %}
+                    <a href="{% url 'inventario:detalle' producto.id %}" class="d-block text-decoration-none" style="width: 100%; height: 100%;">
+                        <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}" loading="lazy">
                     </a>
                     {% else %}
                     <a href="{% url 'inventario:detalle' producto.id %}" class="d-flex justify-content-center align-items-center h-100 bg-white text-decoration-none" style="min-height: 220px;">
@@ -104,7 +132,7 @@
                     <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-dark opacity-25" style="pointer-events: none;"></div>
                     
                     <!-- Etiquetas de estado flotantes -->
-                    <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 align-items-end">
+                    <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 align-items-end" style="z-index: 4;">
                         {% if producto.esta_agotado %}
                         <span class="badge bg-danger shadow-sm"><i class="fas fa-times-circle me-1"></i>Agotado</span>
                         {% elif producto.stock < producto.stock_minimo %}
@@ -215,4 +243,98 @@
     {% endif %}
     </div>
 </div>
+
+<style>
+/* Estilos críticos para asegurar tamaño perfecto y carrusel */
+.product-image-container {
+    height: 220px !important;
+    max-height: 220px !important;
+    width: 100% !important;
+    position: relative !important;
+    overflow: hidden !important;
+    background-color: #f8fafc;
+}
+.product-image {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 220px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    transition: transform 0.4s ease;
+}
+.hover-card:hover .product-image {
+    transform: scale(1.05);
+}
+.carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    cursor: pointer;
+    z-index: 6;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s, transform 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.carousel-nav-btn.btn-prev { left: 8px; }
+.carousel-nav-btn.btn-next { right: 8px; }
+.product-image-container:hover .carousel-nav-btn {
+    opacity: 1;
+}
+.carousel-nav-btn:hover {
+    background: #ffffff;
+    transform: translateY(-50%) scale(1.1);
+    color: #166534;
+}
+</style>
+
+<script>
+function navegarCarruselCard(btn, direction, event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    var container = btn.closest('[data-card-carousel]');
+    if (!container) return;
+    
+    var slides = container.querySelectorAll('.card-carousel-slide');
+    if (!slides || slides.length <= 1) return;
+    
+    var activeIdx = -1;
+    slides.forEach(function(slide, idx) {
+        if (slide.classList.contains('active') || slide.style.display !== 'none') {
+            activeIdx = idx;
+        }
+    });
+    
+    if (activeIdx === -1) activeIdx = 0;
+    var nextIdx = (activeIdx + direction + slides.length) % slides.length;
+    
+    slides.forEach(function(slide, idx) {
+        if (idx === nextIdx) {
+            slide.style.display = 'block';
+            slide.classList.add('active');
+        } else {
+            slide.style.display = 'none';
+            slide.classList.remove('active');
+        }
+    });
+    
+    var counterEl = container.querySelector('.curr-slide');
+    if (counterEl) {
+        counterEl.textContent = (nextIdx + 1);
+    }
+}
+</script>
 {% endblock %}
