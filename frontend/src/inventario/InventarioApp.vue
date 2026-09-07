@@ -62,6 +62,52 @@ async function eliminarProducto(id, nombre) {
     products.value = products.value.filter(p => p.id !== id)
   }
 }
+
+// Lógica de Carrusel de Imágenes
+const activeIndexes = ref({})
+
+function getActiveIndex(prodId) {
+  return activeIndexes.value[prodId] || 0
+}
+
+function getImages(producto) {
+  if (producto.imagenes && producto.imagenes.length > 0) {
+    return producto.imagenes
+  }
+  return producto.imagen ? [producto.imagen] : []
+}
+
+function nextImage(producto, e) {
+  if (e) {
+    e.stopPropagation()
+    e.preventDefault()
+  }
+  const imgs = getImages(producto)
+  if (imgs.length <= 1) return
+  const current = getActiveIndex(producto.id)
+  const next = (current + 1) % imgs.length
+  activeIndexes.value = { ...activeIndexes.value, [producto.id]: next }
+}
+
+function prevImage(producto, e) {
+  if (e) {
+    e.stopPropagation()
+    e.preventDefault()
+  }
+  const imgs = getImages(producto)
+  if (imgs.length <= 1) return
+  const current = getActiveIndex(producto.id)
+  const prev = (current - 1 + imgs.length) % imgs.length
+  activeIndexes.value = { ...activeIndexes.value, [producto.id]: prev }
+}
+
+function setImage(producto, index, e) {
+  if (e) {
+    e.stopPropagation()
+    e.preventDefault()
+  }
+  activeIndexes.value = { ...activeIndexes.value, [producto.id]: index }
+}
 </script>
 
 <template>
@@ -129,15 +175,62 @@ async function eliminarProducto(id, nombre) {
     <div v-for="producto in products" :key="producto.id" class="col-xl-3 col-lg-4 col-md-6">
       <div class="card h-100 hover-card border-0 rounded-4 position-relative">
         <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
-          <div v-if="producto.imagen" class="d-flex justify-content-center align-items-center h-100 bg-white" style="min-height: 220px;">
-            <img :src="producto.imagen" class="product-image" :alt="producto.nombre">
+          <template v-if="getImages(producto).length > 0">
+            <a :href="producto.detailUrl || `/inventario/producto/${producto.id}/`" class="image-wrapper d-block text-decoration-none">
+              <img
+                :src="getImages(producto)[getActiveIndex(producto.id)]"
+                class="product-image"
+                :alt="producto.nombre"
+                loading="lazy"
+              >
+            </a>
+
+            <!-- Controles de Carrusel (cuando hay > 1 imagen) -->
+            <template v-if="getImages(producto).length > 1">
+              <button
+                type="button"
+                class="carousel-nav-btn btn-prev shadow-sm"
+                @click.stop.prevent="prevImage(producto, $event)"
+                title="Imagen anterior"
+              >
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button
+                type="button"
+                class="carousel-nav-btn btn-next shadow-sm"
+                @click.stop.prevent="nextImage(producto, $event)"
+                title="Siguiente imagen"
+              >
+                <i class="fas fa-chevron-right"></i>
+              </button>
+
+              <!-- Indicadores Dots -->
+              <div class="carousel-dots-container" @click.stop>
+                <span
+                  v-for="(img, idx) in getImages(producto)"
+                  :key="idx"
+                  class="carousel-dot"
+                  :class="{ active: idx === getActiveIndex(producto.id) }"
+                  @click.stop.prevent="setImage(producto, idx, $event)"
+                ></span>
+              </div>
+
+              <!-- Contador de fotos -->
+              <div class="carousel-counter badge bg-dark bg-opacity-75 rounded-pill text-white shadow-sm">
+                <i class="fas fa-camera me-1"></i>{{ getActiveIndex(producto.id) + 1 }}/{{ getImages(producto).length }}
+              </div>
+            </template>
+          </template>
+
+          <div v-else class="d-flex justify-content-center align-items-center h-100 bg-white">
+            <a :href="producto.detailUrl || `/inventario/producto/${producto.id}/`" class="d-flex justify-content-center align-items-center w-100 h-100 text-decoration-none">
+              <div class="bg-success bg-opacity-10 p-4 rounded-circle">
+                <i class="fas fa-seedling fa-3x text-success"></i>
+              </div>
+            </a>
           </div>
-          <div v-else class="d-flex justify-content-center align-items-center h-100 bg-white" style="min-height: 220px;">
-            <div class="bg-success bg-opacity-10 p-4 rounded-circle">
-              <i class="fas fa-seedling fa-3x text-success"></i>
-            </div>
-          </div>
-          <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 align-items-end">
+
+          <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 align-items-end" style="z-index: 3;">
             <span v-if="producto.esta_agotado" class="badge bg-danger shadow-sm"><i class="fas fa-times-circle me-1"></i>Agotado</span>
             <span v-else-if="producto.stock < producto.stock_minimo" class="badge bg-warning shadow-sm text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Últimas unid.</span>
             <span v-if="producto.estado === 'pendiente'" class="badge bg-secondary shadow-sm">Pendiente</span>
@@ -145,7 +238,11 @@ async function eliminarProducto(id, nombre) {
         </div>
         <div class="card-body p-4 d-flex flex-column">
           <div class="d-flex justify-content-between align-items-start mb-2">
-            <h5 class="card-title fw-bold mb-0 text-truncate" style="max-width: 70%;">{{ producto.nombre }}</h5>
+            <h5 class="card-title fw-bold mb-0 text-truncate" style="max-width: 70%;">
+              <a :href="producto.detailUrl || `/inventario/producto/${producto.id}/`" class="text-dark text-decoration-none">
+                {{ producto.nombre }}
+              </a>
+            </h5>
             <span class="badge bg-light text-secondary border px-2 py-1"><i class="fas fa-tag me-1"></i>{{ producto.categoria_nombre }}</span>
           </div>
           <p class="card-text text-muted small mb-4 flex-grow-1 line-clamp-2">{{ producto.descripcion }}</p>
@@ -163,6 +260,9 @@ async function eliminarProducto(id, nombre) {
           </div>
         </div>
         <div class="card-footer bg-white border-0 p-3 pt-0 rounded-bottom-4 text-center">
+          <a :href="producto.detailUrl || `/inventario/producto/${producto.id}/`" class="btn btn-outline-success d-block w-100 rounded-pill fw-bold shadow-sm mb-2">
+            <i class="fas fa-eye me-1"></i> Ver detalle
+          </a>
           <div class="d-flex gap-2 justify-content-center">
             <a :href="producto.editUrl" class="btn btn-sm btn-outline-primary flex-grow-1 rounded-pill fw-bold">
               <i class="fas fa-edit me-1"></i> Editar
@@ -221,15 +321,96 @@ async function eliminarProducto(id, nombre) {
 }
 .product-image-container {
   height: 220px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: #f8fafc;
+}
+.image-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .product-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  object-position: center;
+  display: block;
+  transition: transform 0.4s ease;
 }
 .hover-card:hover .product-image {
-  transform: scale(1.05);
+  transform: scale(1.04);
+}
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.25s ease, background-color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.hover-card:hover .carousel-nav-btn {
+  opacity: 1;
+}
+.carousel-nav-btn:hover {
+  background: #ffffff;
+  transform: translateY(-50%) scale(1.1);
+  color: var(--primary-color, #3C8D3C);
+}
+.btn-prev { left: 8px; }
+.btn-next { right: 8px; }
+
+.carousel-dots-container {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 2;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  border-radius: 20px;
+}
+.carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.carousel-dot.active {
+  width: 16px;
+  border-radius: 10px;
+  background: #ffffff;
+}
+.carousel-counter {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  backdrop-filter: blur(4px);
+  z-index: 2;
 }
 .line-clamp-2 {
   display: -webkit-box;

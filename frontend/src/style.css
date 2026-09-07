@@ -300,3 +300,532 @@ main.container, main.container-fluid {
 ::-webkit-scrollbar-track { background: var(--bg-color); }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Utilidades de Imágenes y Tarjetas de Producto */
+.object-fit-cover {
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+.object-fit-contain {
+    object-fit: contain !important;
+    object-position: center !important;
+}
+
+.hover-card {
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    top: 0;
+}
+.hover-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+.product-image-container {
+    height: 220px !important;
+    max-height: 220px !important;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #f8fafc;
+}
+
+.image-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-image {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 220px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.hover-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+/* Controles de Carrusel en Cards */
+.carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    z-index: 5;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, background-color 0.2s, transform 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.hover-card:hover .carousel-nav-btn,
+.product-image-container:hover .carousel-nav-btn {
+    opacity: 1;
+}
+.carousel-nav-btn:hover {
+    background: #ffffff;
+    transform: translateY(-50%) scale(1.15);
+    color: var(--primary-color, #3C8D3C);
+}
+.btn-prev { left: 8px; }
+.btn-next { right: 8px; }
+
+.carousel-dots-container {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+    z-index: 5;
+    padding: 3px 8px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+}
+.carousel-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.carousel-dot.active {
+    width: 16px;
+    border-radius: 10px;
+    background: #ffffff;
+}
+.carousel-counter {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    backdrop-filter: blur(4px);
+    z-index: 5;
+}
+
+/* Detalle de Producto - Galería */
+.product-detail-carousel-container {
+    width: 100%;
+    height: 380px;
+    max-height: 380px;
+    border-radius: 1rem;
+    overflow: hidden;
+    position: relative;
+    background-color: #f8fafc;
+}
+.product-detail-img {
+    width: 100%;
+    height: 380px;
+    max-height: 380px;
+    object-fit: cover;
+    object-position: center;
+}
+.product-thumb-item {
+    width: 72px;
+    height: 72px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+.product-thumb-item:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+.product-thumb-item.active {
+    border-color: var(--primary-color);
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(60, 141, 60, 0.25);
+}
+
+/* ==========================================================================
+   GALERÍA LIGHTBOX (CAJA DE LUZ)
+   ========================================================================== */
+.lightbox-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 10500;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lightbox-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lightbox-header {
+    width: 100%;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ffffff;
+    z-index: 10502;
+}
+
+.lightbox-close-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #ffffff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lightbox-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+    color: #ffffff;
+}
+
+/* Toolbar de Zoom en Lightbox */
+.lightbox-zoom-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 30px;
+    padding: 3px 8px;
+}
+
+.lightbox-tool-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lightbox-tool-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+    color: #ffffff;
+}
+
+.lightbox-zoom-level {
+    font-size: 0.75rem;
+    color: #ffffff;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+    user-select: none;
+}
+
+.lightbox-stage {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.lightbox-img-wrapper {
+    max-width: 100%;
+    max-height: 72vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.lightbox-img {
+    max-width: 100%;
+    max-height: 72vh;
+    object-fit: contain;
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    transition: transform 0.15s ease-out, opacity 0.2s ease;
+    cursor: zoom-in;
+    transform-origin: center center;
+}
+
+.lightbox-img.is-zoomed {
+    cursor: grab;
+}
+
+.lightbox-img.is-dragging {
+    cursor: grabbing;
+    transition: none;
+}
+
+.lightbox-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10502;
+    backdrop-filter: blur(8px);
+}
+
+.lightbox-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-50%) scale(1.12);
+    color: #ffffff;
+}
+
+.lightbox-btn-prev { left: 1.5rem; }
+.lightbox-btn-next { right: 1.5rem; }
+
+.lightbox-footer {
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 10502;
+}
+
+.lightbox-thumbnails {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    max-width: 90vw;
+    padding: 6px 12px;
+}
+
+.lightbox-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    opacity: 0.55;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.lightbox-thumb.active, .lightbox-thumb:hover {
+    opacity: 1;
+    border-color: var(--primary-color, #3C8D3C);
+    transform: scale(1.08);
+}
+
+.lightbox-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Indicador de Zoom en el carrusel de producto */
+.product-zoom-hint {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 6;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.product-zoom-hint:hover {
+    background: var(--primary-color, #3C8D3C);
+    transform: scale(1.12);
+}
+
+.clickable-gallery-slide {
+    cursor: zoom-in;
+}
+
+/* Zona de Carga Drag & Drop */
+.dropzone-container {
+    border: 2px dashed #cbd5e1;
+    border-radius: 1rem;
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    background: #f8fafc;
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+.dropzone-container.dragover {
+    border-color: var(--primary-color, #3C8D3C);
+    background: var(--primary-light, #E8F5E8);
+    transform: scale(1.01);
+}
+
+/* ==========================================================================
+   CARRUSEL DE DETALLE DE PRODUCTO (Galería en página)
+   ========================================================================== */
+
+/* Contenedor principal del carrusel de imágenes en la página de detalle */
+.product-detail-carousel-container {
+    width: 100%;
+    height: 380px;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #f1f5f9;
+    position: relative;
+    cursor: zoom-in;
+}
+
+@media (max-width: 576px) {
+    .product-detail-carousel-container {
+        height: 260px;
+    }
+}
+
+/* Envoltorio de todos los slides */
+.gallery-slides {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Cada slide individual */
+.gallery-slide {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;          /* oculto por defecto */
+}
+
+.gallery-slide.active {
+    display: block;         /* solo el activo es visible */
+}
+
+/* Imagen dentro del slide */
+.product-detail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;   /* respeta proporciones, sin recortar */
+    display: block;
+    background: #f8fafc;
+}
+
+/* Botones de navegación izquierda/derecha del carrusel en página */
+.carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    background: rgba(0, 0, 0, 0.55);
+    border: none;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.carousel-nav-btn:hover {
+    background: rgba(60, 141, 60, 0.85);
+    transform: translateY(-50%) scale(1.1);
+    color: #ffffff;
+}
+
+.btn-prev { left: 10px; }
+.btn-next { right: 10px; }
+
+/* Contador de imágenes (badge) */
+.carousel-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    z-index: 5;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    pointer-events: none;
+}
+
+/* Miniaturas debajo del carrusel */
+.product-thumb-item {
+    width: 62px;
+    height: 62px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    opacity: 0.55;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.product-thumb-item.active,
+.product-thumb-item:hover {
+    opacity: 1;
+    border-color: var(--primary-color, #3C8D3C);
+    transform: scale(1.08);
+}
+

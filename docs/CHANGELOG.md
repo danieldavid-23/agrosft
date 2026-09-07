@@ -7,7 +7,29 @@
 
 ## [Unreleased]
 
+### Added (2026-09-04)
+- **Homologación de tamaño de imágenes y soporte de carrusel de múltiples imágenes** (ver [[DECISIONS#ADR-014]]):
+  - `scripts/crear_tabla_producto_imagenes.sql` [NEW]: Script SQL idempotente para la creación de la tabla `tblproducto_imagenes`.
+  - `apps/inventario/models/producto.py`: Nuevo modelo `ProductoImagen` y método `get_imagenes()` en `Producto` para consolidar todas las imágenes disponibles.
+  - `apps/inventario/forms/producto_form.py`: Soporte de carga múltiple en el campo `imagen` (`multiple=True`).
+  - `apps/inventario/controllers/producto_controller.py`: Guardado de múltiples archivos de imagen en `crear_producto`/`editar_producto` y serialización del arreglo `imagenes` para el frontend.
+  - `frontend/src/inventario/InventarioApp.vue` y `frontend/src/marketplace/MarketApp.vue`: Contenedores de imagen estandarizados a 220px con `object-fit: cover` e integración de carrusel interactivo con flechas de navegación, dots indicadores y contador de fotos.
+  - `apps/inventario/templates/inventario/producto_form.html`: Galería de fotos actuales y previsualización interactiva de nuevas imágenes seleccionadas.
+  - `apps/inventario/templates/inventario/Productosdetalles.html`: Carrusel principal responsive con tira de miniaturas interactivas.
+  - Recompilación de bundles frontend mediante Vite (`npm run build`).
+
 ### Fixed (2026-09-04)
+- **Corrección integral de dimensionamiento de imágenes y funcionamiento de carruseles**:
+  - `frontend/src/style.css`: Incorporadas al archivo CSS global las clases `.product-image-container` (altura fija de 220px), `.product-image`, `.object-fit-cover`, `.image-wrapper`, estilos de botones de carrusel `.carousel-nav-btn`, dots y badges de conteo.
+  - `apps/inventario/templates/inventario/Productosdetalles.html`: Implementada galería interactiva y carrusel independiente con altura estandarizada de 380px, `object-fit: cover`, botones de navegación anterior/siguiente, contador de fotos, miniaturas seleccionables con borde de activación y soporte visual para productos relacionados.
+  - `frontend/src/inventario/InventarioApp.vue` y `frontend/src/marketplace/MarketApp.vue`: Corregida la reactividad en el cambio de índice activo (`activeIndexes`) para garantizar la transición instantánea entre fotos al hacer clic en flechas o dots.
+  - `frontend/src/inventario/main.js` y `frontend/src/marketplace/main.js`: Eliminado automáticamente el contenedor de fallback al montar la aplicación Vue para evitar duplicación de tarjetas.
+  - `apps/inventario/controllers/producto_controller.py`: Corregido el guardado de imágenes secundarias para evitar registrar URLs duplicadas de la foto principal en el carrusel.
+  - `apps/inventario/views/producto_views.py`: Contexto de detalle de producto enriquecido con la lista de imágenes para renderizado directo sin bloqueos.
+  - Recompilación completa de assets (`npm run build`).
+- **Corrección de compatibilidad con carga múltiple en formularios Django y sintaxis en plantilla de detalle**:
+  - `apps/inventario/forms/producto_form.py`: Definidos `MultipleFileInput` y `MultipleFileField` con `allow_multiple_selected = True` para evitar la excepción `ValueError: FileInput doesn't support uploading multiple files` generada por Django al recibir `multiple=True`.
+  - `apps/inventario/templates/inventario/Productosdetalles.html`: Corregida la sintaxis del tag Django para la llamada de miniatura (`{{ forloop.counter0 }}`).
 - **Corrección de errores y validación completa en "Cambiar Contraseña" (`cambiar_password.html`)**:
   - `apps/usuarios/controllers/auth_controller.py`: Implementado `update_session_auth_hash(request, request.user)` para evitar el cierre involuntario de sesión tras el cambio exitoso de contraseña.
   - `apps/usuarios/controllers/auth_controller.py`: Añadidas las validaciones de negocio en el backend (mínimo 8 caracteres, no solo números, y contraseña diferente a la actual).

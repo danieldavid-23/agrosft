@@ -89,7 +89,6 @@ class Producto(models.Model):
     )
     stock_minimo = models.IntegerField(default=5, db_column='stock_minimo')
     estado = models.CharField(max_length=20, default='pendiente', db_column='estado')
-    imagen = models.ImageField(db_column='imagen', blank=True, null=True, upload_to='productos/')
     eliminado = models.BooleanField(default=False, db_column='eliminado')
     fecha_eliminacion = models.DateTimeField(null=True, blank=True, db_column='fecha_eliminacion')
     eliminado_por_id = models.IntegerField(null=True, blank=True, db_column='eliminado_por_id')
@@ -103,6 +102,55 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def get_imagenes(self):
+        """Retorna lista de URLs de todas las imágenes disponibles para el carrusel"""
+        urls = []
+        if self.imagen:
+            try:
+                urls.append(self.imagen.url)
+            except Exception:
+                pass
+        for img in self.imagenes_secundarias.all():
+            try:
+                if img.imagen and img.imagen.url not in urls:
+                    urls.append(img.imagen.url)
+            except Exception:
+                pass
+        return urls
+
+
+class ProductoImagen(models.Model):
+    """
+    Modelo para almacenar múltiples imágenes asociadas a un producto (carrusel)
+    """
+    id = models.AutoField(primary_key=True)
+    id_producto = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        related_name='imagenes_secundarias',
+        db_column='id_producto'
+    )
+    imagen = models.ImageField(
+        upload_to='productos/',
+        db_column='imagen',
+        validators=[
+            FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
+            validate_image_size
+        ]
+    )
+    orden = models.IntegerField(default=0, db_column='orden')
+    created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
+
+    class Meta:
+        db_table = 'tblproducto_imagenes'
+        managed = False
+        ordering = ['orden', 'id']
+        verbose_name = 'Imagen de Producto'
+        verbose_name_plural = 'Imágenes de Producto'
+
+    def __str__(self):
+        return f"Imagen {self.id} de {self.id_producto.nombre}"
 
 
 class ProductoUsuario(models.Model):

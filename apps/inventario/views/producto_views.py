@@ -32,8 +32,11 @@ def producto_detail(request, pk):
         id_producto_usuario=pk
     ).select_related('id_producto', 'id_estado', 'id_usuario')[:4]
     
+    imagenes = producto.id_producto.get_imagenes()
+    
     contexto = {
         'producto': producto,
+        'imagenes': imagenes,
         'relacionados': relacionados
     }
     return render(request, 'inventario/Productosdetalles.html', contexto)

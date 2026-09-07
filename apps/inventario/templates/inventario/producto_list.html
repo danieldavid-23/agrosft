@@ -89,17 +89,19 @@
                 <!-- Imagen del producto -->
                 <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
                     {% if producto.imagen %}
-                    <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}">
+                    <a href="{% url 'inventario:detalle' producto.id %}" class="d-block text-decoration-none">
+                        <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}">
+                    </a>
                     {% else %}
-                    <div class="d-flex justify-content-center align-items-center h-100 bg-white" style="min-height: 220px;">
+                    <a href="{% url 'inventario:detalle' producto.id %}" class="d-flex justify-content-center align-items-center h-100 bg-white text-decoration-none" style="min-height: 220px;">
                         <div class="bg-success bg-opacity-10 p-4 rounded-circle">
                             <i class="fas fa-seedling fa-3x text-success"></i>
                         </div>
-                    </div>
+                    </a>
                     {% endif %}
                     
                     <!-- Overlay Gradient -->
-                    <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-dark opacity-25"></div>
+                    <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-dark opacity-25" style="pointer-events: none;"></div>
                     
                     <!-- Etiquetas de estado flotantes -->
                     <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 align-items-end">
@@ -118,7 +120,11 @@
                 <!-- Contenido de la Card -->
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title fw-bold mb-0 text-truncate" style="max-width: 70%;">{{ producto.nombre }}</h5>
+                        <h5 class="card-title fw-bold mb-0 text-truncate" style="max-width: 70%;">
+                            <a href="{% url 'inventario:detalle' producto.id %}" class="text-dark text-decoration-none">
+                                {{ producto.nombre }}
+                            </a>
+                        </h5>
                         <span class="badge bg-light text-secondary border px-2 py-1"><i class="fas fa-tag me-1"></i>{{ producto.categoria_nombre }}</span>
                     </div>
                     
@@ -140,8 +146,11 @@
                     </div>
                 </div>
 
-                <!-- Footer de la Card (Acciones: SOLO Editar y Eliminar) -->
+                <!-- Footer de la Card (Acciones: Ver Detalle, Editar y Eliminar) -->
                 <div class="card-footer bg-white border-0 p-3 pt-0 rounded-bottom-4 text-center">
+                    <a href="{% url 'inventario:detalle' producto.id %}" class="btn btn-outline-success d-block w-100 rounded-pill fw-bold shadow-sm mb-2">
+                        <i class="fas fa-eye me-1"></i> Ver detalle
+                    </a>
                     <div class="d-flex gap-2 justify-content-center">
                         <a href="{% url 'inventario:editar' producto.id %}" class="btn btn-sm btn-outline-primary flex-grow-1 rounded-pill fw-bold">
                             <i class="fas fa-edit me-1"></i> Editar

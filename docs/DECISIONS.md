@@ -443,6 +443,43 @@ El proyecto requería soportar dos tipos de imágenes: foto de perfil de usuario
 
 ---
 
+## ADR-014: Homologación de Tamaño de Imágenes y Soporte de Carrusel de Múltiples Imágenes
+
+**Fecha**: 2026-09-04  
+**Estado**: Aceptada
+
+### Contexto
+
+Las imágenes cargadas por los usuarios contaban con proporciones dispares y fondos heterogéneos, provocando desalineaciones y alturas desiguales en las tarjetas de producto del inventario y marketplace. Adicionalmente, existía la necesidad de publicar múltiples fotos por producto y explorarlas mediante un carrusel interactivo directamente en cada tarjeta y en la vista de detalle.
+
+### Decisión
+
+1. **Estandarización de Imagen en Tarjetas**: Fijar la altura del contenedor en `220px` con `width: 100%`, `overflow: hidden` y regla `object-fit: cover; object-position: center;`.
+2. **Entidad `tblproducto_imagenes`**: Crear tabla relacional `tblproducto_imagenes` para registrar múltiples imágenes por producto, manteniendo `tblproducto.imagen` como portada principal para compatibilidad con código y consultas legacy.
+3. **Componente de Carrusel Interactivo**:
+   - En `InventarioApp.vue` y `MarketApp.vue`: Navegación con flechas anterior/siguiente (`<` / `>`), dots de posición y contador numérico de fotos con prevención de propagación de eventos (`@click.stop`).
+   - En `Productosdetalles.html`: Carrusel principal con tira de miniaturas interactivas.
+
+### Consecuencias
+
+- ✅ Grid de productos uniforme y alineado independientemente de la resolución o proporción original de la imagen
+- ✅ Soporte nativo para galerías de fotos por producto con carrusel ágil y responsive
+- ✅ Carga múltiple intuitiva con previsualización en el formulario de registro y edición
+- ✅ Total compatibilidad con la base de datos MariaDB existente
+
+### Archivos Afectados
+
+- `scripts/crear_tabla_producto_imagenes.sql` [NEW]
+- `apps/inventario/models/producto.py` — modelo `ProductoImagen` y método `get_imagenes()`
+- `apps/inventario/forms/producto_form.py` — soporte `multiple` en campo `imagen`
+- `apps/inventario/controllers/producto_controller.py` — procesamiento de múltiples archivos y array `imagenes`
+- `frontend/src/inventario/InventarioApp.vue` — carrusel interactivo en tarjetas
+- `frontend/src/marketplace/MarketApp.vue` — carrusel interactivo en tarjetas
+- `apps/inventario/templates/inventario/producto_form.html` — previsualización y galería de imágenes
+- `apps/inventario/templates/inventario/Productosdetalles.html` — carrusel de detalle con miniaturas
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -460,6 +497,7 @@ El proyecto requería soportar dos tipos de imágenes: foto de perfil de usuario
 | ADR-011 | Sesiones por cookie firmada | Aceptada | Sesiones / Auth |
 | ADR-012 | Solicitudes server-side (reversión) | Aceptada | Módulo ventas |
 | ADR-013 | Soporte de imágenes (producto + perfil) | Aceptada | Inventario / Usuarios |
+| ADR-014 | Carrusel de imágenes y tamaño uniforme | Aceptada | Inventario / Marketplace |
 
 ---
 

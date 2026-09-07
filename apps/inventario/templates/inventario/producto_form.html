@@ -128,27 +128,56 @@
 
                             <div class="col-12"><hr class="text-muted opacity-25 my-2"></div>
 
-                            <!-- Imagen del producto -->
+                            <!-- Imágenes del producto -->
                             <div class="col-12">
                                 <label for="{{ form.imagen.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase d-flex align-items-center gap-2">
-                                    <i class="fas fa-camera"></i> Imagen del Producto
+                                    <i class="fas fa-images"></i> Imágenes del Producto (Carrusel)
                                 </label>
-                                {% if producto.imagen %}
+                                {% if imagenes %}
+                                <div class="mb-3">
+                                    <small class="d-block text-muted mb-2 fw-semibold">Imágenes actuales en el carrusel:</small>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for img_url in imagenes %}
+                                        <div class="position-relative border rounded-3 p-1 bg-white shadow-sm" style="width: 100px; height: 100px;">
+                                            <img src="{{ img_url }}" alt="Imagen de producto" class="w-100 h-100 object-fit-cover rounded-2">
+                                            {% if forloop.first %}
+                                            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-success" style="font-size: 0.65rem;">Portada</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="d-block text-muted mt-2">Puedes seleccionar nuevas imágenes para reemplazar o agregar al carrusel.</small>
+                                </div>
+                                {% elif producto.imagen %}
                                 <div class="mb-2">
-                                    <img src="{{ producto.imagen.url }}" alt="Imagen actual" class="img-thumbnail" style="max-height: 150px;">
-                                    <small class="d-block text-muted mt-1">Imagen actual. Sube una nueva para reemplazarla.</small>
+                                    <img src="{{ producto.imagen.url }}" alt="Imagen actual" class="img-thumbnail" style="max-height: 120px;">
+                                    <small class="d-block text-muted mt-1">Imagen actual. Sube nuevas imágenes para el carrusel.</small>
                                 </div>
                                 {% endif %}
-                                <div class="p-4 border border-dashed rounded-3 bg-light text-center" style="border-style: dashed !important; border-width: 2px !important;">
-                                    {{ form.imagen }}
+                                <div class="dropzone-container position-relative" id="dropzoneContainer">
+                                    <div class="d-flex flex-column align-items-center justify-content-center py-2">
+                                        <div class="rounded-circle bg-success bg-opacity-10 p-3 mb-2 text-success">
+                                            <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                                        </div>
+                                        <h6 class="fw-bold mb-1">Arrastra y suelta tus fotos aquí o haz clic para seleccionarlas</h6>
+                                        <p class="text-muted small mb-3">Puedes seleccionar múltiples archivos a la vez para tu carrusel</p>
+                                        {{ form.imagen }}
+                                    </div>
+                                    
+                                    <!-- Previsualización interactiva con botón de eliminar individual -->
+                                    <div id="preview-nuevas-imagenes" class="row g-2 justify-content-center mt-3" style="display: none;"></div>
+                                    
                                     {% if form.imagen.errors %}
-                                    <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.imagen.errors.0 }}</div>
+                                    <div class="text-danger small mt-2"><i class="fas fa-info-circle me-1"></i>{{ form.imagen.errors.0 }}</div>
                                     {% endif %}
+                                    
                                     <div class="form-text mt-3 mb-0">
+                                        <i class="fas fa-layer-group me-1 text-success"></i> <strong>Soporta selección múltiple</strong> (mantén presionado <kbd>Ctrl</kbd> o <kbd>Shift</kbd> al elegir fotos).
+                                        <br>
                                         <span class="badge bg-secondary me-1">JPG</span> 
                                         <span class="badge bg-secondary me-1">PNG</span>
                                         <span class="badge bg-secondary me-1">WEBP</span>
-                                        Tamaño máximo: 5MB
+                                        Máximo: 5MB por imagen
                                     </div>
                                 </div>
                             </div>
@@ -197,5 +226,156 @@
         min-height: 120px;
         resize: vertical;
     }
+    .preview-card {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        border: 2px solid #e2e8f0;
+        background: #ffffff;
+        transition: transform 0.2s ease;
+    }
+    .preview-card:hover {
+        transform: translateY(-2px);
+    }
+    .preview-remove-btn {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: rgba(220, 38, 38, 0.9);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.2s ease;
+    }
+    .preview-remove-btn:hover {
+        background: #b91c1c;
+        transform: scale(1.15);
+    }
+    .preview-badge {
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        border-radius: 12px;
+        z-index: 9;
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('id_imagen');
+        const dropzone = document.getElementById('dropzoneContainer');
+        const previewContainer = document.getElementById('preview-nuevas-imagenes');
+        if (!fileInput || !previewContainer) return;
+
+        let selectedFiles = [];
+
+        function renderPreviews() {
+            previewContainer.innerHTML = '';
+            if (selectedFiles.length > 0) {
+                previewContainer.style.removeProperty('display');
+                previewContainer.style.display = 'flex';
+                
+                selectedFiles.forEach((file, index) => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const col = document.createElement('div');
+                            col.className = 'preview-card m-1';
+                            
+                            const isFirst = index === 0;
+                            const badgeHtml = isFirst 
+                                ? `<span class="badge bg-success preview-badge shadow-sm">#1 Portada</span>`
+                                : `<span class="badge bg-dark bg-opacity-75 preview-badge shadow-sm">#${index + 1}</span>`;
+
+                            col.innerHTML = `
+                                <img src="${e.target.result}" class="w-100 h-100 object-fit-cover" alt="Foto ${index + 1}">
+                                <button type="button" class="preview-remove-btn shadow-sm" data-remove-index="${index}" title="Quitar esta foto">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                ${badgeHtml}
+                            `;
+                            
+                            // Botón de eliminar archivo
+                            const removeBtn = col.querySelector('.preview-remove-btn');
+                            removeBtn.addEventListener('click', function(ev) {
+                                ev.stopPropagation();
+                                const idxToRemove = parseInt(this.getAttribute('data-remove-index'), 10);
+                                selectedFiles.splice(idxToRemove, 1);
+                                syncDataTransfer();
+                                renderPreviews();
+                            });
+
+                            previewContainer.appendChild(col);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        function syncDataTransfer() {
+            try {
+                const dt = new DataTransfer();
+                selectedFiles.forEach(file => dt.items.add(file));
+                fileInput.files = dt.files;
+            } catch (err) {
+                console.warn('DataTransfer API no soportada', err);
+            }
+        }
+
+        // Selección normal por explorador de archivos
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                selectedFiles = Array.from(this.files);
+                renderPreviews();
+            }
+        });
+
+        // Soporte Drag & Drop
+        if (dropzone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                if (dt && dt.files && dt.files.length > 0) {
+                    const validFiles = Array.from(dt.files).filter(f => f.type.startsWith('image/'));
+                    if (validFiles.length > 0) {
+                        selectedFiles = validFiles;
+                        syncDataTransfer();
+                        renderPreviews();
+                    }
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

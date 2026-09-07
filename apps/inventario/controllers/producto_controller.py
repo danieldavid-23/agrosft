@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.core.cache import cache
 from decimal import Decimal
-from apps.inventario.models import Categoria, Producto, ProductoUsuario, Estado
+from apps.inventario.models import Categoria, Producto, ProductoImagen, ProductoUsuario, Estado
 from apps.inventario.forms.producto_form import ProductoForm
 from apps.inventario.repositories.producto_repository import ProductoRepository
 from apps.usuarios.models.profile_model import Tblusuarios
@@ -88,6 +88,7 @@ def listar_productos(request):
     # Transformar productos para que sean compatibles con el template
     productos_transformados = []
     for pu in page_obj:
+        imagenes = pu.id_producto.get_imagenes()
         producto_data = {
             'id': pu.id_producto_usuario,
             'nombre': pu.id_producto.nombre,
@@ -99,8 +100,10 @@ def listar_productos(request):
             'categoria_nombre': pu.id_producto.id_categoria.nombre,
             'agricultor_id': pu.id_usuario.id_users,
             'esta_agotado': pu.cantidad <= 0,
-            'imagen': pu.id_producto.imagen.url if pu.id_producto.imagen else None,
+            'imagen': imagenes[0] if imagenes else None,
+            'imagenes': imagenes,
             'es_mi_producto': True,
+            'detailUrl': reverse('inventario:detalle', args=[pu.id_producto_usuario]),
             'editUrl': reverse('inventario:editar', args=[pu.id_producto_usuario]),
             'deleteUrl': reverse('inventario:eliminar', args=[pu.id_producto_usuario]),
         }
@@ -138,7 +141,7 @@ def listar_productos(request):
         'vista': 'inventario',
         'titulo': 'Mi Inventario',
         'subtitulo': 'Gestiona tus productos registrados',
-        'inventario_json': json.dumps(inventario_data),
+        'inventario_json': inventario_data,
         'categorias': categorias,
         'estados': estados,
     })
@@ -202,6 +205,7 @@ def marketplace(request):
     # Transformar productos para que sean compatibles con el template
     productos_transformados = []
     for pu in page_obj:
+        imagenes = pu.id_producto.get_imagenes()
         producto_data = {
             'id': pu.id_producto_usuario,
             'nombre': pu.id_producto.nombre,
@@ -214,7 +218,8 @@ def marketplace(request):
             'agricultor_id': pu.id_usuario.id_users,
             'agricultor_nombre': f"{pu.id_usuario.nombres} {pu.id_usuario.apellidos}",
             'esta_agotado': pu.cantidad <= 0,
-            'imagen': pu.id_producto.imagen.url if pu.id_producto.imagen else None,
+            'imagen': imagenes[0] if imagenes else None,
+            'imagenes': imagenes,
             'es_mi_producto': False,
             'detailUrl': reverse('inventario:detalle', args=[pu.id_producto_usuario]),
         }
@@ -246,7 +251,7 @@ def marketplace(request):
         'vista': 'marketplace',
         'titulo': 'Marketplace',
         'subtitulo': 'Productos disponibles de otros agricultores',
-        'marketplace_json': json.dumps(marketplace_data),
+        'marketplace_json': marketplace_data,
     })
 
 
@@ -267,6 +272,10 @@ def crear_producto(request):
                         estado_obj = Estado.objects.filter(estado__iexact='aprobado').first() or Estado.objects.first()
                     estado_str = estado_obj.estado.lower() if estado_obj else 'aprobado'
 
+                    # Obtener todos los archivos de imagen enviados
+                    archivos_imagen = request.FILES.getlist('imagen')
+                    primera_imagen = archivos_imagen[0] if archivos_imagen else None
+
                     # 2. Crear producto maestro en tblproducto
                     producto = Producto.objects.create(
                         nombre=form.cleaned_data['nombre'],
@@ -275,8 +284,17 @@ def crear_producto(request):
                         cantidad=form.cleaned_data['cantidad'],
                         stock_minimo=form.cleaned_data.get('stock_minimo') or 5,
                         estado=estado_str,
-                        imagen=form.cleaned_data.get('imagen')
+                        imagen=primera_imagen
                     )
+
+                    # Guardar imágenes secundarias en tblproducto_imagenes (a partir de la segunda)
+                    if len(archivos_imagen) > 1:
+                        for idx, img_file in enumerate(archivos_imagen[1:], start=1):
+                            ProductoImagen.objects.create(
+                                id_producto=producto,
+                                imagen=img_file,
+                                orden=idx
+                            )
 
                     # 3. Crear relación en tblproductos_has_tblusuarios (ProductoUsuario)
                     precio_val = form.cleaned_data.get('precio')
@@ -508,9 +526,22 @@ def editar_producto(request, pk):
                 producto.descripcion = form.cleaned_data['descripcion']
                 producto.id_categoria = form.cleaned_data['id_categoria']
                 
-                # Actualizar imagen si se proporciona una nueva
-                if form.cleaned_data.get('imagen'):
-                    producto.imagen = form.cleaned_data['imagen']
+                # Actualizar imágenes si se proporcionan nuevas (conservando existentes)
+                archivos_nuevos = request.FILES.getlist('imagen')
+                if archivos_nuevos:
+                    if not producto.imagen:
+                        producto.imagen = archivos_nuevos[0]
+                        archivos_a_agregar = archivos_nuevos[1:]
+                    else:
+                        archivos_a_agregar = archivos_nuevos
+
+                    ultimo_orden = producto.imagenes_secundarias.count()
+                    for idx, img_file in enumerate(archivos_a_agregar, start=ultimo_orden + 1):
+                        ProductoImagen.objects.create(
+                            id_producto=producto,
+                            imagen=img_file,
+                            orden=idx
+                        )
                 
                 # TODOS los usuarios pueden editar stock_minimo
                 stock_minimo_value = form.cleaned_data.get('stock_minimo')
@@ -577,6 +608,7 @@ def editar_producto(request, pk):
         'form': form,
         'producto_usuario': producto_usuario,
         'producto': producto_usuario.id_producto,  # El template usa producto.nombre
+        'imagenes': producto_usuario.id_producto.get_imagenes(),
         'categorias': categorias,
         'estados': estados,
         'titulo': 'Editar Producto',

@@ -82,7 +82,7 @@ def calificar_transaccion(request, movimiento_id):
     return render(request, 'ventas/calificaciones/calificar.html', {
         'form': form,
         'movimiento_detalle': movimiento_detalle,
-        'calificaciones_json': json.dumps(movimiento_data),
+        'calificaciones_json': movimiento_data,
     })
 
 

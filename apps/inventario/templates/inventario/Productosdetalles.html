@@ -5,109 +5,511 @@
 {% block title %}Detalle del Producto - {{ producto.id_producto.nombre }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-success text-white rounded-top-4">
-                    <h2 class="mb-0">{{ producto.id_producto.nombre }}</h2>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5>Categoría:</h5>
-                            <p class="mb-0">{{ producto.id_producto.id_categoria.nombre }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Estado:</h5>
-                            <p class="mb-0">
-                                <span class="badge bg-{% if producto.id_estado.estado == 'aprobado' %}success{% elif producto.id_estado.estado == 'pendiente' %}secondary{% elif producto.id_estado.estado == 'rechazado' %}danger{% else %}dark{% endif %}">
-                                    {{ producto.id_estado.estado|capfirst }}
-                                </span>
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5>Precio:</h5>
-                            <p class="mb-0 fw-bold text-success">{{ producto.precio|currency_cop }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Cantidad Disponible:</h5>
-                            <p class="mb--0">
-                                <span class="badge {% if producto.cantidad <= producto.id_producto.stock_minimo %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                                    {{ producto.cantidad }}
-                                </span>
-                            </p>
-                        </div>
-                    </div>
-                    
-                    {% if producto.id_producto.imagen %}
-                    <div class="mb-4 text-center">
-                        <img src="{{ producto.id_producto.imagen.url }}" alt="{{ producto.id_producto.nombre }}" class="img-fluid rounded-3 shadow-sm" style="max-height: 350px;">
-                    </div>
-                    {% endif %}
 
-                    <h5>Descripción:</h5>
-                    <p>{{ producto.id_producto.descripcion }}</p>
-                    
-                    <h5>Fecha de Creación:</h5>
-                    <p>{{ producto.fecha_creacion|date:"d/m/Y H:i" }}</p>
-                    
-                    <div class="mt-4">
-                        <a href="{% url 'inventario:listar' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Volver a la lista
-                        </a>
-                        {% if producto.id_usuario.id_users == user.id_users or user.is_staff %}
-                        <a href="{% url 'inventario:editar' producto.id_producto_usuario %}" class="btn btn-primary ms-2">
-                            <i class="fas fa-edit me-2"></i>Editar
-                        </a>
-                        <a href="{% url 'inventario:eliminar' producto.id_producto_usuario %}" class="btn btn-danger ms-2">
-                            <i class="fas fa-trash me-2"></i>Eliminar
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+<style>
+/* ── CONTENEDOR GALERÍA ── */
+.pdg-wrapper {
+    width: 100%;
+    height: 380px;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #f1f5f9;
+    position: relative;
+    cursor: zoom-in;
+    box-shadow: 0 2px 12px rgba(0,0,0,.10);
+}
+@media (max-width: 576px) { .pdg-wrapper { height: 240px; } }
+
+/* ── SLIDES ── */
+.pdg-slide { position: absolute; inset: 0; display: none; }
+.pdg-slide.active { display: block; }
+.pdg-img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: #f8fafc;
+    display: block;
+    pointer-events: none;
+}
+
+/* ── BOTONES NAV CARRUSEL ── */
+.pdg-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(0,0,0,.55); border: none; color: #fff;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; backdrop-filter: blur(4px); transition: background .2s;
+}
+.pdg-nav:hover { background: rgba(60,141,60,.85); }
+.pdg-prev { left: 10px; }
+.pdg-next { right: 10px; }
+
+/* ── BOTÓN ZOOM ── */
+.pdg-zoom-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25);
+    color: #fff; width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; backdrop-filter: blur(4px); transition: background .2s;
+}
+.pdg-zoom-btn:hover { background: #3C8D3C; }
+
+/* ── CONTADOR ── */
+.pdg-counter {
+    position: absolute; bottom: 10px; right: 12px; z-index: 10;
+    background: rgba(0,0,0,.65); color: #fff; font-size: .72rem;
+    padding: 3px 10px; border-radius: 20px;
+    pointer-events: none; user-select: none;
+}
+
+/* ── MINIATURAS ── */
+.pdg-thumbs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.pdg-thumb {
+    width: 60px; height: 60px; border-radius: .5rem; overflow: hidden;
+    cursor: pointer; border: 2px solid transparent; opacity: .55;
+    transition: all .2s; flex-shrink: 0; background: #e2e8f0;
+}
+.pdg-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pdg-thumb.active, .pdg-thumb:hover { opacity: 1; border-color: #3C8D3C; transform: scale(1.08); }
+
+/* ── LIGHTBOX ── */
+#productLightbox {
+    position: fixed; inset: 0; z-index: 10500;
+    background: rgba(10,14,26,.93);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s ease;
+}
+#productLightbox.show { opacity: 1; pointer-events: auto; }
+
+.lb-header {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    padding: .85rem 1.5rem; flex-shrink: 0; color: #fff;
+}
+.lb-close {
+    background: rgba(255,255,255,.15); border: none; color: #fff;
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; cursor: pointer; transition: background .2s, transform .2s;
+}
+.lb-close:hover { background: rgba(255,255,255,.3); transform: scale(1.1); }
+
+.lb-zoom-bar {
+    display: flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+    border-radius: 30px; padding: 3px 8px;
+}
+.lb-tool-btn {
+    background: transparent; border: none; color: #fff;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: .9rem; transition: background .2s;
+}
+.lb-tool-btn:hover { background: rgba(255,255,255,.25); }
+.lb-zoom-level { font-size: .72rem; color: #fff; font-weight: 700; min-width: 38px; text-align: center; user-select: none; }
+
+.lb-stage {
+    flex: 1; display: flex; justify-content: center; align-items: center;
+    position: relative; overflow: hidden; padding: .5rem 4rem;
+}
+.lb-img-wrapper {
+    max-width: 100%; max-height: 72vh;
+    display: flex; justify-content: center; align-items: center;
+    user-select: none; -webkit-user-select: none; overflow: visible;
+}
+.lb-img {
+    max-width: 100%; max-height: 72vh; object-fit: contain;
+    border-radius: .6rem; box-shadow: 0 20px 50px rgba(0,0,0,.6);
+    transition: transform .15s ease-out, opacity .2s ease;
+    cursor: zoom-in; transform-origin: center center; display: block;
+}
+.lb-img.is-zoomed { cursor: grab; }
+.lb-img.is-dragging { cursor: grabbing; transition: none; }
+
+.lb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+    width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; cursor: pointer;
+    transition: background .2s, transform .2s; backdrop-filter: blur(6px);
+}
+.lb-nav:hover { background: rgba(255,255,255,.35); transform: translateY(-50%) scale(1.1); }
+.lb-prev { left: 1rem; }
+.lb-next { right: 1rem; }
+
+.lb-footer {
+    width: 100%; flex-shrink: 0; padding: .75rem 1rem;
+    display: flex; flex-direction: column; align-items: center; gap: .6rem;
+}
+.lb-thumbs {
+    display: flex; gap: 8px; overflow-x: auto; max-width: 90vw;
+    padding: 4px 8px; scrollbar-width: thin;
+}
+.lb-thumb {
+    width: 60px; height: 60px; border-radius: .5rem; overflow: hidden;
+    cursor: pointer; border: 2px solid transparent; opacity: .5;
+    flex-shrink: 0; transition: all .2s;
+}
+.lb-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lb-thumb.active, .lb-thumb:hover { opacity: 1; border-color: #3C8D3C; transform: scale(1.08); }
+</style>
+
+<div class="container py-4">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-success text-white rounded-top-4">
+          <h2 class="mb-0">{{ producto.id_producto.nombre }}</h2>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-light rounded-top-4">
-                    <h4 class="mb-0">Información del Vendedor</h4>
-                </div>
-                <div class="card-body">
-                    <p><strong>Nombre:</strong> {{ producto.id_usuario.nombres }} {{ producto.id_usuario.apellidos }}</p>
-                    <p><strong>Correo:</strong> {{ producto.id_usuario.correo }}</p>
-                    <p><strong>Teléfono:</strong> {{ producto.id_usuario.telefono }}</p>
-                </div>
+        <div class="card-body p-4">
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h5>Categoría:</h5>
+              <p class="mb-0">{{ producto.id_producto.id_categoria.nombre }}</p>
             </div>
+            <div class="col-md-6">
+              <h5>Estado:</h5>
+              <p class="mb-0">
+                <span class="badge bg-{% if producto.id_estado.estado == 'aprobado' %}success{% elif producto.id_estado.estado == 'pendiente' %}secondary{% elif producto.id_estado.estado == 'rechazado' %}danger{% else %}dark{% endif %}">
+                  {{ producto.id_estado.estado|capfirst }}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h5>Precio:</h5>
+              <p class="mb-0 fw-bold text-success">{{ producto.precio|currency_cop }}</p>
+            </div>
+            <div class="col-md-6">
+              <h5>Cantidad Disponible:</h5>
+              <p class="mb-0">
+                <span class="badge {% if producto.cantidad <= producto.id_producto.stock_minimo %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                  {{ producto.cantidad }}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {% if imagenes %}
+          <div class="mb-4">
+            <div class="pdg-wrapper" id="pdgContainer" title="Haz clic para ver en pantalla completa">
+              <button type="button" class="pdg-zoom-btn" id="pdgZoomBtn" title="Ver en pantalla completa">
+                <i class="fas fa-expand-alt"></i>
+              </button>
+              {% for img_url in imagenes %}
+              <div class="pdg-slide {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
+                <img src="{{ img_url }}" alt="{{ producto.id_producto.nombre }}" class="pdg-img">
+              </div>
+              {% endfor %}
+              {% if imagenes|length > 1 %}
+              <button type="button" class="pdg-nav pdg-prev" id="pdgPrev" title="Anterior">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button type="button" class="pdg-nav pdg-next" id="pdgNext" title="Siguiente">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+              <div class="pdg-counter" id="pdgCounter">
+                <i class="fas fa-camera me-1"></i>1 / {{ imagenes|length }}
+              </div>
+              {% endif %}
+            </div>
+            {% if imagenes|length > 1 %}
+            <div class="pdg-thumbs" id="pdgThumbs">
+              {% for img_url in imagenes %}
+              <div class="pdg-thumb {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
+                <img src="{{ img_url }}" alt="Min {{ forloop.counter }}">
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <h5>Descripción:</h5>
+          <p>{{ producto.id_producto.descripcion }}</p>
+          <h5>Fecha de Creación:</h5>
+          <p>{{ producto.fecha_creacion|date:"d/m/Y H:i" }}</p>
+
+          <div class="mt-4">
+            <a href="{% url 'inventario:listar' %}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left me-2"></i>Volver a la lista
+            </a>
+            {% if producto.id_usuario.id_users == user.id_users or user.is_staff %}
+            <a href="{% url 'inventario:editar' producto.id_producto_usuario %}" class="btn btn-primary ms-2">
+              <i class="fas fa-edit me-2"></i>Editar
+            </a>
+            <a href="{% url 'inventario:eliminar' producto.id_producto_usuario %}" class="btn btn-danger ms-2">
+              <i class="fas fa-trash me-2"></i>Eliminar
+            </a>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
-    
-    <!-- Productos relacionados -->
-    <div class="mt-5">
-        <h3 class="mb-4">Productos Relacionados</h3>
-        <div class="row">
-            {% for p in relacionados|slice:":4" %}
-            <div class="col-md-3 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ p.id_producto.nombre }}</h5>
-                        <p class="card-text">{{ p.precio|currency_cop }}</p>
-                        {% if p.id_producto_usuario %}
-                        <a href="{% url 'inventario:detalle' p.id_producto_usuario %}" class="btn btn-sm btn-outline-primary">Ver detalles</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-12">
-                <p class="text-muted">No hay productos relacionados disponibles.</p>
-            </div>
-            {% endfor %}
+
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-light rounded-top-4">
+          <h4 class="mb-0">Información del Vendedor</h4>
         </div>
+        <div class="card-body">
+          <p><strong>Nombre:</strong> {{ producto.id_usuario.nombres }} {{ producto.id_usuario.apellidos }}</p>
+          <p><strong>Correo:</strong> {{ producto.id_usuario.correo }}</p>
+          <p><strong>Teléfono:</strong> {{ producto.id_usuario.telefono }}</p>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="mt-5">
+    <h3 class="mb-4">Productos Relacionados</h3>
+    <div class="row g-3">
+      {% for p in relacionados|slice:":4" %}
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card h-100 hover-card border-0 rounded-4 overflow-hidden shadow-sm">
+          <div class="bg-light overflow-hidden position-relative" style="height:160px;">
+            {% if p.id_producto.imagen %}
+            <img src="{{ p.id_producto.imagen.url }}" alt="{{ p.id_producto.nombre }}" class="w-100 h-100 object-fit-cover">
+            {% else %}
+            <div class="d-flex justify-content-center align-items-center h-100 bg-white">
+              <i class="fas fa-seedling fa-2x text-success"></i>
+            </div>
+            {% endif %}
+          </div>
+          <div class="card-body p-3 d-flex flex-column">
+            <h6 class="card-title fw-bold mb-1 text-truncate">{{ p.id_producto.nombre }}</h6>
+            <p class="card-text text-success fw-bold mb-3">{{ p.precio|currency_cop }}</p>
+            {% if p.id_producto_usuario %}
+            <a href="{% url 'inventario:detalle' p.id_producto_usuario %}" class="btn btn-sm btn-outline-primary mt-auto rounded-pill w-100 fw-bold">
+              <i class="fas fa-eye me-1"></i> Ver detalle
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12"><p class="text-muted">No hay productos relacionados disponibles.</p></div>
+      {% endfor %}
+    </div>
+  </div>
 </div>
+
+{% if imagenes %}
+{{ imagenes|json_script:"lb-images-data" }}
+
+<div id="productLightbox" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="lb-header">
+    <div class="d-flex align-items-center gap-3">
+      <span class="badge bg-success px-3 py-2 fs-6 rounded-pill">
+        <i class="fas fa-seedling me-1"></i>{{ producto.id_producto.nombre }}
+      </span>
+      <span class="text-white-50 small" id="lbCounter">1 / {{ imagenes|length }}</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <div class="lb-zoom-bar">
+        <button type="button" class="lb-tool-btn" id="lbZoomOut" title="Alejar (-)"><i class="fas fa-search-minus"></i></button>
+        <span class="lb-zoom-level" id="lbZoomLevel">100%</span>
+        <button type="button" class="lb-tool-btn" id="lbZoomIn" title="Acercar (+)"><i class="fas fa-search-plus"></i></button>
+        <button type="button" class="lb-tool-btn" id="lbZoomReset" title="Restablecer (0)"><i class="fas fa-compress-arrows-alt"></i></button>
+      </div>
+      <button type="button" class="lb-close ms-2" id="lbClose" title="Cerrar (Esc)"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+
+  <div class="lb-stage" id="lbStage">
+    {% if imagenes|length > 1 %}
+    <button type="button" class="lb-nav lb-prev" id="lbPrev" title="Anterior"><i class="fas fa-chevron-left"></i></button>
+    {% endif %}
+    <div class="lb-img-wrapper" id="lbImgWrapper">
+      <img id="lbImg" src="{{ imagenes.0 }}" alt="{{ producto.id_producto.nombre }}" class="lb-img" draggable="false">
+    </div>
+    {% if imagenes|length > 1 %}
+    <button type="button" class="lb-nav lb-next" id="lbNext" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
+    {% endif %}
+  </div>
+
+  <div class="lb-footer">
+    {% if imagenes|length > 1 %}
+    <div class="lb-thumbs" id="lbThumbs">
+      {% for img_url in imagenes %}
+      <div class="lb-thumb {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
+        <img src="{{ img_url }}" alt="Min {{ forloop.counter }}">
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <small class="text-white-50">
+      <i class="fas fa-info-circle me-1"></i>
+      Rueda = Zoom &bull; <kbd>&#8592;</kbd><kbd>&#8594;</kbd> navegar &bull; <kbd>ESC</kbd> cerrar
+    </small>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var imageUrls = [];
+  try {
+    var raw = document.getElementById('lb-images-data');
+    if (raw) {
+      imageUrls = JSON.parse(raw.textContent);
+      if (typeof imageUrls === 'string') imageUrls = JSON.parse(imageUrls);
+    }
+  } catch(e) {}
+  if (!imageUrls || !imageUrls.length) {
+    imageUrls = Array.from(document.querySelectorAll('.pdg-slide img')).map(function(i){ return i.src; }).filter(Boolean);
+  }
+  var TOTAL = imageUrls.length;
+  var currentIdx = 0;
+
+  var container = document.getElementById('pdgContainer');
+  var slides    = document.querySelectorAll('.pdg-slide');
+  var thumbs    = document.querySelectorAll('.pdg-thumb');
+  var prevBtn   = document.getElementById('pdgPrev');
+  var nextBtn   = document.getElementById('pdgNext');
+  var zoomBtn   = document.getElementById('pdgZoomBtn');
+  var counter   = document.getElementById('pdgCounter');
+  var lb        = document.getElementById('productLightbox');
+  var lbImg     = document.getElementById('lbImg');
+  var lbCounter = document.getElementById('lbCounter');
+  var lbClose   = document.getElementById('lbClose');
+  var lbPrev    = document.getElementById('lbPrev');
+  var lbNext    = document.getElementById('lbNext');
+  var lbStage   = document.getElementById('lbStage');
+  var lbWrapper = document.getElementById('lbImgWrapper');
+  var lbThumbs  = document.querySelectorAll('.lb-thumb');
+  var lbZoomIn  = document.getElementById('lbZoomIn');
+  var lbZoomOut = document.getElementById('lbZoomOut');
+  var lbZoomRst = document.getElementById('lbZoomReset');
+  var lbZoomLvl = document.getElementById('lbZoomLevel');
+
+  /* CARRUSEL */
+  function showSlide(idx) {
+    if (!TOTAL) return;
+    currentIdx = ((idx % TOTAL) + TOTAL) % TOTAL;
+    slides.forEach(function(s, i) {
+      s.style.display = (i === currentIdx) ? 'block' : 'none';
+      s.classList.toggle('active', i === currentIdx);
+    });
+    thumbs.forEach(function(t, i) { t.classList.toggle('active', i === currentIdx); });
+    if (counter) counter.innerHTML = '<i class="fas fa-camera me-1"></i>' + (currentIdx+1) + ' / ' + TOTAL;
+  }
+  showSlide(0);
+
+  if (prevBtn) prevBtn.addEventListener('click', function(e){ e.stopPropagation(); showSlide(currentIdx-1); });
+  if (nextBtn) nextBtn.addEventListener('click', function(e){ e.stopPropagation(); showSlide(currentIdx+1); });
+  thumbs.forEach(function(t){
+    t.addEventListener('click', function(e){
+      e.stopPropagation();
+      showSlide(parseInt(t.dataset.index,10));
+    });
+  });
+
+  /* ZOOM LIGHTBOX */
+  var zoom=1, panX=0, panY=0, dragging=false, sx=0, sy=0;
+  function applyT() {
+    if (!lbImg) return;
+    lbImg.style.transform = 'translate('+panX+'px,'+panY+'px) scale('+zoom+')';
+    if (lbZoomLvl) lbZoomLvl.textContent = Math.round(zoom*100)+'%';
+    if (zoom > 1.05) { lbImg.classList.add('is-zoomed'); }
+    else { lbImg.classList.remove('is-zoomed'); panX=panY=0; lbImg.style.transform='scale('+zoom+')'; }
+  }
+  function resetZoom() { zoom=1; panX=panY=0; applyT(); }
+  function doZoom(d) { zoom=Math.min(Math.max(zoom+d,1),4); applyT(); }
+
+  if (lbZoomIn)  lbZoomIn.addEventListener('click',  function(e){ e.stopPropagation(); doZoom(.35); });
+  if (lbZoomOut) lbZoomOut.addEventListener('click', function(e){ e.stopPropagation(); doZoom(-.35); });
+  if (lbZoomRst) lbZoomRst.addEventListener('click', function(e){ e.stopPropagation(); resetZoom(); });
+  if (lbWrapper) lbWrapper.addEventListener('wheel', function(e){ e.preventDefault(); doZoom(e.deltaY<0?.2:-.2); }, {passive:false});
+  if (lbImg) {
+    lbImg.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (zoom>1.1) resetZoom(); else { zoom=2; applyT(); }
+    });
+    lbImg.addEventListener('mousedown', function(e){
+      if (zoom<=1.05) return;
+      e.preventDefault(); dragging=true; sx=e.clientX-panX; sy=e.clientY-panY;
+      lbImg.classList.add('is-dragging');
+    });
+  }
+  window.addEventListener('mousemove', function(e){ if(!dragging) return; panX=e.clientX-sx; panY=e.clientY-sy; applyT(); });
+  window.addEventListener('mouseup',   function(){ if(dragging){ dragging=false; if(lbImg) lbImg.classList.remove('is-dragging'); } });
+
+  /* LIGHTBOX OPEN/CLOSE */
+  function setLbImage(idx) {
+    if (!TOTAL) return;
+    currentIdx = ((idx%TOTAL)+TOTAL)%TOTAL;
+    resetZoom();
+    if (lbImg) { lbImg.style.opacity='0'; setTimeout(function(){ lbImg.src=imageUrls[currentIdx]; lbImg.style.opacity='1'; },80); }
+    if (lbCounter) lbCounter.textContent = (currentIdx+1)+' / '+TOTAL;
+    lbThumbs.forEach(function(t,i){ t.classList.toggle('active',i===currentIdx); if(i===currentIdx) t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); });
+    showSlide(currentIdx);
+  }
+  function openLb(idx) {
+    if (!lb || !TOTAL) return;
+    document.body.style.overflow='hidden';
+    lb.classList.add('show');
+    lb.setAttribute('aria-hidden','false');
+    setLbImage(idx);
+  }
+  function closeLb() {
+    if (!lb) return;
+    resetZoom();
+    lb.classList.remove('show');
+    lb.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  }
+
+  /* TRIGGERS */
+  if (container) {
+    container.addEventListener('click', function(e){
+      if (e.target.closest('.pdg-nav') || e.target.closest('.pdg-zoom-btn')) return;
+      openLb(currentIdx);
+    });
+  }
+  if (zoomBtn) zoomBtn.addEventListener('click', function(e){ e.stopPropagation(); openLb(currentIdx); });
+
+  if (lbClose) lbClose.addEventListener('click', function(e){ e.stopPropagation(); closeLb(); });
+  if (lbPrev)  lbPrev.addEventListener('click',  function(e){ e.stopPropagation(); setLbImage(currentIdx-1); });
+  if (lbNext)  lbNext.addEventListener('click',  function(e){ e.stopPropagation(); setLbImage(currentIdx+1); });
+  lbThumbs.forEach(function(t){ t.addEventListener('click', function(e){ e.stopPropagation(); setLbImage(parseInt(t.dataset.index,10)); }); });
+  if (lb) lb.addEventListener('click', function(e){ if(e.target===lb||e.target===lbStage) closeLb(); });
+
+  /* TECLADO */
+  document.addEventListener('keydown', function(e){
+    if (!lb||!lb.classList.contains('show')) return;
+    if (e.key==='Escape') closeLb();
+    else if (e.key==='ArrowLeft')  setLbImage(currentIdx-1);
+    else if (e.key==='ArrowRight') setLbImage(currentIdx+1);
+    else if (e.key==='+'||e.key==='=') doZoom(.35);
+    else if (e.key==='-'||e.key==='_') doZoom(-.35);
+    else if (e.key==='0') resetZoom();
+  });
+
+  /* SWIPE TÁCTIL */
+  var tx0=0, ty0=0;
+  if (lbStage) {
+    lbStage.addEventListener('touchstart', function(e){
+      if (e.touches.length!==1) return;
+      tx0=e.touches[0].screenX; ty0=e.touches[0].screenY;
+      if (zoom>1.05){ sx=e.touches[0].clientX-panX; sy=e.touches[0].clientY-panY; }
+    },{passive:true});
+    lbStage.addEventListener('touchmove', function(e){
+      if (zoom>1.05&&e.touches.length===1){ panX=e.touches[0].clientX-sx; panY=e.touches[0].clientY-sy; applyT(); }
+    },{passive:true});
+    lbStage.addEventListener('touchend', function(e){
+      if (zoom>1.05||e.changedTouches.length!==1) return;
+      var dx=tx0-e.changedTouches[0].screenX, dy=ty0-e.changedTouches[0].screenY;
+      if (Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40) setLbImage(dx>0?currentIdx+1:currentIdx-1);
+    },{passive:true});
+  }
+})();
+</script>
+{% endif %}
+
 {% endblock %}

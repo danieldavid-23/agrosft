@@ -4,6 +4,31 @@ from core.utils.helpers import validate_image_size
 from apps.inventario.models import Producto, Categoria, ProductoUsuario, Estado
 
 
+class MultipleFileInput(forms.FileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        attrs = kwargs.get("widget", {}).attrs if hasattr(kwargs.get("widget", None), "attrs") else {}
+        attrs.update({
+            'class': 'form-control',
+            'id': 'id_imagen',
+            'accept': 'image/jpeg,image/png,image/webp,image/jpg',
+            'multiple': True,
+        })
+        kwargs.setdefault("widget", MultipleFileInput(attrs=attrs))
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data if d]
+        else:
+            result = single_file_clean(data, initial)
+        return result
+
+
 class ProductoForm(forms.Form):
     # Campos para el catálogo maestro de productos (tblproductos)
     nombre = forms.CharField(
@@ -19,9 +44,8 @@ class ProductoForm(forms.Form):
         empty_label="Seleccione una categoría",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    imagen = forms.ImageField(
+    imagen = MultipleFileField(
         required=False,
-        widget=forms.FileInput(attrs={'class': 'form-control', 'id': 'id_imagen', 'accept': 'image/*'}),
         validators=[
             FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
             validate_image_size

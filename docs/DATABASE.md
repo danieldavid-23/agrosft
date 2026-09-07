@@ -112,6 +112,20 @@ erDiagram
 
 ---
 
+### 2.4.1 tblproducto_imagenes — Galería de Imágenes (Carrusel)
+
+| Columna | Tipo | Nullable | Default | Descripción |
+|---|---|---|---|---|
+| `id` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
+| `id_producto` | INT (FK) | No | — | FK a tblproducto (ON DELETE CASCADE) |
+| `imagen` | VARCHAR(255) | No | — | Ruta de archivo de la imagen |
+| `orden` | INT | No | 0 | Orden secuencial en el carrusel |
+| `created_at` | DATETIME | No | CURRENT_TIMESTAMP | Fecha de carga |
+
+**Modelo Django**: `apps.inventario.models.producto.ProductoImagen`
+
+---
+
 ### 2.5 estado — Estados de Publicación
 
 | Columna | Tipo | Nullable | Default | Descripción |

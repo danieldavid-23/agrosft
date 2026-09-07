@@ -43,7 +43,7 @@ def detalle_carrito(request):
         }
     }
     return render(request, 'ventas/carrito/detalle.html', {
-        'carrito_json': json.dumps(carrito_data),
+        'carrito_json': carrito_data,
         'carrito': carrito,
     })
 
