@@ -1,60 +1,260 @@
 {% extends 'base.html' %}
 {% load currency_tags %}
-{% block title %}Factura #{{ factura.id_factura }} - AgroSFT{% endblock %}
+{% block title %}Factura #{{ factura.id_factura|stringformat:"06d" }} - AgroSFT{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-  <div class="card shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-      <h4 class="mb-0">Factura #{{ factura.id_factura }}</h4>
-      <span class="badge bg-{% if factura.estado == 'emitida' %}success{% else %}secondary{% endif %} fs-6">
-        {{ factura.get_estado_display }}
-      </span>
-    </div>
-    <div class="card-body">
-      <div class="row mb-4">
-        <div class="col-sm-6">
-          <p class="mb-1"><strong>Cliente:</strong> {{ factura.usuario.get_full_name }}</p>
-          <p class="mb-1"><strong>Email:</strong> {{ factura.usuario.correo }}</p>
-          {% if factura.metodo_pago_nombre %}
-          <p class="mb-1"><strong>Metodo de pago:</strong> {{ factura.metodo_pago_nombre }}</p>
-          {% endif %}
+<div class="container py-4 py-md-5">
+  <!-- Breadcrumb & Navegación -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item">
+          <a href="{% url 'facturacion:historial_facturas' %}" class="text-decoration-none text-success fw-medium">
+            <i class="fas fa-file-invoice me-1"></i> Facturación
+          </a>
+        </li>
+        <li class="breadcrumb-item active text-muted" aria-current="page">
+          Factura #{{ factura.id_factura|stringformat:"06d" }}
+        </li>
+      </ol>
+    </nav>
+    <a href="{% url 'facturacion:historial_facturas' %}" class="btn btn-sm btn-outline-secondary d-none d-sm-inline-flex align-items-center gap-1 rounded-pill px-3">
+      <i class="fas fa-arrow-left"></i> Volver a facturas
+    </a>
+  </div>
+
+  <!-- Tarjeta Principal de la Factura -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" style="background: #ffffff; border: 1px solid rgba(0,0,0,0.06) !important;">
+    <!-- Línea decorativa verde superior -->
+    <div style="height: 6px; background: linear-gradient(90deg, #15803d, #22c55e, #16a34a);"></div>
+
+    <div class="card-body p-4 p-md-5">
+      <!-- Encabezado de la Factura -->
+      <div class="row align-items-start pb-4 border-bottom g-3">
+        <div class="col-12 col-md-7">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-4 d-flex align-items-center justify-content-center text-success flex-shrink-0" style="width: 58px; height: 58px; background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+              <i class="fas fa-leaf fa-2x"></i>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">AGROSFT</h3>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2 py-1 small">
+                  Oficial
+                </span>
+              </div>
+              <p class="text-muted mb-0 small">Sistema de Información y Comercio Agrícola</p>
+              <span class="text-muted small">NIT: 900.123.456-7 • Soporte: soporte@agrosft.com</span>
+            </div>
+          </div>
         </div>
-        <div class="col-sm-6 text-sm-end">
-          <p class="mb-1"><strong>Fecha:</strong> {{ factura.creada_en|date:"d/m/Y H:i" }}</p>
+
+        <div class="col-12 col-md-5 text-md-end">
+          <div class="d-inline-block text-md-end">
+            <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.8px;">Comprobante de Venta</span>
+            <h2 class="fw-bold text-success mb-1" style="font-family: monospace; letter-spacing: 0.5px;">
+              FAC-{{ factura.id_factura|stringformat:"06d" }}
+            </h2>
+            <div class="d-flex align-items-center justify-content-md-end gap-2 mt-2">
+              {% if factura.estado == 'emitida' %}
+                <span class="badge rounded-pill px-3 py-2 fs-6 fw-semibold d-inline-flex align-items-center gap-1" style="background-color: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                  <i class="fas fa-check-circle"></i> Emitida
+                </span>
+              {% else %}
+                <span class="badge rounded-pill px-3 py-2 fs-6 fw-semibold d-inline-flex align-items-center gap-1" style="background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
+                  <i class="fas fa-ban"></i> Cancelada
+                </span>
+              {% endif %}
+            </div>
+            <div class="text-muted small mt-2">
+              <i class="far fa-calendar-alt me-1"></i> {{ factura.creada_en|date:"d/m/Y h:i A" }}
+            </div>
+          </div>
         </div>
       </div>
 
-      <table class="table">
-        <thead>
-          <tr><th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr>
-        </thead>
-        <tbody>
-          {% for item in items %}
-          <tr>
-            <td>{{ item.descripcion }}</td>
-            <td>{{ item.cantidad }}</td>
-            <td>{{ item.precio_unitario|currency_cop }}</td>
-            <td>{{ item.subtotal|currency_cop }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr class="fw-bold fs-5">
-            <td colspan="3" class="text-end">Total:</td>
-            <td>{{ factura.total|currency_cop }}</td>
-          </tr>
-        </tfoot>
-      </table>
+      <!-- Tarjetas de Información: Cliente y Transacción -->
+      <div class="row g-4 my-3">
+        <div class="col-12 col-md-6">
+          <div class="p-3 p-md-4 rounded-4 h-100" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+            <div class="d-flex align-items-center gap-2 mb-3 text-success">
+              <i class="fas fa-user-circle fa-lg"></i>
+              <h6 class="fw-bold text-uppercase mb-0 small" style="letter-spacing: 0.5px;">Datos del Cliente</h6>
+            </div>
+            <div class="mb-2">
+              <span class="text-muted small d-block">Nombre completo:</span>
+              <strong class="text-dark fs-6">{{ factura.usuario.get_full_name|default:factura.usuario.correo }}</strong>
+            </div>
+            <div class="mb-2">
+              <span class="text-muted small d-block">Correo electrónico:</span>
+              <span class="text-dark">{{ factura.usuario.correo }}</span>
+            </div>
+            {% if factura.usuario.telefono %}
+            <div class="mb-0">
+              <span class="text-muted small d-block">Teléfono:</span>
+              <span class="text-dark">{{ factura.usuario.telefono }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
 
-      <div class="mt-4 d-flex gap-2">
-        <a href="{% url 'facturacion:generar_pdf' factura.id_factura %}" class="btn btn-success" target="_blank">
-          <i class="fas fa-file-pdf me-2"></i>Descargar PDF
-        </a>
-        <a href="{% url 'facturacion:historial_facturas' %}" class="btn btn-outline-primary">
-          <i class="fas fa-arrow-left me-2"></i>Volver a facturas
-        </a>
+        <div class="col-12 col-md-6">
+          <div class="p-3 p-md-4 rounded-4 h-100" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+            <div class="d-flex align-items-center gap-2 mb-3 text-success">
+              <i class="fas fa-credit-card fa-lg"></i>
+              <h6 class="fw-bold text-uppercase mb-0 small" style="letter-spacing: 0.5px;">Detalles del Pago</h6>
+            </div>
+            <div class="mb-2">
+              <span class="text-muted small d-block">Método de pago:</span>
+              <span class="badge bg-white text-dark border px-2 py-1 fw-medium">
+                <i class="fas fa-money-bill-wave text-success me-1"></i>
+                {{ factura.metodo_pago_nombre|default:"Contado / Pago Directo" }}
+              </span>
+            </div>
+            {% if factura.movimiento %}
+            <div class="mb-2">
+              <span class="text-muted small d-block">No. Movimiento en sistema:</span>
+              <span class="badge bg-white text-secondary border">#{{ factura.movimiento.id_movimiento }}</span>
+            </div>
+            {% endif %}
+            <div class="mb-0">
+              <span class="text-muted small d-block">Moneda:</span>
+              <span class="text-dark">COP (Pesos Colombianos)</span>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- Tabla de Productos -->
+      <div class="table-responsive rounded-4 border overflow-hidden mt-4 mb-4" style="border-color: #e2e8f0 !important;">
+        <table class="table align-middle mb-0">
+          <thead style="background-color: #f0fdf4; border-bottom: 2px solid #bbf7d0;">
+            <tr>
+              <th scope="col" class="py-3 px-4 text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px; width: 45%;">
+                Producto
+              </th>
+              <th scope="col" class="py-3 px-3 text-center text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px; width: 15%;">
+                Cantidad
+              </th>
+              <th scope="col" class="py-3 px-3 text-end text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px; width: 20%;">
+                Precio Unitario
+              </th>
+              <th scope="col" class="py-3 px-4 text-end text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px; width: 20%;">
+                Subtotal
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td class="py-3 px-4">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 40px; height: 40px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                    <i class="fas fa-box text-success"></i>
+                  </div>
+                  <div>
+                    <!-- Solo el nombre limpio del producto, sin datos de comprador/vendedor pegados -->
+                    <span class="fw-bold text-dark d-block fs-6">
+                      {{ item.nombre_producto_limpio|default:item.descripcion|clean_producto_nombre }}
+                    </span>
+                    {% if item.producto and item.producto.id_categoria %}
+                    <span class="badge rounded-pill bg-light text-muted border small" style="font-size: 0.72rem;">
+                      <i class="fas fa-tag me-1"></i>{{ item.producto.id_categoria.nombre }}
+                    </span>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td class="py-3 px-3 text-center">
+                <!-- Cantidad formateada como entero (ej. 1 en vez de 1,00) -->
+                <span class="badge rounded-pill bg-light text-dark border px-3 py-2 fw-semibold fs-6">
+                  {{ item.cantidad_formateada|default:item.cantidad|format_cantidad }}
+                </span>
+              </td>
+              <td class="py-3 px-3 text-end text-muted fw-medium">
+                {{ item.precio_unitario|currency_cop }}
+              </td>
+              <td class="py-3 px-4 text-end fw-bold text-dark fs-6">
+                {{ item.subtotal|currency_cop }}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-4 text-muted">
+                No hay productos registrados en esta factura.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Resumen y Totales -->
+      <div class="row align-items-center g-4 pt-2">
+        <div class="col-12 col-md-6">
+          <div class="p-3 rounded-4 d-flex align-items-center gap-3" style="background-color: #f0fdf4; border: 1px dashed #86efac;">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 46px; height: 46px; background-color: #dcfce7; color: #15803d;">
+              <i class="fas fa-seedling fa-lg"></i>
+            </div>
+            <div>
+              <h6 class="fw-bold text-success mb-1 small">¡Gracias por apoyar el campo colombiano!</h6>
+              <p class="text-muted mb-0 small" style="line-height: 1.3;">
+                Tu compra a través de AgroSFT fortalece el comercio directo entre productores agrícolas locales y compradores.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div class="p-4 rounded-4" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+            <div class="d-flex justify-content-between text-muted mb-2 small">
+              <span>Subtotal:</span>
+              <span class="fw-semibold text-dark">{{ factura.total|currency_cop }}</span>
+            </div>
+            <div class="d-flex justify-content-between text-muted mb-3 small">
+              <span>IVA (0% Régimen Agrícola):</span>
+              <span class="fw-semibold text-dark">$0</span>
+            </div>
+            <div class="border-top pt-3 d-flex justify-content-between align-items-center">
+              <span class="fw-bold text-dark fs-5">Total Factura:</span>
+              <span class="fw-bolder text-success fs-3" style="letter-spacing: -0.5px;">
+                {{ factura.total|currency_cop }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-4 mt-4 border-top">
+        <a href="{% url 'facturacion:historial_facturas' %}" class="btn btn-outline-secondary rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2">
+          <i class="fas fa-arrow-left"></i> Volver a facturas
+        </a>
+
+        <div class="d-flex gap-2">
+          <button type="button" onclick="window.print()" class="btn btn-light border rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 text-secondary">
+            <i class="fas fa-print"></i> Imprimir
+          </button>
+          <a href="{% url 'facturacion:generar_pdf' factura.id_factura %}" class="btn btn-success rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2 shadow-sm fw-semibold" target="_blank">
+            <i class="fas fa-file-pdf"></i> Descargar PDF Oficial
+          </a>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
+
+<style>
+@media print {
+  #vue-navbar, #vue-footer, .breadcrumb, .btn {
+    display: none !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+</style>
 {% endblock %}
+

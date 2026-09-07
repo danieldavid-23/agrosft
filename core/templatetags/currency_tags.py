@@ -28,3 +28,33 @@ def currency_cop(value):
         return f"${formatted}"
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def format_cantidad(value):
+    """
+    Formatea la cantidad para que números enteros no muestren decimales (ej. 1 en vez de 1,00).
+    """
+    try:
+        if value is None or value == '':
+            return '0'
+        val = float(value)
+        if val.is_integer():
+            return f"{int(val):,}".replace(",", ".")
+        return f"{val:g}".replace(".", ",")
+    except (ValueError, TypeError):
+        return value
+
+
+@register.filter
+def clean_producto_nombre(value):
+    """
+    Si la descripción incluye ' - nombre_vendedor', extrae únicamente el nombre del producto.
+    """
+    if not value:
+        return ''
+    val_str = str(value)
+    if ' - ' in val_str:
+        return val_str.split(' - ')[0].strip()
+    return val_str
+

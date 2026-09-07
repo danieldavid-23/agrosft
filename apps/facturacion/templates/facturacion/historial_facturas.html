@@ -1,49 +1,97 @@
 {% extends 'base.html' %}
 {% load currency_tags %}
 {% block title %}Historial de Facturas - AgroSFT{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-  <h2 class="mb-4">Historial de Facturas</h2>
+<div class="container py-4 py-md-5">
+  <!-- Encabezado de Sección -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h2 class="fw-bold text-dark mb-0" style="letter-spacing: -0.5px;">Historial de Facturas</h2>
+        {% if facturas %}
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1">
+          {{ facturas|length }} {{ facturas|length|pluralize:"factura,facturas" }}
+        </span>
+        {% endif %}
+      </div>
+      <p class="text-muted mb-0 small">Consulta y descarga los comprobantes de tus compras y ventas realizadas en AgroSFT.</p>
+    </div>
+    <a href="{% url 'inventario:marketplace' %}" class="btn btn-success rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2 shadow-sm fw-medium">
+      <i class="fas fa-store"></i> Explorar Marketplace
+    </a>
+  </div>
 
   {% if facturas %}
-  <div class="table-responsive">
-    <table class="table table-hover">
-      <thead class="table-light">
-        <tr>
-          <th># Factura</th>
-          <th>Fecha</th>
-          <th>Total</th>
-          <th>Estado</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for f in facturas %}
-        <tr>
-          <td>{{ f.id_factura }}</td>
-          <td>{{ f.creada_en|date:"d/m/Y H:i" }}</td>
-          <td>{{ f.total|currency_cop }}</td>
-          <td>
-            <span class="badge bg-{% if f.estado == 'emitida' %}success{% else %}secondary{% endif %}">
-              {{ f.get_estado_display }}
-            </span>
-          </td>
-          <td>
-            <a href="{% url 'facturacion:detalle_factura' f.id_factura %}" class="btn btn-sm btn-outline-primary">
-              <i class="fas fa-eye"></i>
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="border: 1px solid rgba(0,0,0,0.06) !important;">
+    <div class="table-responsive mb-0">
+      <table class="table align-middle table-hover mb-0">
+        <thead style="background-color: #f0fdf4; border-bottom: 2px solid #bbf7d0;">
+          <tr>
+            <th scope="col" class="py-3 px-4 text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">No. Factura</th>
+            <th scope="col" class="py-3 px-3 text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Fecha de Emisión</th>
+            <th scope="col" class="py-3 px-3 text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Total</th>
+            <th scope="col" class="py-3 px-3 text-center text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Estado</th>
+            <th scope="col" class="py-3 px-4 text-end text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in facturas %}
+          <tr style="border-bottom: 1px solid #f1f5f9;">
+            <td class="py-3 px-4">
+              <a href="{% url 'facturacion:detalle_factura' f.id_factura %}" class="text-decoration-none fw-bold text-success" style="font-family: monospace; font-size: 0.95rem;">
+                FAC-{{ f.id_factura|stringformat:"06d" }}
+              </a>
+            </td>
+            <td class="py-3 px-3 text-muted">
+              <i class="far fa-calendar-alt me-1"></i> {{ f.creada_en|date:"d/m/Y H:i" }}
+            </td>
+            <td class="py-3 px-3 fw-bold text-dark fs-6">
+              {{ f.total|currency_cop }}
+            </td>
+            <td class="py-3 px-3 text-center">
+              {% if f.estado == 'emitida' %}
+              <span class="badge rounded-pill px-3 py-1 fw-semibold small" style="background-color: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                <i class="fas fa-check-circle me-1"></i> Emitida
+              </span>
+              {% else %}
+              <span class="badge rounded-pill px-3 py-1 fw-semibold small" style="background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
+                <i class="fas fa-ban me-1"></i> Cancelada
+              </span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-4 text-end">
+              <div class="d-inline-flex gap-2">
+                <a href="{% url 'facturacion:detalle_factura' f.id_factura %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 d-inline-flex align-items-center gap-1" title="Ver detalle de la factura">
+                  <i class="fas fa-eye"></i> Detalle
+                </a>
+                <a href="{% url 'facturacion:generar_pdf' f.id_factura %}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3 d-inline-flex align-items-center gap-1 shadow-sm" title="Descargar PDF">
+                  <i class="fas fa-file-pdf"></i> PDF
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
   {% else %}
-  <div class="text-center py-5">
-    <i class="fas fa-file-invoice fa-4x text-muted mb-3"></i>
-    <p class="text-muted">No tienes facturas aun.</p>
-    <a href="{% url 'inventario:marketplace' %}" class="btn btn-primary">Ir al marketplace</a>
+  <div class="card border-0 shadow-sm rounded-4 p-5 text-center" style="background-color: #ffffff; border: 1px solid rgba(0,0,0,0.06) !important;">
+    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px; background-color: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">
+      <i class="fas fa-file-invoice fa-3x"></i>
+    </div>
+    <h4 class="fw-bold text-dark mb-1">Aún no tienes facturas registradas</h4>
+    <p class="text-muted mx-auto mb-4" style="max-width: 480px;">
+      Cuando realices una compra en el marketplace o completes una venta directa, tus facturas oficiales aparecerán listadas aquí con opción de descarga en PDF.
+    </p>
+    <div>
+      <a href="{% url 'inventario:marketplace' %}" class="btn btn-success rounded-pill px-4 py-2 shadow-sm fw-medium">
+        <i class="fas fa-shopping-basket me-2"></i> Ir al Marketplace
+      </a>
+    </div>
   </div>
   {% endif %}
 </div>
 {% endblock %}
+

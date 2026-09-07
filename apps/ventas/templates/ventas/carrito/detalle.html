@@ -5,18 +5,6 @@
 
 {% block content %}
 <div class="container mt-4 mb-5">
-    
-    {% if messages %}
-    <div class="mt-3">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
     {% if carrito|length > 0 %}
     <div class="card premium-card border-0" style="box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0,0,0,0.1)); border-radius: var(--radius-xl, 1.5rem); overflow: hidden;">
         <div class="card-header bg-transparent border-bottom-0 pt-4 pb-0 px-4">
