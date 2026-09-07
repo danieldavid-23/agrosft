@@ -37,12 +37,21 @@ function onClickOutside(event) {
 
 async function logout() {
   try {
-    await fetch(props.urls.logout, {
+    const res = await fetch(props.urls.logout, {
       method: 'POST',
-      headers: { 'X-CSRFToken': getCSRFToken() },
+      headers: { 
+        'X-CSRFToken': getCSRFToken(),
+        'X-Requested-With': 'XMLHttpRequest'
+      },
     })
-  } catch (e) {}
-  window.location.href = props.urls.login
+    if (!res.ok) {
+      console.warn('Logout server response:', res.status)
+    }
+  } catch (err) {
+    console.error('Error during logout:', err)
+  } finally {
+    window.location.href = props.urls.login
+  }
 }
 
 onMounted(() => {

@@ -16,24 +16,36 @@ const page = ref(1)
 const loading = ref(false)
 const hasNext = ref(false)
 const hasPrev = ref(false)
+const error = ref('')
+const addingId = ref(null)
 
 async function fetchProducts() {
   loading.value = true
-  const params = new URLSearchParams()
-  if (search.value) params.append('q', search.value)
-  if (selectedCategory.value) params.append('categoria', selectedCategory.value)
-  if (sortBy.value) params.append('orden', sortBy.value)
-  params.append('page', page.value)
-  params.append('ajax', '1')
+  error.value = ''
+  try {
+    const params = new URLSearchParams()
+    if (search.value) params.append('q', search.value)
+    if (selectedCategory.value) params.append('categoria', selectedCategory.value)
+    if (sortBy.value) params.append('orden', sortBy.value)
+    params.append('page', page.value)
+    params.append('ajax', '1')
 
-  const res = await fetch(props.urls.marketplace + '?' + params.toString(), {
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  const data = await res.json()
-  products.value = data.products
-  hasNext.value = data.has_next
-  hasPrev.value = data.has_prev
-  loading.value = false
+    const res = await fetch(props.urls.marketplace + '?' + params.toString(), {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`)
+    }
+    const data = await res.json()
+    products.value = data.products || []
+    hasNext.value = !!data.has_next
+    hasPrev.value = !!data.has_prev
+  } catch (err) {
+    console.error('Error al cargar marketplace:', err)
+    error.value = 'No se pudieron cargar los productos. Intenta nuevamente.'
+  } finally {
+    loading.value = false
+  }
 }
 
 watch([search, selectedCategory, sortBy], () => {
@@ -42,21 +54,36 @@ watch([search, selectedCategory, sortBy], () => {
 })
 
 async function agregarCarrito(productoId) {
-  const formData = new URLSearchParams()
-  formData.append('cantidad', '1')
-  const res = await fetch(props.urls.addToCart.replace('0', productoId), {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCSRFToken(),
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-    body: formData
-  })
-  if (res.ok) {
-    const item = products.value.find(p => p.id === productoId)
-    if (item) item.added = true
-    setTimeout(() => { if (item) item.added = false }, 2000)
+  addingId.value = productoId
+  error.value = ''
+  try {
+    const formData = new URLSearchParams()
+    formData.append('cantidad', '1')
+    const res = await fetch(props.urls.addToCart.replace('0', productoId), {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken(),
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: formData
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`)
+    }
+    const data = await res.json()
+    if (data && data.success) {
+      const item = products.value.find(p => p.id === productoId)
+      if (item) item.added = true
+      setTimeout(() => { if (item) item.added = false }, 2000)
+    } else {
+      error.value = (data && data.error) || 'No se pudo agregar el producto al carrito.'
+    }
+  } catch (err) {
+    console.error('Error al agregar al carrito:', err)
+    error.value = 'No se pudo agregar el producto al carrito. Intenta nuevamente.'
+  } finally {
+    addingId.value = null
   }
 }
 
@@ -158,6 +185,12 @@ function setImage(producto, index, e) {
     </div>
   </div>
 
+  <!-- Error Alert -->
+  <div v-if="error" class="alert alert-danger alert-dismissible fade show rounded-4 mb-4 shadow-sm" role="alert">
+    <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+    <button type="button" class="btn-close" @click="error = ''" aria-label="Close"></button>
+  </div>
+
   <!-- Loading -->
   <div v-if="loading" class="text-center py-5">
     <div class="spinner-border text-success" role="status">
@@ -255,8 +288,8 @@ function setImage(producto, index, e) {
           <a :href="producto.detailUrl" class="btn btn-outline-primary d-block w-100 rounded-pill fw-bold shadow-sm mb-2">
             <i class="fas fa-eye me-1"></i> Ver Detalle
           </a>
-          <button v-if="!producto.esta_agotado && !producto.added" class="btn btn-success d-block w-100 rounded-pill fw-bold shadow-sm" @click="agregarCarrito(producto.id)">
-            <i class="fas fa-cart-plus me-1"></i> Añadir al carrito
+          <button v-if="!producto.esta_agotado && !producto.added" class="btn btn-success d-block w-100 rounded-pill fw-bold shadow-sm" :disabled="addingId === producto.id" @click="agregarCarrito(producto.id)">
+            <i class="fas fa-cart-plus me-1"></i> {{ addingId === producto.id ? 'Añadiendo...' : 'Añadir al carrito' }}
           </button>
           <button v-else-if="producto.added" class="btn btn-outline-success d-block w-100 rounded-pill fw-bold shadow-sm" disabled>
             <i class="fas fa-check me-1"></i> Añadido

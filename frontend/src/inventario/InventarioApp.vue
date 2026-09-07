@@ -17,24 +17,36 @@ const page = ref(1)
 const loading = ref(false)
 const hasNext = ref(false)
 const hasPrev = ref(false)
+const error = ref('')
+const deletingId = ref(null)
 
 async function fetchProducts() {
   loading.value = true
-  const params = new URLSearchParams()
-  if (search.value) params.append('q', search.value)
-  if (selectedCategory.value) params.append('categoria', selectedCategory.value)
-  if (sortBy.value) params.append('orden', sortBy.value)
-  params.append('page', page.value)
-  params.append('ajax', '1')
+  error.value = ''
+  try {
+    const params = new URLSearchParams()
+    if (search.value) params.append('q', search.value)
+    if (selectedCategory.value) params.append('categoria', selectedCategory.value)
+    if (sortBy.value) params.append('orden', sortBy.value)
+    params.append('page', page.value)
+    params.append('ajax', '1')
 
-  const res = await fetch(props.urls.listar + '?' + params.toString(), {
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  const data = await res.json()
-  products.value = data.products
-  hasNext.value = data.has_next
-  hasPrev.value = data.has_prev
-  loading.value = false
+    const res = await fetch(props.urls.listar + '?' + params.toString(), {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`)
+    }
+    const data = await res.json()
+    products.value = data.products || []
+    hasNext.value = !!data.has_next
+    hasPrev.value = !!data.has_prev
+  } catch (err) {
+    console.error('Error al cargar inventario:', err)
+    error.value = 'No se pudieron cargar los productos. Intenta nuevamente.'
+  } finally {
+    loading.value = false
+  }
 }
 
 function formatearPrecio(valor) {
@@ -51,15 +63,30 @@ function formatearPrecio(valor) {
 
 async function eliminarProducto(id, nombre) {
   if (!confirm(`¿Eliminar "${nombre}" de tu inventario?`)) return
-  const res = await fetch(props.urls.eliminar.replace('0', id), {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCSRFToken(),
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-  })
-  if (res.ok) {
-    products.value = products.value.filter(p => p.id !== id)
+  deletingId.value = id
+  error.value = ''
+  try {
+    const res = await fetch(props.urls.eliminar.replace('0', id), {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken(),
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`)
+    }
+    const data = await res.json()
+    if (data && data.success) {
+      products.value = products.value.filter(p => p.id !== id)
+    } else {
+      error.value = (data && data.error) || 'No se pudo eliminar el producto. Intenta nuevamente.'
+    }
+  } catch (err) {
+    console.error('Error al eliminar producto:', err)
+    error.value = 'No se pudo eliminar el producto. Intenta nuevamente.'
+  } finally {
+    deletingId.value = null
   }
 }
 
@@ -161,6 +188,12 @@ function setImage(producto, index, e) {
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div v-if="error" class="alert alert-danger alert-dismissible fade show rounded-4 mb-4 shadow-sm" role="alert">
+    <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+    <button type="button" class="btn-close" @click="error = ''" aria-label="Close"></button>
   </div>
 
   <!-- Loading -->
@@ -267,8 +300,8 @@ function setImage(producto, index, e) {
             <a :href="producto.editUrl" class="btn btn-sm btn-outline-primary flex-grow-1 rounded-pill fw-bold">
               <i class="fas fa-edit me-1"></i> Editar
             </a>
-            <button class="btn btn-sm btn-outline-danger flex-grow-1 rounded-pill fw-bold" @click="eliminarProducto(producto.id, producto.nombre)">
-              <i class="fas fa-trash me-1"></i> Eliminar
+            <button class="btn btn-sm btn-outline-danger flex-grow-1 rounded-pill fw-bold" :disabled="deletingId === producto.id" @click="eliminarProducto(producto.id, producto.nombre)">
+              <i class="fas fa-trash me-1"></i> {{ deletingId === producto.id ? 'Eliminando...' : 'Eliminar' }}
             </button>
           </div>
         </div>

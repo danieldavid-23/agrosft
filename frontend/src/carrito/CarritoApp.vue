@@ -8,6 +8,9 @@ const props = defineProps({
 })
 
 const cartItems = ref(props.items)
+const error = ref('')
+const updatingId = ref(null)
+const deletingId = ref(null)
 
 const total = computed(() =>
   cartItems.value.reduce((sum, item) => sum + item.precio * item.cantidad, 0)
@@ -28,33 +31,63 @@ function formatearPrecio(valor) {
 async function actualizarCantidad(item, delta) {
   const nueva = item.cantidad + delta
   if (nueva < 1) return
-  const formData = new URLSearchParams()
-  formData.append('cantidad', nueva)
-  const res = await fetch(item.urls.actualizar, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCSRFToken(),
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-    body: formData
-  })
-  const data = await res.json()
-  if (data.success) item.cantidad = nueva
+  updatingId.value = item.producto_id
+  error.value = ''
+  try {
+    const formData = new URLSearchParams()
+    formData.append('cantidad', nueva)
+    const res = await fetch(item.urls.actualizar, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken(),
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: formData
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`)
+    }
+    const data = await res.json()
+    if (data && data.success) {
+      item.cantidad = nueva
+    } else {
+      error.value = (data && data.error) || 'No se pudo actualizar la cantidad.'
+    }
+  } catch (err) {
+    console.error('Error al actualizar carrito:', err)
+    error.value = 'No se pudo actualizar la cantidad. Intenta nuevamente.'
+  } finally {
+    updatingId.value = null
+  }
 }
 
 async function eliminarItem(item) {
   if (!confirm('¿Eliminar este producto del carrito?')) return
-  const res = await fetch(item.urls.eliminar, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCSRFToken(),
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-  })
-  const data = await res.json()
-  if (data.success) {
-    cartItems.value = cartItems.value.filter(i => i.producto_id !== item.producto_id)
+  deletingId.value = item.producto_id
+  error.value = ''
+  try {
+    const res = await fetch(item.urls.eliminar, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken(),
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`)
+    }
+    const data = await res.json()
+    if (data && data.success) {
+      cartItems.value = cartItems.value.filter(i => i.producto_id !== item.producto_id)
+    } else {
+      error.value = (data && data.error) || 'No se pudo eliminar el producto del carrito.'
+    }
+  } catch (err) {
+    console.error('Error al eliminar del carrito:', err)
+    error.value = 'No se pudo eliminar el producto del carrito. Intenta nuevamente.'
+  } finally {
+    deletingId.value = null
   }
 }
 </script>
@@ -66,6 +99,12 @@ async function eliminarItem(item) {
         <h4 class="mb-0 fw-bold" style="color: var(--primary-color);"><i class="fas fa-shopping-basket me-2"></i> Tu Carrito de Compras</h4>
       </div>
       <div class="card-body p-4">
+        <!-- Error Alert -->
+        <div v-if="error" class="alert alert-danger alert-dismissible fade show rounded-4 mb-4 shadow-sm" role="alert">
+          <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+          <button type="button" class="btn-close" @click="error = ''" aria-label="Close"></button>
+        </div>
+
         <div class="table-responsive">
           <table class="table table-hover align-middle custom-table mb-0">
             <thead>
@@ -90,18 +129,18 @@ async function eliminarItem(item) {
                 <td class="text-center text-muted fw-medium">{{ formatearPrecio(item.precio) }}</td>
                 <td>
                   <div class="input-group input-group-sm quantity-control mx-auto shadow-sm">
-                    <button class="btn btn-qty" @click="actualizarCantidad(item, -1)">
+                    <button class="btn btn-qty" :disabled="updatingId === item.producto_id || deletingId === item.producto_id" @click="actualizarCantidad(item, -1)">
                       <i class="fas fa-minus"></i>
                     </button>
                     <input type="text" :value="item.cantidad" class="form-control text-center fw-bold px-0 bg-white" readonly>
-                    <button class="btn btn-qty" @click="actualizarCantidad(item, 1)">
+                    <button class="btn btn-qty" :disabled="updatingId === item.producto_id || deletingId === item.producto_id" @click="actualizarCantidad(item, 1)">
                       <i class="fas fa-plus"></i>
                     </button>
                   </div>
                 </td>
                 <td class="text-end fw-bold" style="color: var(--primary-dark);">{{ formatearPrecio(item.precio * item.cantidad) }}</td>
                 <td class="text-center">
-                  <button class="btn btn-sm btn-action-danger rounded-circle shadow-sm" @click="eliminarItem(item)" title="Eliminar producto">
+                  <button class="btn btn-sm btn-action-danger rounded-circle shadow-sm" :disabled="deletingId === item.producto_id || updatingId === item.producto_id" @click="eliminarItem(item)" title="Eliminar producto">
                     <i class="fas fa-trash-alt"></i>
                   </button>
                 </td>

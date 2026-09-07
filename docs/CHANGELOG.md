@@ -7,6 +7,25 @@
 
 ## [Unreleased]
 
+### Improved (2026-09-06)
+- **Manejo robusto de Promesas y ciclo de vida de peticiones asíncronas en el Frontend**:
+  - `frontend/src/inventario/InventarioApp.vue`:
+    - `fetchProducts()`: Integrado manejo con `try/catch/finally`, validación de `response.ok`, reseteo asegurado de `loading = false` en `finally` y estado `error` para mensajes amigables al usuario.
+    - `eliminarProducto()`: Manejo con `try/catch/finally`, estado de carga `deletingId` para deshabilitar botón durante la petición, validación de `response.ok` y comprobación de `data.success`.
+  - `frontend/src/marketplace/MarketApp.vue`:
+    - `fetchProducts()`: Integrado `try/catch/finally`, validación `response.ok`, reseteo de `loading` en `finally` y mensaje amigable de error.
+    - `agregarCarrito()`: Manejo con `try/catch/finally`, control de estado `addingId` para evitar clics duplicados ("Añadiendo..."), validación de respuesta y manejo de errores.
+  - `frontend/src/carrito/CarritoApp.vue`:
+    - `actualizarCantidad()`: Integrado `try/catch/finally`, estado `updatingId` para deshabilitar controles durante la actualización, validación `response.ok` y `data.success`.
+    - `eliminarItem()`: Integrado `try/catch/finally`, estado `deletingId` para deshabilitar botón durante la eliminación, validación `response.ok` y `data.success`.
+  - `frontend/src/calificaciones/CalificacionApp.vue`:
+    - `submitRating()`: Reestructurado con `try/catch/finally`, validación de `response.ok` y garantía de restablecer `submitting = false` en `finally` evitando bloqueos permanentes en el botón de envío ante errores.
+  - `frontend/src/layout/NavbarApp.vue`:
+    - `logout()`: Reestructurado con `try/catch/finally`, cabecera `X-Requested-With` y redirección limpia garantizada en el bloque `finally`.
+  - `frontend/src/shared/api.js`:
+    - `apiFetch()`: Validada la propiedad `response.ok`, parseo adaptativo JSON/texto y lanzamiento controlado de excepciones con mensajes descriptivos.
+  - Recompilación y verificación de bundles con Vite (`npm run build`).
+
 ### Added (2026-09-04)
 - **Homologación de tamaño de imágenes y soporte de carrusel de múltiples imágenes** (ver [[DECISIONS#ADR-014]]):
   - `scripts/crear_tabla_producto_imagenes.sql` [NEW]: Script SQL idempotente para la creación de la tabla `tblproducto_imagenes`.
