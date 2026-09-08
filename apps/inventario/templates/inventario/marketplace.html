@@ -40,7 +40,9 @@
                 <!-- Imagen del producto -->
                 <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
                     {% if producto.imagen %}
-                    <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}">
+                    <div class="image-wrapper">
+                        <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}" loading="lazy">
+                    </div>
                     {% else %}
                     <div class="d-flex justify-content-center align-items-center h-100 bg-white" style="min-height: 220px;">
                                                 <div class="p-4 rounded-circle" style="background-color: var(--primary-light)">

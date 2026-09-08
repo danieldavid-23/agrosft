@@ -89,8 +89,8 @@
                 <!-- Imagen del producto -->
                 <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
                     {% if producto.imagen %}
-                    <a href="{% url 'inventario:detalle' producto.id %}" class="d-block text-decoration-none">
-                        <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}">
+                    <a href="{% url 'inventario:detalle' producto.id %}" class="image-wrapper d-block text-decoration-none">
+                        <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}" loading="lazy">
                     </a>
                     {% else %}
                     <a href="{% url 'inventario:detalle' producto.id %}" class="d-flex justify-content-center align-items-center h-100 bg-white text-decoration-none" style="min-height: 220px;">

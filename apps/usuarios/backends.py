@@ -65,22 +65,29 @@ class TblusuariosAuthBackend(BaseBackend):
             return None
 
     def tabla_existe(self, table_name):
-        """Verifica si una tabla existe en la base de datos"""
+        """Verifica si una tabla existe en la base de datos (query parametrizada vía information_schema)"""
         try:
             with connection.cursor() as cursor:
-                cursor.execute(f"SELECT 1 FROM {table_name} LIMIT 1")
-            return True
-        except:
+                cursor.execute(
+                    "SELECT 1 FROM information_schema.tables "
+                    "WHERE table_schema = DATABASE() AND table_name = %s",
+                    [table_name]
+                )
+                return cursor.fetchone() is not None
+        except Exception:
             return False
 
     def columna_existe(self, table_name, column_name):
-        """Verifica si una columna existe en una tabla"""
+        """Verifica si una columna existe en una tabla (query parametrizada vía information_schema)"""
         try:
             with connection.cursor() as cursor:
-                cursor.execute(f"DESCRIBE {table_name}")
-                columns = [row[0] for row in cursor.fetchall()]
-                return column_name in columns
-        except:
+                cursor.execute(
+                    "SELECT 1 FROM information_schema.columns "
+                    "WHERE table_schema = DATABASE() AND table_name = %s AND column_name = %s",
+                    [table_name, column_name]
+                )
+                return cursor.fetchone() is not None
+        except Exception:
             return False
 
     def get_user_permissions(self, user_obj, obj=None):

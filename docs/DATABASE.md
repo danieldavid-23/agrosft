@@ -1,7 +1,7 @@
 # DATABASE.md — AgroSFT
 
 > Modelo de datos completo: entidades, relaciones y triggers.  
-> **Motor**: MariaDB 10.4 | **Gestión**: Externa (Django NO modifica schema)
+> **Motor**: MariaDB 10.4 | **Gestión**: Principalmente externa (Django NO modifica schema, salvo la app `facturacion` — ver [[DECISIONS#ADR-016]])
 
 ---
 
@@ -16,6 +16,7 @@ erDiagram
     estado ||--o{ tblproductos_has_tblusuarios : "define estado"
 
     tblproducto ||--o{ tblproductos_has_tblusuarios : "es publicado por"
+    tblproducto ||--o{ tblproducto_imagenes : "galería (carrusel)"
 
     tblproductos_has_tblusuarios ||--o{ tblproductos_has_tblusuarios_has_movimiento : "participa en"
     movimiento ||--o{ tblproductos_has_tblusuarios_has_movimiento : "contiene"
@@ -23,6 +24,11 @@ erDiagram
     tipo_movimiento ||--o{ movimiento : "tipifica"
 
     calificacion }o--o{ tblproductos_has_tblusuarios_has_movimiento : "referencia"
+
+    movimiento ||--o| factura : "genera (opcional)"
+    tblusuarios ||--o{ factura : "emite"
+    factura ||--|{ item_factura : "contiene"
+    tblproducto ||--o{ item_factura : "referencia"
 ```
 
 ---
@@ -258,6 +264,43 @@ erDiagram
 
 ---
 
+### 2.12 factura — Cabecera de Factura
+
+| Columna | Tipo | Nullable | Default | Descripción |
+|---|---|---|---|---|
+| `id_factura` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
+| `id_usuario` | INT (FK) | No | — | FK a tblusuarios (comprador) |
+| `id_movimiento` | INT (FK) | Yes | NULL | FK a movimiento (nullable, SET_NULL) |
+| `total` | DECIMAL(12,2) | No | — | Total de la factura |
+| `metodo_pago_nombre` | VARCHAR(60) | Yes | — | Nombre del método de pago |
+| `estado` | VARCHAR(20) | No | 'emitida' | `emitida` \| `cancelada` |
+| `payer_email` | VARCHAR(255) | Yes | — | Email del comprador |
+| `creada_en` | DATETIME | No | CURRENT_TIMESTAMP | Fecha de emisión |
+| `pdf_generado` | BOOLEAN | No | FALSE | Indicador de PDF generado |
+
+**Modelo Django**: `apps.facturacion.models.Factura`
+
+> [!warning] Excepción a la regla `managed = False`
+> A diferencia del resto de apps, esta tabla **sí se gestiona mediante migraciones Django** (`python manage.py migrate facturacion`). Ver [[DECISIONS#ADR-016]].
+
+---
+
+### 2.13 item_factura — Detalle de Factura
+
+| Columna | Tipo | Nullable | Default | Descripción |
+|---|---|---|---|---|
+| `id_item` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
+| `id_factura` | INT (FK) | No | — | FK a factura (CASCADE) |
+| `id_producto` | INT (FK) | Yes | NULL | FK a tblproducto (SET_NULL) |
+| `descripcion` | VARCHAR(255) | No | — | Descripción del item |
+| `cantidad` | DECIMAL(10,2) | No | — | Cantidad |
+| `precio_unitario` | DECIMAL(12,2) | No | — | Precio unitario |
+| `subtotal` | DECIMAL(12,2) | No | — | Subtotal del item |
+
+**Modelo Django**: `apps.facturacion.models.ItemFactura` (relación `related_name='items'`)
+
+---
+
 ## 3. Triggers de Base de Datos
 
 La BD actual tiene **5 triggers** activos (verificado en MariaDB 2026-06-24):
@@ -320,14 +363,17 @@ La BD actual tiene **5 triggers** activos (verificado en MariaDB 2026-06-24):
 
 ---
 
-## 4. Tablas Obsoletas (No Usar)
+## 4. Tablas Obsoletas (Eliminadas del Código)
 
-| Modelo | Tabla (inexistente) | Razón |
+> [!note] Limpieza completada (2026-09-07)
+> Los modelos obsoletos `SolicitudCompra`, `DetalleSolicitudCompra`, `Venta` y `DetalleVenta` fueron **eliminados del código** en 2026-09-07 ([[DECISIONS#ADR-015]]). Sus tablas (`ventas_solicitudcompra`, etc.) nunca existieron en MariaDB. Fueron reemplazados por `Movimiento` + `ProductoUsuarioMovimiento`.
+
+| Modelo (eliminado) | Tabla (inexistente) | Reemplazo |
 |---|---|---|
-| `SolicitudCompra` | `ventas_solicitudcompra` | Reemplazado por `Movimiento` con tipo='compra' |
-| `DetalleSolicitudCompra` | `ventas_detallesolicitudcompra` | Reemplazado por `ProductoUsuarioMovimiento` |
-| `Venta` | `ventas_venta` | Reemplazado por `Movimiento` con tipo='venta' |
-| `DetalleVenta` | `ventas_detalleventa` | Reemplazado por `ProductoUsuarioMovimiento` |
+| ~~`SolicitudCompra`~~ | `ventas_solicitudcompra` | `Movimiento` con tipo='compra' |
+| ~~`DetalleSolicitudCompra`~~ | `ventas_detallesolicitudcompra` | `ProductoUsuarioMovimiento` |
+| ~~`Venta`~~ | `ventas_venta` | `Movimiento` con tipo='venta' |
+| ~~`DetalleVenta`~~ | `ventas_detalleventa` | `ProductoUsuarioMovimiento` |
 
 > Ver [[ARCHITECTURE#2.4 apps.ventas — Transacciones]] para la arquitectura actual.
 
@@ -337,7 +383,7 @@ La BD actual tiene **5 triggers** activos (verificado en MariaDB 2026-06-24):
 
 | Modelo | Tabla | Problema |
 |---|---|---|
-| `Cliente` | `clientes` | No tiene `managed = False`, no se usa en el código |
+| `Cliente` | `clientes` | No se usa en la lógica de negocio del controller (que consulta `Tblusuarios` + `Movimiento`). Desde 2026-09-07 tiene `managed = False` (ver [[DECISIONS#ADR-015]]). |
 
 ---
 

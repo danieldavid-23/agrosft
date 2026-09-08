@@ -2,7 +2,7 @@
 
 > Fuente principal de contexto global del proyecto.  
 > **Metodología**: Specification-Driven Development (SDD)  
-> **Última actualización**: 2026-08-20
+> **Última actualización**: 2026-09-07 (Fase 1 ROADMAP completada — seguridad y limpieza)
 
 ---
 
@@ -42,13 +42,14 @@ Un marketplace digital donde:
 
 | Capa | Tecnología | Versión | Rol |
 |---|---|---|---|
-| **Backend** | Django | 6.0.2 | Framework web principal |
-| **Base de Datos** | MariaDB | 10.4 | Persistencia relacional (legacy, no gestionada por Django) |
+| **Backend** | Django | 5.0.14 | Framework web principal |
+| **Base de Datos** | MariaDB | 10.4 | Persistencia relacional (legacy; solo `facturacion` usa migraciones Django) |
 | **Frontend** | Vue.js | 3.5 | Componentes SPA parciales |
 | **Bundler** | Vite | 6.0 | Compilación de assets frontend |
 | **CSS** | Bootstrap | 5.1.3 | Framework UI |
 | **Iconos** | Font Awesome | 6.4 | Iconografía |
 | **Imágenes** | Pillow | 10.2.0 | Procesamiento de imágenes |
+| **PDF** | xhtml2pdf | 0.2.17 | Generación de PDF de facturas |
 | **OAuth** | social-auth-app-django | — | Google OAuth2 (configurado, no activo) |
 | **Servidor** | Django runserver | — | Desarrollo |
 
@@ -106,12 +107,13 @@ graph TB
 
 | Módulo | App Django | Descripción | Estado |
 |---|---|---|---|
-| **Usuarios** | `apps.usuarios` | Autenticación, registro, perfil (con foto), términos | ✅ Funcional |
-| **Inventario** | `apps.inventario` | Catálogo de productos (con foto), CRUD, marketplace | ✅ Funcional |
-| **Ventas** | `apps.ventas` | Carrito, solicitudes, ventas, calificaciones | ✅ Funcional |
+| **Usuarios** | `apps.usuarios` | Autenticación, registro, perfil (con foto), términos, panel admin | ✅ Funcional |
+| **Inventario** | `apps.inventario` | Catálogo de productos (con foto y galería/carrusel), CRUD, marketplace | ✅ Funcional |
+| **Ventas** | `apps.ventas` | Carrito, solicitudes, ventas, compras, calificaciones | ✅ Funcional |
 | **Clientes** | `apps.clientes` | Historial de compradores | ✅ Funcional |
+| **Facturación** | `apps.facturacion` | Facturas, historial y PDF (xhtml2pdf). Única app con migraciones Django | ✅ Funcional |
 | **Core** | `core` | Clases base, middleware, utilidades | ✅ Funcional |
-| **Frontend** | `frontend/src/` | 5 componentes Vue 3 | ✅ Funcional |
+| **Frontend** | `frontend/src/` | 6 componentes Vue 3 (layout/navbar+footer, marketplace, carrito, inventario, calificaciones) | ✅ Funcional |
 
 ---
 
@@ -119,11 +121,12 @@ graph TB
 
 > [!danger] Reglas Críticas — Viola estas reglas y el sistema fallará
 
-1. **`managed = False` en TODOS los modelos** — Django NUNCA crea ni modifica tablas. El schema se gestiona externamente en MariaDB.
-2. **`MIGRATION_MODULES = {app: None}`** — No hay migraciones Django para las apps personalizadas.
+1. **`managed = False` en los modelos de `usuarios`, `inventario`, `ventas` y `clientes`** — Django NUNCA crea ni modifica tablas. El schema se gestiona externamente en MariaDB. (Desde 2026-09-07 también en `Cliente`.) **Excepción**: la app `facturacion` usa migraciones Django para sus tablas `factura`/`item_factura` (ver [[DECISIONS#ADR-016]]).
+2. **`MIGRATION_MODULES = {app: None}`** — No hay migraciones Django para las apps personalizadas (**excepto `facturacion`**).
 3. **Triggers de BD para stock** — El trigger `trg_actualizar_stock_oferta` actualiza stock automáticamente. **NUNCA** restar stock manualmente en Python.
 4. **Cantidad negativa** — En `ProductoUsuarioMovimiento`, la cantidad es negativa para ventas/compras y positiva para abastecimiento.
-5. **Sesiones en caché** — Las sesiones no usan base de datos; se almacenan en `LocMemCache`.
+5. **Sesiones en caché/cookie firmada** — Las sesiones son `signed_cookies` (ADR-011).
+6. **Queries de existencia de tablas parametrizadas** — `tabla_existe()`/`columna_existe()` usan `information_schema` con `%s` (ADR-015). NUNCA interpolar nombres en SQL.
 
 ---
 

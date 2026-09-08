@@ -3,7 +3,7 @@ Script para asegurar que los tipos de movimiento básicos existan en la base de 
 Ejecutar: python manage.py shell < scripts/asegurar_tipos_movimiento.py
 """
 
-from apps.inventario.models import TipoMovimiento
+from apps.ventas.models.movimiento import TipoMovimiento
 
 def asegurar_tipos_movimiento():
     """Crea los tipos de movimiento 'compra' y 'venta' si no existen"""

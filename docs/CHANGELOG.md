@@ -7,6 +7,90 @@
 
 ## [Unreleased]
 
+### Changed (2026-09-07)
+- **Imágenes aún más ligeras y pequeñas (máx. 400×400 px)**:
+  - `core/utils/helpers.py`: `MAX_IMAGE_DIMENSION` 600 → **400** (mantiene nitidez en cards de 220 px y detalle ≤460 px). Compresión reforzada en `resize_uploaded_image()`: PNG → paleta de 256 colores con `quantize()` + `optimize=True`; JPEG → `quality=72, progressive, optimize`; WEBP → `quality=72, method=6`. Resultado: pesos ≈ 5–87 KB (antes 0,3–2 MB).
+  - Cache-busting: nuevo `image_cache_bust()` y `IMAGE_VERSION = '20260907'`; se aplica a las URLs de imagen en `Producto.get_imagenes()` (cubre marketplace, inventario, detalle Vue y server) y `listar_productos_api`; tarjeta de relacionados usa `?v=20260907` en línea. Obliga al navegador a descartar las versiones viejas (los archivos re-codificados conservan el mismo nombre/ruta).
+  - Vista de detalle (`Productosdetalles.html`): galería `.pdg-wrapper` compacta — `max-width: 460px`, `height: 340px`, centrada — para que el producto no ocupe todo el ancho de la columna.
+  - Backfill ejecutado: las 10 imágenes referenciadas en BD re-codificadas a ≤400 px (idempotente, 0 errores).
+
+### Changed (2026-09-07)
+- **Optimización del redimensionado de imágenes → `ResizableImageField`** (supersede el `save()` de modelos):
+  - `core/models/resizable_image.py`: nuevo `ResizableImageField` con `attr_class = ResizableImageFieldFile` que intercepta `FieldFile.save()` (invocado desde `FileField.pre_save`) y aplica `resize_uploaded_image()` **antes** de persistir, por lo que el original grande nunca se escribe en `MEDIA_ROOT`. Se eliminan los `save()` sobrescritos de `Producto`, `ProductoImagen` y `UserProfile`; sus campos pasan a `ResizableImageField`.
+  - `apps/inventario/management/commands/redimensionar_imagenes.py`: management command `redimensionar_imagenes` que reprocesa **en su lugar** (sin cambiar rutas en BD, `storage.delete` + `storage.save`) las imágenes ya almacenadas mayores de 600 px en productos y perfiles. Ejecutado el 2026-09-07: 9 imágenes referenciadas procesadas (idempotente, 0 daños).
+  - Fix de bug en `core/utils/helpers.py`: `resize_uploaded_image()` ahora hace `buffer.seek(0)` antes de construir el `InMemoryUploadedFile` (sin esto, `.read()` del resultado devolvía `b''`). Durante el primer backfill se detectó el archivo vacío resultante y se recuperó el contenido original desde git antes de re-ejecutar.
+
+### Changed (2026-09-07)
+- **Redimensionado automático de imágenes con Pillow (máx. 600×600)**:
+  - `core/utils/helpers.py`: nuevo helper `resize_uploaded_image()` + constante `MAX_IMAGE_DIMENSION = 600`. Usa `Image.thumbnail()` con `LANCZOS` (preserva relación de aspecto, nunca agranda), normaliza a JPEG/PNG/WEBP, convierte RGBA→RGB solo cuando el destino es JPEG y guarda con `quality=85, optimize=True`. Devuelve `None` si la imagen ya cumple el límite (sin re-codificar) o si el archivo no es procesable (el guardado original se conserva).
+  - `apps/inventario/models/producto.py`: sobrescrito `save()` en `Producto` y `ProductoImagen` para redimensionar la imagen recién asignada antes de guardarla (detectada vía `_committed`; no reprocesa archivos ya almacenados en saves sin cambio de imagen).
+  - `apps/usuarios/models/profile_model.py`: sobrescrito `save()` en `UserProfile` con el mismo patrón para `imagen_perfil`.
+  - Frontend: fallbacks server-side alineados con el patrón de las cards Vue — `<img>` envuelto en `.image-wrapper` y con `loading="lazy"` en `apps/inventario/templates/inventario/marketplace.html` y `producto_list.html`. Assets recompilados (`npm run build` → `static/dist/`).
+  - Impacto: imágenes de alta resolución ya no se sirven crudas; peso y tiempos de carga reducidos sin deformar las tarjetas (CSS de cards ya usaba alto fijo + `object-fit: cover` — ver ADR-013/ADR-014).
+
+### Changed (2026-09-07)
+- **Sincronización de documentación SDD con el código real** (ADR-016, ADR-017):
+  - Documentado el módulo **Facturación** (`apps.facturacion`, tablas `factura`/`item_factura` gestionadas por migraciones Django — excepción a la regla `managed = False`):
+    - `ARCHITECTURE.md` (+ sección 2.6 con diagrama y flujo), `02-ARQUITECTURA.md`, `DATABASE.md` (+ secciones 2.12/2.13), `03-BASE-DATOS.md`, `API.md` (+ sección 5), `10-API-ENDPOINTS.md` (+ sección `/facturacion/`), `00-INDEX.md`, `PROJECT_CONTEXT.md`, `01-VISION-GENERAL.md`, `ROADMAP.md` (2.4), `12-BRECHAS-Y-ROADMAP.md` (doc. comerciales ✅) y `DECISIONS.md` (ADR-016).
+  - **Versión real de Django corregida a 5.0.14** (docs decían 6.0.2): `PROJECT_CONTEXT.md`, `00-INDEX.md`.
+  - **`SESSION_ENGINE` documentado como `signed_cookies`** (era `cache`): `ARCHITECTURE.md`, `02-ARQUITECTURA.md`.
+  - **Layout corregido**: se documenta el montaje real de `NavbarApp.vue` (+`#vue-navbar`) y `FooterApp.vue` (+`#vue-footer`) desde `frontend/src/layout/main.js`; se elimina la referencia inexistente a `LayoutApp.vue`.
+  - **Rutas faltantes documentadas**: sección "Panel de Administración de Usuarios" (16 rutas staff) en `API.md` (1.7) y `10-API-ENDPOINTS.md`; rutas `inventario/venta-directa/`, `ventas/compras/`, `venta_marcar_vendida/`, `venta_cancelar/`.
+  - **Carrito corregido a `Auth: Sí`** en ambos docs de API (ADR-015: todas las vistas del carrito requieren `@login_required`); descripción de `home` corregida (redirige según estado).
+  - **Totales actualizados**: 68 endpoints en 5 apps; 15 tablas; 17 ADR.
+  - **Eliminado `apps/inventario/app.py`** (residuo Flask + SQLite ajeno a Django, código muerto — ADR-017).
+  - Ver [[DECISIONS#ADR-016]], [[DECISIONS#ADR-017]].
+
+### Security (2026-09-07)
+- **Corregida vulnerabilidad de SQL injection en `tabla_existe()` y `columna_existe()`** (RNF-S09):
+  - `apps/usuarios/controllers/auth_controller.py`: funciones `tabla_existe()` y `columna_existe()` reescritas para usar `information_schema` con **queries completamente parametrizadas** (`%s`), eliminando los f-strings inseguros (`SELECT 1 FROM {table}`, `DESCRIBE {table}`).
+  - `apps/usuarios/backends.py`: métodos `tabla_existe()` y `columna_existe()` del backend de autenticación reescritos con la misma técnica parametrizada.
+  - `scripts/validate_schema.py`: función `get_table_columns()` reescrita para usar `information_schema.columns` con `%s`.
+  - Se reemplazaron los `except:` vacíos por `except Exception:` para evitar enmascarar errores.
+  - Ver [[DECISIONS#ADR-015]].
+
+### Security (2026-09-07)
+- **Agregado `@login_required` a 4 vistas de carrito sin protección** (RNF-S02):
+  - `apps/ventas/controllers/carrito_controller.py`: `detalle_carrito()`, `agregar_al_carrito()`, `actualizar_carrito()`, `eliminar_del_carrito()` ahora requieren usuario autenticado. Redirigen a `usuarios:login` (LOGIN_URL ya configurado).
+
+### Removed (2026-09-07)
+- **Eliminada clase `TemporalUsuario` (código muerto peligroso)**:
+  - `apps/usuarios/models/profile_model.py`: eliminada la clase cuyo método `check_password()` siempre retornaba `True` y exponía una contraseña hardcodeada (`"temp_password"`). No tenía imports ni instanciación en todo el proyecto.
+- **Eliminados modelos obsoletos** ([[DATABASE#4. Tablas Obsoletas]]):
+  - `apps/ventas/models/solicitud.py` (SolicitudCompra, DetalleSolicitudCompra): eliminado.
+  - `apps/ventas/models/venta.py` (Venta, DetalleVenta): eliminado.
+  - `apps/ventas/forms/solicitud_form.py`: eliminado (form huérfano).
+  - `apps/ventas/forms/venta_form.py`: eliminado (form huérfano).
+  - `apps/ventas/models/__init__.py`: limpiadas referencias comentadas.
+  - `apps/ventas/forms/__init__.py`: ahora exporta solo `CalificacionForm`.
+
+### Changed (2026-09-07)
+- **Consolidado modelo duplicado `TipoMovimiento`**:
+  - `apps/inventario/models/producto.py`: eliminada la definición duplicada de `TipoMovimiento`. Ahora `apps.inventario.models` re-exporta el canónico desde `apps.ventas.models.movimiento`.
+  - `apps/inventario/admin.py`: import de `TipoMovimiento` redirigido a `apps.ventas.models.movimiento`.
+  - `scripts/asegurar_tipos_movimiento.py`: import actualizado a la fuente canónica.
+- **Agregado `managed = False` a modelo `Cliente`**:
+  - `apps/clientes/models/cliente.py`: el modelo ahora declara `managed = False` para evitar que Django intente crear/modificar la tabla `clientes` (schema legacy gestionado externamente).
+
+### Removed (2026-09-07)
+- **Eliminado `scripts/crear_tabla_producto_imagenes.sql`**: el script se retiró del repositorio (el schema de `tblproducto_imagenes` se gestiona directamente en MariaDB). Nota: la tabla debe existir en BD para que funcione el carrusel; referencias actualizadas en `DECISIONS#ADR-014` y `03-BASE-DATOS`.
+
+### Changed (2026-09-07)
+- **Sincronización de documentación SDD con el estado real del código** (tras revisión completa del proyecto):
+  - `REQUIREMENTS.md`: RF-U08 (recuperación de contraseña) marcado como ✅ Implementado (Brevo); nuevo requisito **RF-I16** (galería/carrusel de múltiples imágenes); corregida referencia GAP-02 → ADR-013/ADR-014.
+  - `USER_STORIES.md`: nueva historia **US-16** (galería de múltiples imágenes con carrusel); resumen actualizado (16 completadas, RF-U08 ya no parcial).
+  - `ARCHITECTURE.md`: añadido modelo `ProductoImagen` y tabla `tblproducto_imagenes` en la sección de inventario.
+  - `DATABASE.md`: añadida relación `tblproducto_imagenes` al diagrama ER.
+  - `API.md`: documentados los endpoints de recuperación de contraseña (`/usuarios/password-reset/...`), campo `imagenes[]` en respuestas de inventario/marketplace y carga múltiple en crear/editar producto; totales actualizados.
+  - `ROADMAP.md`: password reset y galería/carrusel marcados como completados; corregidas referencias ADR.
+  - `00-INDEX.md`: cifras actualizadas (47 RF, 27 RNF, 16 historias, 13 tablas, 14 ADR, 44 endpoints documentados / 63 rutas registradas).
+  - `03-BASE-DATOS.md`: tablas `user_profiles`, `user_devices`, `user_addresses` corregidas como existentes en MariaDB; añadida tabla `tblproducto_imagenes` y ER.
+  - `08-FRONTEND.md`: entrada `layout`/`LayoutApp.vue`, carrusel de imágenes, botón "Venta Directa" eliminado del carrito.
+  - `05-MODULO-INVENTARIO.md`: campo `imagen` múltiple en `ProductoForm`, modelo `ProductoImagen`, flujos crear/editar con galería.
+  - `04-MODULO-USUARIOS.md`: recuperación de contraseña documentada como implementada; rutas completas del flujo; `historial/` sigue activo (enlaces UI removidos).
+  - `10-API-ENDPOINTS.md`: añadido `imagenes[]` a la respuesta AJAX de inventario/marketplace.
+  - `12-BRECHAS-Y-ROADMAP.md`: password reset y galería/carrusel marcados como resueltos.
+
 ### Added (2026-09-04)
 - **Homologación de tamaño de imágenes y soporte de carrusel de múltiples imágenes** (ver [[DECISIONS#ADR-014]]):
   - `scripts/crear_tabla_producto_imagenes.sql` [NEW]: Script SQL idempotente para la creación de la tabla `tblproducto_imagenes`.
@@ -175,7 +259,8 @@
 - Eliminar clase `TemporalUsuario` peligrosa
 - Consolidar modelo duplicado `TipoMovimiento`
 - Eliminar modelos obsoletos (`SolicitudCompra`, `Venta`)
-- Completar backend de password reset
+
+> ✅ Completado (2026-06-30): backend de password reset con envío real de email vía Brevo.
 
 ---
 

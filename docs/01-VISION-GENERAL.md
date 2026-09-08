@@ -64,18 +64,20 @@ Desarrollar una plataforma digital que conecte agricultores con compradores y of
 
 | Módulo | Estado | Descripción |
 |---|---|---|
-| **Gestión de usuarios** | ✅ Implementado | Registro, login, logout, perfil, contraseña, Google OAuth |
-| **Gestión de productos** | ✅ Implementado | CRUD completo con formulario y validación |
-| **Marketplace** | ✅ Implementado | Catálogo con filtros, búsqueda, paginación AJAX (Vue) |
-| **Carrito de compras** | ✅ Implementado | Sesión + Vue, agregar/actualizar/eliminar |
-| **Solicitudes de compra** | 🔄 En refactor | Flujo completo (crear → aceptar/rechazar/vender), migrando a JS puro |
+| **Gestión de usuarios** | ✅ Implementado | Registro, login, logout, perfil, contraseña, recuperación, Google OAuth (config) |
+| **Gestión de productos** | ✅ Implementado | CRUD completo con formulario, validación y aprobación admin |
+| **Marketplace** | ✅ Implementado | Catálogo con filtros, búsqueda, orden y paginación AJAX (Vue) |
+| **Carrito de compras** | ✅ Implementado | Sesión + Vue, agregar/actualizar/eliminar (todas las vistas con `@login_required`) |
+| **Solicitudes de compra** | ✅ Implementado | Flujo completo server-side (aceptar/rechazar/vender) + WhatsApp (ver [[DECISIONS#ADR-012]]) |
+| **Ventas / Mis Compras** | ✅ Implementado | Listado, detalle, marcar vendida, cancelar; vista del comprador |
 | **Calificaciones** | ✅ Implementado | 1.0–5.0 estrellas, trigger de promedio en BD |
 | **Historial de clientes** | ✅ Implementado | Actividad de compradores y vendedores |
 | **Términos y condiciones** | ✅ Implementado | Simulados (sin tabla real en BD) |
-| **Chat/mensajería** | ❌ Faltante | Mencionado en alcance de ficha, no implementado |
+| **Facturación** | ✅ Implementado | Factura + items, historial y PDF (xhtml2pdf) — ver [[ARCHITECTURE#2.6]] |
+| **Chat/mensajería** | ❌ Faltante | Brecha GAP-01, no implementado |
 | **Notificaciones** | ❌ Faltante | Solo email backend de consola |
-| **Fotos de productos** | ✅ Implementado | ImageField en Producto (`tblproducto.imagen`) |
-| **Ubicación de productos** | ❌ Faltante | Mencionado en alcance, sin campo en modelo |
+| **Fotos de productos** | ✅ Implementado | Imagen portada + galería/carrusel `tblproducto_imagenes` (ver [[DECISIONS#ADR-014]]) |
+| **Ubicación de productos** | ❌ Faltante | Brecha GAP-03, sin campo en modelo |
 
 > [!warning] Brechas críticas
 > Ver [[12-BRECHAS-Y-ROADMAP]] para el análisis completo de funcionalidades faltantes.
@@ -89,7 +91,8 @@ graph TB
     A[Registro/Login] --> B[Marketplace]
     B --> C[Agregar al Carrito]
     C --> D[Checkout - Solicitud de Compra]
-    D --> E[Vendedor recibe Solicitud]
+    D --> D2[Facturación:<br/>Factura + PDF opcional]
+    D2 --> E[Vendedor recibe Solicitud]
     E --> F{Decisión}
     F -->|Aceptar| G[Cambiar tipo a Venta]
     F -->|Rechazar| H[Marcar como Rechazada]

@@ -14,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+@login_required
 def detalle_carrito(request):
     carrito = Carrito(request)
     items = []
@@ -47,6 +48,7 @@ def detalle_carrito(request):
         'carrito': carrito,
     })
 
+@login_required
 def agregar_al_carrito(request, producto_id):
     carrito = Carrito(request)
     producto = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)
@@ -74,6 +76,7 @@ def agregar_al_carrito(request, producto_id):
         return redirect(referer)
     return redirect('ventas:carrito_detalle')
 
+@login_required
 def actualizar_carrito(request, producto_id):
     carrito = Carrito(request)
     if request.method == 'POST':
@@ -94,6 +97,7 @@ def actualizar_carrito(request, producto_id):
             
     return redirect('ventas:carrito_detalle')
 
+@login_required
 def eliminar_del_carrito(request, producto_id):
     carrito = Carrito(request)
     carrito.eliminar(producto_id=producto_id)

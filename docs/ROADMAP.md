@@ -9,29 +9,30 @@
 
 | Módulo | Cobertura | Funcionalidades |
 |---|---|---|
-| Usuarios | 85% | Auth, perfil, términos, OAuth (config) |
-| Inventario | 90% | CRUD, marketplace, aprobación, filtros |
-| Ventas | 80% | Carrito, solicitudes, ventas, calificaciones |
+| Usuarios | 85% | Auth, perfil, términos, recuperación, panel admin, OAuth (config) |
+| Inventario | 90% | CRUD, marketplace, aprobación, filtros, fotos/galería |
+| Ventas | 80% | Carrito, solicitudes, ventas, compras, calificaciones |
+| Facturación | 80% | Facturas, historial, PDF (xhtml2pdf) |
 | Clientes | 70% | Listado, historial básico |
-| **Brechas críticas** | 25% | Fotos ✅ · Chat, geolocalización, notificaciones pendientes |
+| **Brechas críticas** | 50% | Fotos ✅ · Facturación ✅ · Chat, geolocalización, notificaciones pendientes |
 
 ---
 
 ## Fases de Evolución
 
-### Fase 1: Estabilización y Seguridad (Actual)
+### Fase 1: Estabilización y Seguridad (Completada)
 
 **Objetivo**: Corregir problemas técnicos y asegurar la base.
 
 | Tarea | Prioridad | Complejidad | Estado |
 |---|---|---|---|
-| Corregir SQL injection en `tabla_existe()` y `columna_existe()` | Crítica | Baja | ❌ Pendiente |
-| Agregar `@login_required` a vistas de carrito | Alta | Baja | ❌ Pendiente |
-| Eliminar clase `TemporalUsuario` (check_password always True) | Alta | Baja | ❌ Pendiente |
-| Consolidar modelo duplicado `TipoMovimiento` | Media | Media | ❌ Pendiente |
-| Eliminar modelos obsoletos (`SolicitudCompra`, `Venta`) | Media | Baja | ❌ Pendiente |
-| Completar password reset (backend real con email) | Media | Media | ❌ Pendiente |
-| Agregar `managed = False` a modelo `Cliente` | Media | Baja | ❌ Pendiente |
+| Corregir SQL injection en `tabla_existe()` y `columna_existe()` | Crítica | Baja | ✅ Completa (2026-09-07, queries parametrizadas vía information_schema) |
+| Agregar `@login_required` a vistas de carrito | Alta | Baja | ✅ Completa (2026-09-07) |
+| Eliminar clase `TemporalUsuario` (check_password always True) | Alta | Baja | ✅ Completa (2026-09-07, eliminada) |
+| Consolidar modelo duplicado `TipoMovimiento` | Media | Media | ✅ Completa (2026-09-07, canónico en `ventas.models.movimiento`) |
+| Eliminar modelos obsoletos (`SolicitudCompra`, `Venta`) | Media | Baja | ✅ Completa (2026-09-07, eliminados `solicitud.py` y `venta.py` + forms) |
+| Completar password reset (backend real con email) | Media | Media | ✅ Completa (2026-06-30, Brevo) |
+| Agregar `managed = False` a modelo `Cliente` | Media | Baja | ✅ Completa (2026-09-07) |
 
 ---
 
@@ -47,12 +48,12 @@
 | **Complejidad** | Media |
 | **Impacto** | Mejora la experiencia de compra significativamente |
 
-**Estado**: Implementado. Campo `imagen` en `tblproducto` (VARCHAR(255) NULL), `ImageField` en el modelo `Producto`, upload a `MEDIA_ROOT/productos/`, validación de extensión (JPG/JPEG/PNG/WEBP) y tamaño (máx. 5MB) en modelo y formularios. Ver [[REQUIREMENTS#RF-I15]], [[USER_STORIES#US-15]] y [[DECISIONS#ADR-012]].
+**Estado**: Implementado (2026-08-20) y ampliado con **galería/carrusel de múltiples imágenes** (2026-09-04, ver [[DECISIONS#ADR-014]]). Redimensionado automático con **Pillow a máx. 400×400 px** (thumbnails que preservan la relación de aspecto, PNG paleta/JPEG q72/WebP) implementado en 2026-09-07 en `Producto`, `ProductoImagen` y `UserProfile` vía `ResizableImageField` (redimensiona antes de persistir, ver [[DECISIONS#ADR-013]]); comando `manage.py redimensionar_imagenes` para reprocesar imágenes ya almacenadas y cache-busting `?v=` en las URLs. Campo `imagen` en `tblproducto` (VARCHAR(255) NULL) como portada + tabla `tblproducto_imagenes` para imágenes adicionales, `ResizableImageField` en el modelo `Producto`/`ProductoImagen`, upload a `MEDIA_ROOT/productos/`, validación de extensión (JPG/JPEG/PNG/WEBP) y tamaño (máx. 5MB) en modelo y formularios. Ver [[REQUIREMENTS#RF-I15]], [[REQUIREMENTS#RF-I16]], [[USER_STORIES#US-15]], [[USER_STORIES#US-16]] y [[DECISIONS#ADR-013]].
 
 **Especificación original (referencia)**:
-- Agregar campo `imagen` en `ProductoUsuario` o nueva tabla `producto_imagen` *(decisión final: columna `imagen` en `tblproducto`, catálogo maestro)*
-- Upload con Pillow para compresión automática *(pendiente: compresión/redimensionado)*
-- Galería de hasta 5 imágenes por producto *(pendiente: actualmente 1 imagen)*
+- Agregar campo `imagen` en `ProductoUsuario` o nueva tabla `producto_imagen` *(decisión final: columna `imagen` en `tblproducto`, catálogo maestro + tabla `tblproducto_imagenes`)*
+- Upload con Pillow para compresión automática *(✅ implementado (2026-09-07): thumbnails a máx. 400×400 px con Pillow vía `ResizableImageField` + backfill `manage.py redimensionar_imagenes`)*
+- Galería de hasta 5 imágenes por producto *(✅ implementado: carrusel en tarjetas y detalle, sin tope fijo de archivos)*
 - Thumbnail en cards del marketplace *(implementado)*
 - Vista ampliada en detalle de producto *(implementado)*
 
@@ -84,6 +85,23 @@
 - Mapa interactivo con Leaflet.js
 - Filtro de radio de búsqueda
 - Visualización de agricultores en mapa
+
+#### 2.4 Documentos Comerciales / Facturación — ✅ Implementado (2026-09-07)
+
+| Aspecto | Detalle |
+|---|---|
+| **Prioridad** | Media |
+| **Complejidad** | Media |
+| **Impacto** | Soporte documental de las transacciones |
+
+**Estado**: Implementado (2026-09-07). Nueva app `apps.facturacion` con tablas propias gestionadas por migraciones Django (`factura` e `item_factura`). Generación de PDF de facturas con **xhtml2pdf**; historial de facturas por usuario; creación de factura desde carrito y generación de PDF desde un movimiento (pedido). Ver [[ARCHITECTURE#2.6]], [[DATABASE#2.12]], [[DATABASE#2.13]], [[API#5]] y [[DECISIONS#ADR-016]].
+
+**Especificación**:
+- Tablas `factura` (cabecera) e `item_factura` (líneas) vía migraciones Django ✅
+- Historial de facturas del usuario ✅
+- PDF descargable (`?descargar=1`) e inline ✅
+- Factura desde movimiento/pedido ✅
+- Numeración consecutiva por vendedor y totales calculados ✅
 
 ---
 
@@ -162,10 +180,10 @@
 ```mermaid
 graph TD
     subgraph Fase 1 - Estabilización
-        S1[SQL Injection Fix]
-        S2[Login Required Fix]
-        S3[TemporalUsuario Fix]
-        S4[Model Cleanup]
+        S1[SQL Injection Fix ✅]
+        S2[Login Required Fix ✅]
+        S3[TemporalUsuario Fix ✅]
+        S4[Model Cleanup ✅]
     end
 
     subgraph Fase 2 - Core Features

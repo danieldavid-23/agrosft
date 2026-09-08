@@ -18,13 +18,14 @@ apps/ventas/
 ├── forms/
 │   └── calificacion_form.py        → Form de rating 1.0–5.0
 ├── models/
-│   ├── movimiento.py               → Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
-│   ├── solicitud.py                → OBSOLETO (SolicitudCompra, DetalleSolicitudCompra)
-│   └── venta.py                    → OBSOLETO (Venta, DetalleVenta)
+│   └── movimiento.py               → Movimiento, ProductoUsuarioMovimiento, TipoMovimiento (canónico)
 ├── services/
 │   └── carrito_service.py          → Clase Carrito basada en sesión
 └── urls.py
 ```
+
+> [!note] Limpieza 2026-09-07 (ADR-015)
+> Se eliminaron `models/solicitud.py`, `models/venta.py`, `forms/solicitud_form.py` y `forms/venta_form.py` (modelos/forms obsoletos). `TipoMovimiento` canónico reside en `ventas.models.movimiento`.
 
 ---
 
@@ -63,8 +64,8 @@ Almacenamiento en **sesión de Django** (`request.session['carrito']`):
 | `checkout_carrito` | Crea Movimiento tipo "compra" con detalles |
 | `checkout_venta_carrito` | Deshabilitado (placeholder) |
 
-> [!warning] Sin @login_required
-> Las vistas `detalle_carrito`, `agregar_al_carrito`, `actualizar_carrito`, `eliminar_del_carrito` **no tienen `@login_required`**. El carrito funciona con sesión anónima.
+> [!note] Todas las vistas de carrito requieren `@login_required` (desde 2026-09-07, ADR-015)
+> `detalle_carrito`, `agregar_al_carrito`, `actualizar_carrito`, `eliminar_del_carrito`, `checkout_carrito` y `checkout_venta_carrito` están protegidas. Redirigen a `usuarios:login`.
 
 ### Checkout Flow
 
@@ -171,10 +172,10 @@ La tabla de solicitudes se renderiza desde el servidor con Django templates (`so
 
 ---
 
-## Modelos Obsoletos
+## Modelos Obsoletos (Eliminados)
 
-> [!danger] NO USAR
-> `SolicitudCompra`, `DetalleSolicitudCompra`, `Venta`, `DetalleVenta` apuntan a tablas inexistentes. Solo mantenidos por compatibilidad. Todo el nuevo código debe usar `Movimiento` + `ProductoUsuarioMovimiento`.
+> [!note] Eliminados 2026-09-07 (ADR-015)
+> `SolicitudCompra`, `DetalleSolicitudCompra`, `Venta`, `DetalleVenta` fueron eliminados del código. Usar `Movimiento` + `ProductoUsuarioMovimiento`.
 
 ---
 

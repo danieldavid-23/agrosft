@@ -1,6 +1,6 @@
 # Base de Datos
 
-> MariaDB 10.4 legacy — Django NO gestiona el schema. Todos los modelos son `managed = False`.
+> MariaDB 10.4 legacy — Django NO gestiona el schema, con excepción de la app `facturacion` (ver [[DECISIONS#ADR-016]]). La mayoría de los modelos son `managed = False`; los de `facturacion` se crean con migraciones Django.
 
 ---
 
@@ -10,6 +10,7 @@
 graph TB
     TBLUSUARIOS[tblusuarios] --> PRODUCTO_USUARIO[tblproductos_has_tblusuarios]
     PRODUCTO[tblproducto] --> PRODUCTO_USUARIO
+    PRODUCTO --> PRODUCTO_IMAGEN[tblproducto_imagenes]
     CATEGORIA[tblcategoria] --> PRODUCTO
     ESTADO[estado] --> PRODUCTO_USUARIO
     PRODUCTO_USUARIO --> DETALLE_MOV[tblproductos_has_tblusuarios_has_movimiento]
@@ -17,6 +18,10 @@ graph TB
     TIPO_MOV[tipo_movimiento] --> MOVIMIENTO
     TBLUSUARIOS --> MOVIMIENTO
     CALIFICACION[calificacion] -.-> PRODUCTO_USUARIO
+    MOVIMIENTO -.->|opcional| FACTURA[factura]
+    TBLUSUARIOS --> FACTURA
+    FACTURA --> ITEM[item_factura]
+    PRODUCTO -.-> ITEM
 ```
 
 ---
@@ -81,6 +86,23 @@ graph TB
 
 > [!note] Catálogo unificado
 > Esta tabla es el **catálogo genérico**. Los datos específicos por vendedor (precio, stock propio) están en `tblproductos_has_tblusuarios`.
+
+---
+
+### `tblproducto_imagenes` — Galería de Imágenes (Carrusel)
+
+| Columna | Tipo | Django Field | Descripción |
+|---|---|---|---|
+| `id` | INT AUTO_INCREMENT | `AutoField` (PK) | ID imagen |
+| `id_producto` | INT (FK) | `ForeignKey` | FK a `tblproducto.id_productos` (ON DELETE CASCADE) |
+| `imagen` | VARCHAR(255) | `ImageField` | Ruta de archivo de la imagen |
+| `orden` | INT | `IntegerField` | Orden en el carrusel |
+| `created_at` | DATETIME | `DateTimeField` | Fecha de carga |
+
+**Modelo Django**: `apps.inventario.models.producto.ProductoImagen`
+
+> [!note] Portada vs galería
+> La imagen principal se conserva en `tblproducto.imagen` (compatibilidad legacy). Las imágenes adicionales del carrusel se almacenan en `tblproducto_imagenes`. El schema se aplica directamente en MariaDB (ver [[DECISIONS#ADR-014]]).
 
 ---
 
@@ -171,9 +193,10 @@ graph TB
 
 ---
 
-## Tablas Extendidas (Solo Django — Inexistentes en MariaDB)
+## Tablas Extendidas — Existentes en MariaDB
 
-> [!warning] Las siguientes tablas existen como modelos Django (`managed = False`) pero **no están creadas** en la base de datos MariaDB real. No son funcionales.
+> [!note] Tablas extendidas confirmadas
+> `user_profiles`, `user_devices` y `user_addresses` **existen** en MariaDB con FK `ON DELETE CASCADE` a `tblusuarios` (verificado 2026-06-24, [[DECISIONS#ADR-009]]). No son gestionadas por migraciones Django.
 
 ### `user_profiles` — Perfil Extendido
 
@@ -185,12 +208,57 @@ graph TB
 | `biografia` | `TextField` | Biografía |
 | `sitio_web` | `URLField` | Sitio web |
 | `telefono_contacto` | `CharField` | Teléfono alternativo |
-| `notificaciones_activas` | `BooleanField` | Preferencia |
+| `direccion_envio_predeterminada` | `TextField` | Dirección principal |
+| `fecha_creacion` | `DateTimeField` | Fecha de creación |
+| `fecha_actualizacion` | `DateTimeField` | Última actualización |
+| `notificaciones_activas` | `BooleanField` | Preferencia (default: TRUE) |
 | `idioma_preferido` | `CharField` | Default: 'es' |
 | `zona_horaria` | `CharField` | Default: 'America/Bogota' |
 
-### `user_devices` — Dispositivos del Usuario (Inexistente en BD)
-### `user_addresses` — Direcciones del Usuario (Inexistente en BD)
+### `user_devices` — Dispositivos del Usuario (Existente)
+
+- `id_dispositivo` (PK), `id_usuario` (FK), `dispositivo_id`, `tipo_dispositivo`, `sistema_operativo`, `navegador`, `ultima_conexion`, `fecha_registro`, `esta_activo`
+
+### `user_addresses` — Direcciones del Usuario (Existente)
+
+- `id_direccion` (PK), `id_usuario` (FK), `direccion`, `ciudad`, `departamento`, `codigo_postal`, `pais`, `es_principal`, `fecha_creacion`, `fecha_actualizacion`
+
+---
+
+## Tablas de Facturación — Gestionadas por Migraciones Django
+
+> [!warning] Excepción a la regla `managed = False`
+> La app `apps.facturacion` es la **única app que usa migraciones Django** (`python manage.py migrate facturacion`). Sus tablas `factura` e `item_factura` **no** siguen la regla de schema gestionado externamente. Ver [[DECISIONS#ADR-016]].
+
+### `factura` — Cabecera de Factura
+
+| Columna | Tipo | Django Field | Descripción |
+|---|---|---|---|
+| `id_factura` | INT AUTO_INCREMENT | `AutoField` (PK) | ID factura |
+| `id_usuario` | INT (FK) | `ForeignKey(AUTH_USER_MODEL)` | Comprador |
+| `id_movimiento` | INT (FK) | `ForeignKey(Movimiento, SET_NULL)` | Movimiento asociado (nullable) |
+| `total` | DECIMAL(12,2) | `DecimalField` | Total |
+| `metodo_pago_nombre` | VARCHAR(60) | `CharField` | Método de pago |
+| `estado` | VARCHAR(20) | `CharField` | `emitida` \| `cancelada` |
+| `payer_email` | VARCHAR(255) | `EmailField` | Email del pagador |
+| `creada_en` | DATETIME | `DateTimeField(auto_now_add)` | Fecha emisión |
+| `pdf_generado` | BOOLEAN | `BooleanField` | PDF generado |
+
+**Modelo Django**: `apps.facturacion.models.Factura` (`db_table = 'factura'`)
+
+### `item_factura` — Detalle de Factura
+
+| Columna | Tipo | Django Field | Descripción |
+|---|---|---|---|
+| `id_item` | INT AUTO_INCREMENT | `AutoField` (PK) | ID item |
+| `id_factura` | INT (FK) | `ForeignKey(Factura, CASCADE)` | Factura padre |
+| `id_producto` | INT (FK) | `ForeignKey(Producto, SET_NULL)` | Producto (nullable) |
+| `descripcion` | VARCHAR(255) | `CharField` | Descripción |
+| `cantidad` | DECIMAL(10,2) | `DecimalField` | Cantidad |
+| `precio_unitario` | DECIMAL(12,2) | `DecimalField` | Precio unitario |
+| `subtotal` | DECIMAL(12,2) | `DecimalField` | Subtotal |
+
+**Modelo Django**: `apps.facturacion.models.ItemFactura` (`db_table = 'item_factura'`, `related_name='items'`)
 
 ---
 
@@ -221,11 +289,12 @@ graph TB
 
 ## Consideraciones de Desarrollo
 
-1. **Nunca ejecutar `python manage.py makemigrations`** — Los modelos son de solo lectura para Django
-2. **Nunca ejecutar `python manage.py migrate`** para apps propias — Solo para tablas internas de Django
-3. **Cambios al schema** → Hacer directamente en MariaDB (phpMyAdmin, scripts SQL)
-4. **Sincronizar modelos** → Después de cambiar la BD, actualizar el modelo Django manualmente
-5. **`db_column`** → Cada campo del modelo debe coincidir exactamente con el nombre de columna en BD
+1. **Nunca ejecutar `python manage.py makemigrations`** para las apps `usuarios`, `inventario`, `cliente`, `ventas` — Sus modelos son `managed = False` (de solo lectura)
+2. **Nunca ejecutar `python manage.py migrate`** para apps propias (excepto `facturacion`) — Solo para tablas internas de Django y para `facturacion`
+3. **Excepción `facturacion`**: Sí usa migraciones Django. Si se modifica `apps/facturacion/models.py`, crear migración con `python manage.py makemigrations facturacion` y aplicarla con `python manage.py migrate facturacion`
+4. **Cambios al schema** (resto de apps) → Hacer directamente en MariaDB (phpMyAdmin, scripts SQL)
+5. **Sincronizar modelos** → Después de cambiar la BD, actualizar el modelo Django manualmente
+6. **`db_column`** → Cada campo del modelo debe coincidir exactamente con el nombre de columna en BD
 
 ---
 

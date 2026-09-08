@@ -11,13 +11,13 @@
 | Documento | Contenido | Rol SDD |
 |---|---|---|
 | [[PROJECT_CONTEXT]] | Contexto global, stack, flujos principales | Punto de entrada SDD |
-| [[REQUIREMENTS]] | 45 requisitos funcionales + 17 no funcionales + 8 brechas | Qué debe hacer el sistema |
-| [[USER_STORIES]] | 13 historias de usuario con criterios de aceptación | Cómo lo usa el usuario |
-| [[ARCHITECTURE]] | Arquitectura, módulos, patrones, diagramas Mermaid | Cómo está construido |
-| [[DATABASE]] | 9 tablas reales en MariaDB, triggers (5), ER diagram, convenciones | Dónde se guardan los datos |
-| [[API]] | 36 endpoints con contratos request/response | Cómo se comunica |
-| [[ROADMAP]] | Plan de evolución en 4 fases | Qué sigue |
-| [[DECISIONS]] | 9 registros de decisiones técnicas (ADR) | Por qué se hizo así |
+| [[REQUIREMENTS]] | 46 requisitos funcionales + 27 no funcionales + 8 brechas (Fase 1 completada) | Qué debe hacer el sistema |
+| [[USER_STORIES]] | 16 historias de usuario con criterios de aceptación | Cómo lo usa el usuario |
+| [[ARCHITECTURE]] | Arquitectura por capas (Controller-Service-Repository) + Diagramas Mermaid | Cómo está construido |
+| [[DATABASE]] | 15 tablas (incl. facturación) + 5 triggers + ER | Cómo se almacena |
+| [[API]] | 68 endpoints en 5 apps documentados | Cómo se comunica |
+| [[ROADMAP]] | 4 fases de evolución (Fase 1: completada) | Hacia dónde va |
+| [[DECISIONS]] | 17 registros de decisiones técnicas (ADR) | Por qué se hizo así |
 | [[CHANGELOG]] | Historial cronológico de cambios | Qué cambió y cuándo |
 
 ---
@@ -71,13 +71,14 @@
 
 | Tecnología | Versión | Rol |
 |---|---|---|
-| Django | 6.0.2 | Framework web (backend) |
+| Django | 5.0.14 | Framework web (backend) |
 | MariaDB | 10.4 | Base de datos relacional |
 | Vue.js | 3.5 | Componentes frontend SPA |
 | Vite | 6 | Bundler de JavaScript |
 | Bootstrap | 5.1.3 | Framework CSS |
 | Font Awesome | 6.4 | Iconografía |
 | Pillow | 10.2.0 | Procesamiento de imágenes |
+| xhtml2pdf | 0.2.17 | Generación de PDF (facturas) |
 | social-auth-app-django | — | Google OAuth2 |
 
 ---
@@ -92,8 +93,9 @@ agrosft/
 │   ├── usuarios/        → [[04-MODULO-USUARIOS]]
 │   ├── inventario/      → [[05-MODULO-INVENTARIO]]
 │   ├── ventas/          → [[06-MODULO-VENTAS]]
-│   └── clientes/        → [[07-MODULO-CLIENTES]]
-├── frontend/src/        → [[08-FRONTEND]] (componentes Vue 3)
+│   ├── clientes/        → [[07-MODULO-CLIENTES]]
+│   └── facturacion/     → Facturación (facturas + PDF)
+├── frontend/src/        → [[08-FRONTEND]] (componentes Vue 3 + layout)
 ├── templates/           → Template base de Django
 ├── static/dist/         → Assets compilados por Vite
 ├── media/               → Archivos subidos por usuarios

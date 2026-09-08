@@ -15,7 +15,7 @@ apps/inventario/
 ├── forms/
 │   └── producto_form.py        → ProductoForm, ProductoBusquedaForm
 ├── models/
-│   ├── __init__.py             → Export: Categoria, Producto, ProductoUsuario, Estado, TipoMovimiento, Calificacion
+│   ├── __init__.py             → Export: Categoria, Producto, ProductoImagen, ProductoUsuario, Estado, TipoMovimiento, Calificacion
 │   └── producto.py             → Todos los modelos del módulo
 ├── repositories/
 │   ├── base_repository.py      → CRUD genérico
@@ -63,17 +63,19 @@ graph TB
 ### `crear_producto`
 1. Valida formulario `ProductoForm`
 2. Busca/crea producto en catálogo maestro (`get_or_create` por nombre)
-3. Crea `ProductoUsuario` con precio, estado=Pendiente, stock=0
-4. Si cantidad > 0, crea `Movimiento` + `ProductoUsuarioMovimiento` inicial
-5. Stock actualizado por trigger de BD
+3. Si hay imágenes (`request.FILES.getlist('imagen')`), la primera se guarda como portada y las restantes en `tblproducto_imagenes`
+4. Crea `ProductoUsuario` con precio, estado=Pendiente, stock=0
+5. Si cantidad > 0, crea `Movimiento` + `ProductoUsuarioMovimiento` inicial
+6. Stock actualizado por trigger de BD
 
 ### `editar_producto`
 1. Verifica propiedad (dueño o admin)
 2. Actualiza producto maestro (nombre, descripción, categoría, stock_minimo)
-3. Calcula diferencia de stock: `diferencia = nueva_cantidad - cantidad_actual`
-4. Actualiza ProductoUsuario (precio, estado)
-5. Si hubo cambio de stock, registra movimiento de ajuste
-6. Todo dentro de `transaction.atomic()`
+3. Si se envían nuevas imágenes, reemplaza la portada (primera) y agrega el resto a la galería
+4. Calcula diferencia de stock: `diferencia = nueva_cantidad - cantidad_actual`
+5. Actualiza ProductoUsuario (precio, estado)
+6. Si hubo cambio de stock, registra movimiento de ajuste
+7. Todo dentro de `transaction.atomic()`
 
 ### `eliminar_producto`
 - Verifica propiedad (dueño o admin)
@@ -100,6 +102,7 @@ graph TB
 | `nombre` | CharField(45) | Nombre del producto |
 | `descripcion` | CharField | Descripción (opcional) |
 | `id_categoria` | ModelChoiceField | Categoría activa |
+| `imagen` | MultipleFileField | Carga múltiple de imágenes (JPG/JPEG/PNG/WEBP, máx. 5MB c/u). La primera es la portada |
 | `stock_minimo` | IntegerField | Mínimo para alerta (opcional) |
 | `cantidad` | IntegerField | Stock (solo enteros, step=1) |
 | `precio` | DecimalField(10,2) | Precio por unidad |
@@ -107,6 +110,9 @@ graph TB
 
 > [!note] Cantidad es IntegerField
 > Aunque el modelo BD es `DecimalField(10,2)`, el formulario fuerza enteros con `step=1` y `min_value=0`.
+
+> [!note] Carga múltiple de imágenes
+> El formulario usa `MultipleFileInput` / `MultipleFileField` con `allow_multiple_selected = True`. Las imágenes adicionales se guardan en la tabla `tblproducto_imagenes` (modelo `ProductoImagen`) y se consolidan en `Producto.get_imagenes()` para el carrusel.
 
 ---
 

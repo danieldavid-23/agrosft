@@ -5,7 +5,29 @@ Provides safe type conversions, shared constants, and utility functions.
 import logging
 import re
 import urllib.parse
+from io import BytesIO
+
+from PIL import Image
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import InMemoryUploadedFile
+
+logger = logging.getLogger(__name__)
+
+MAX_IMAGE_DIMENSION = 400
+
+IMAGE_VERSION = '20260907'
+
+
+def image_cache_bust(url):
+    """
+    Añade un parámetro de versión a la URL de una imagen para invalidar la
+    caché del navegador cuando el archivo se re-codifica en el mismo path.
+    """
+    if not url:
+        return url
+    separador = '&' if '?' in url else '?'
+    return f'{url}{separador}v={IMAGE_VERSION}'
+
 
 def validate_image_size(value):
     """
@@ -15,7 +37,70 @@ def validate_image_size(value):
     if value.size > limit_mb * 1024 * 1024:
         raise ValidationError(f'El tamaño máximo permitido es {limit_mb}MB.')
 
-logger = logging.getLogger(__name__)
+
+def resize_uploaded_image(file_obj, field_name='imagen', max_dimension=MAX_IMAGE_DIMENSION):
+    """
+    Redimensiona una imagen subida a un máximo de `max_dimension` píxeles en su
+    lado mayor, manteniendo la relación de aspecto (Pillow thumbnail).
+
+    Devuelve un `InMemoryUploadedFile` listo para asignar al campo `ImageField`,
+    u `None` cuando la imagen ya cumple el límite o no puede procesarse (el
+    guardado original se conserva y no se rompe la operación).
+
+    Args:
+        file_obj: Archivo de imagen subido (UploadedFile / File).
+        field_name: Nombre del campo ImageField al que se asignará el resultado.
+        max_dimension: Límite máximo del lado mayor en píxeles.
+
+    Returns:
+        InMemoryUploadedFile | None
+    """
+    try:
+        file_obj.seek(0)
+        img = Image.open(file_obj)
+        img.load()
+    except Exception:
+        return None
+
+    if img.width <= max_dimension and img.height <= max_dimension:
+        return None
+
+    img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+
+    fmt = (img.format or 'JPEG').upper()
+    if fmt not in ('JPEG', 'PNG', 'WEBP'):
+        fmt = 'JPEG'
+
+    buffer = BytesIO()
+    save_kwargs = {'format': fmt}
+    if fmt == 'JPEG':
+        if img.mode not in ('RGB', 'L'):
+            img = img.convert('RGB')
+        save_kwargs.update({'quality': 72, 'optimize': True, 'progressive': True})
+    elif fmt == 'PNG':
+        method = getattr(Image, 'MEDIANCUT', None)
+        img = img.quantize(colors=256, method=method) if method else img.quantize(colors=256)
+        save_kwargs.update({'optimize': True})
+    else:  # WEBP
+        if img.mode not in ('RGB', 'RGBA'):
+            img = img.convert('RGBA')
+        save_kwargs.update({'quality': 72, 'method': 6})
+    img.save(buffer, **save_kwargs)
+
+    content_types = {'JPEG': 'image/jpeg', 'PNG': 'image/png', 'WEBP': 'image/webp'}
+    name = getattr(file_obj, 'name', None) or f'upload.{fmt.lower()}'
+
+    size = buffer.tell()
+    buffer.seek(0)
+
+    return InMemoryUploadedFile(
+        buffer,
+        field_name,
+        name,
+        content_types[fmt],
+        size,
+        charset=None,
+    )
 
 
 class EstadoProducto:
