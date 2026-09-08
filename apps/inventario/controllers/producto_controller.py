@@ -236,6 +236,15 @@ def marketplace(request):
 
     categorias_list = get_categorias_cached()
 
+    # ---- Estadísticas para el banner (HÉROE) del inicio ----
+    # Se calculan sobre el queryset ya filtrado para mostrar cifras reales.
+    try:
+        num_agricultores = productos.values('id_usuario').distinct().count()
+    except Exception:
+        num_agricultores = 0
+    num_categorias = len(categorias_list) if categorias_list else 0
+    num_productos = productos.count()
+
     marketplace_data = {
         'initialProducts': productos_transformados,
         'categories': [{'id': c.id_categoria, 'nombre': c.nombre} for c in categorias_list],
@@ -252,6 +261,10 @@ def marketplace(request):
         'titulo': 'Marketplace',
         'subtitulo': 'Productos disponibles de otros agricultores',
         'marketplace_json': marketplace_data,
+        # Datos para el HÉROE: estadísticas reales del marketplace
+        'num_productos': num_productos,
+        'num_agricultores': num_agricultores,
+        'num_categorias': num_categorias,
     })
 
 
