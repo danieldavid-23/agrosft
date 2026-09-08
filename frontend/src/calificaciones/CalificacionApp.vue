@@ -23,25 +23,34 @@ async function submitRating() {
   submitting.value = true
   error.value = ''
 
-  const formData = new URLSearchParams()
-  formData.append('calificacion', rating.value)
+  try {
+    const formData = new URLSearchParams()
+    formData.append('calificacion', rating.value)
 
-  const res = await fetch(props.urls.calificar, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': getCSRFToken(),
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-    body: formData
-  })
-  const data = await res.json()
-  if (data.success) {
-    submitted.value = true
-  } else {
-    error.value = data.error || 'Error al enviar calificación'
+    const res = await fetch(props.urls.calificar, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCSRFToken(),
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: formData
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`)
+    }
+    const data = await res.json()
+    if (data && data.success) {
+      submitted.value = true
+    } else {
+      error.value = (data && data.error) || 'No se pudo enviar la calificación. Intenta nuevamente.'
+    }
+  } catch (err) {
+    console.error('Error al enviar calificación:', err)
+    error.value = 'No se pudo enviar la calificación. Intenta nuevamente.'
+  } finally {
+    submitting.value = false
   }
-  submitting.value = false
 }
 
 function estrellaClase(estrella) {

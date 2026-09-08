@@ -128,56 +128,109 @@
 
                             <div class="col-12"><hr class="text-muted opacity-25 my-2"></div>
 
-                            <!-- Imágenes del producto -->
+                            <!-- Imágenes del producto (Galería y Carrusel) -->
                             <div class="col-12">
-                                <label for="{{ form.imagen.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase d-flex align-items-center gap-2">
-                                    <i class="fas fa-images"></i> Imágenes del Producto (Carrusel)
-                                </label>
-                                {% if imagenes %}
-                                <div class="mb-3">
-                                    <small class="d-block text-muted mb-2 fw-semibold">Imágenes actuales en el carrusel:</small>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        {% for img_url in imagenes %}
-                                        <div class="position-relative border rounded-3 p-1 bg-white shadow-sm" style="width: 100px; height: 100px;">
-                                            <img src="{{ img_url }}" alt="Imagen de producto" class="w-100 h-100 object-fit-cover rounded-2">
-                                            {% if forloop.first %}
-                                            <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-success" style="font-size: 0.65rem;">Portada</span>
-                                            {% endif %}
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <label for="{{ form.imagen.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase d-flex align-items-center gap-2 mb-0">
+                                        <i class="fas fa-images text-success"></i> Galería de Fotos del Producto
+                                    </label>
+                                    {% if imagenes_detalle %}
+                                    <span class="badge fw-bold px-3 py-2 rounded-pill" style="background-color: var(--primary-color, #2d6a4f); color: #ffffff;">
+                                        <i class="fas fa-camera me-1"></i>{{ imagenes_detalle|length }} fotos registradas
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                {% if imagenes_detalle %}
+                                <div class="card bg-white border border-light-subtle rounded-4 p-4 mb-4 shadow-sm">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                        <div>
+                                            <h6 class="fw-bold mb-1 text-dark">
+                                                <i class="fas fa-layer-group me-2 text-success"></i>Fotos actuales en tu publicación
+                                            </h6>
+                                            <p class="text-muted small mb-0">La primera imagen se usará como portada en el catálogo.</p>
+                                        </div>
+                                        <span class="badge rounded-pill px-3 py-2 fw-bold" id="galeria-contador-badge" style="background-color: var(--primary-color, #2d6a4f); color: #ffffff;">
+                                            <i class="fas fa-images me-1"></i>{{ imagenes_detalle|length }} fotos
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="galeria-fotos-grid" id="galeria-imagenes-actuales">
+                                        {% for img_info in imagenes_detalle %}
+                                        <div class="foto-card-wrapper" id="img-item-{{ img_info.id }}">
+                                            <div class="foto-card-inner rounded-3 overflow-hidden shadow-sm bg-white position-relative">
+                                                <img src="{{ img_info.url }}" alt="Foto producto" class="foto-card-img" loading="lazy">
+                                                
+                                                <!-- Overlay sutil en hover -->
+                                                <div class="foto-card-overlay"></div>
+                                                
+                                                <!-- Badge Portada / Número -->
+                                                {% if img_info.es_portada %}
+                                                <span class="foto-badge-portada badge bg-success shadow-sm">
+                                                    <i class="fas fa-star text-warning me-1"></i>Portada
+                                                </span>
+                                                {% else %}
+                                                <span class="foto-badge-num badge bg-dark bg-opacity-75 shadow-sm">
+                                                    #{{ forloop.counter }}
+                                                </span>
+                                                {% endif %}
+
+                                                <!-- Botón Eliminar Foto Estilizado (No usa alert/confirm nativo) -->
+                                                <button type="button" 
+                                                        class="btn-delete-foto-premium btn-eliminar-foto" 
+                                                        data-img-id="{{ img_info.id }}"
+                                                        data-img-url="{{ img_info.url }}"
+                                                        data-is-portada="{% if img_info.es_portada %}1{% else %}0{% endif %}"
+                                                        data-delete-url="{% url 'inventario:eliminar_imagen' producto_usuario.id_producto_usuario img_info.id %}"
+                                                        title="Eliminar esta foto">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         {% endfor %}
                                     </div>
-                                    <small class="d-block text-muted mt-2">Puedes seleccionar nuevas imágenes para reemplazar o agregar al carrusel.</small>
                                 </div>
                                 {% elif producto.imagen %}
-                                <div class="mb-2">
-                                    <img src="{{ producto.imagen.url }}" alt="Imagen actual" class="img-thumbnail" style="max-height: 120px;">
-                                    <small class="d-block text-muted mt-1">Imagen actual. Sube nuevas imágenes para el carrusel.</small>
+                                <div class="card bg-white border border-light-subtle rounded-4 p-3 mb-4 shadow-sm">
+                                    <small class="d-block text-muted mb-2 fw-semibold"><i class="fas fa-image me-1 text-success"></i>Imagen actual de portada:</small>
+                                    <div class="foto-card-wrapper" style="width: 130px; height: 130px;">
+                                        <div class="foto-card-inner rounded-3 overflow-hidden shadow-sm bg-white h-100">
+                                            <img src="{{ producto.imagen.url }}" alt="Imagen actual" class="foto-card-img">
+                                        </div>
+                                    </div>
                                 </div>
                                 {% endif %}
-                                <div class="dropzone-container position-relative" id="dropzoneContainer">
-                                    <div class="d-flex flex-column align-items-center justify-content-center py-2">
-                                        <div class="rounded-circle bg-success bg-opacity-10 p-3 mb-2 text-success">
-                                            <i class="fas fa-cloud-upload-alt fa-2x"></i>
-                                        </div>
-                                        <h6 class="fw-bold mb-1">Arrastra y suelta tus fotos aquí o haz clic para seleccionarlas</h6>
-                                        <p class="text-muted small mb-3">Puedes seleccionar múltiples archivos a la vez para tu carrusel</p>
+
+                                <!-- Zona Moderna de Carga / Dropzone -->
+                                <div class="modern-dropzone p-4 text-center rounded-4 position-relative" id="dropzoneContainer">
+                                    <div class="dropzone-icon-circle mx-auto mb-3 shadow-sm">
+                                        <i class="fas fa-cloud-arrow-up fa-2x text-success"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-1 text-dark fs-5">Arrastra tus fotos aquí o presiona el botón</h6>
+                                    <p class="text-muted small mb-3">Puedes agregar una o varias fotos a la vez para armar el carrusel de tu producto</p>
+                                    
+                                    <!-- Input oculto pero funcional -->
+                                    <div style="display: none;">
                                         {{ form.imagen }}
                                     </div>
-                                    
-                                    <!-- Previsualización interactiva con botón de eliminar individual -->
-                                    <div id="preview-nuevas-imagenes" class="row g-2 justify-content-center mt-3" style="display: none;"></div>
-                                    
+
+                                    <button type="button" class="btn btn-outline-success rounded-pill px-4 py-2 fw-bold shadow-sm" id="btnExaminarArchivos">
+                                        <i class="fas fa-folder-open me-2"></i>Elegir fotos de mi dispositivo
+                                    </button>
+
+                                    <!-- Previsualización interactiva de nuevas fotos antes de guardar -->
+                                    <div id="preview-nuevas-imagenes" class="row g-2 justify-content-center mt-4 pt-3 border-top border-light" style="display: none;"></div>
+
                                     {% if form.imagen.errors %}
                                     <div class="text-danger small mt-2"><i class="fas fa-info-circle me-1"></i>{{ form.imagen.errors.0 }}</div>
                                     {% endif %}
-                                    
-                                    <div class="form-text mt-3 mb-0">
-                                        <i class="fas fa-layer-group me-1 text-success"></i> <strong>Soporta selección múltiple</strong> (mantén presionado <kbd>Ctrl</kbd> o <kbd>Shift</kbd> al elegir fotos).
-                                        <br>
-                                        <span class="badge bg-secondary me-1">JPG</span> 
-                                        <span class="badge bg-secondary me-1">PNG</span>
-                                        <span class="badge bg-secondary me-1">WEBP</span>
-                                        Máximo: 5MB por imagen
+
+                                    <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-3 pt-3 border-top border-light text-muted small">
+                                        <span><i class="fas fa-check-circle text-success me-1"></i>Soporta selección múltiple (<kbd>Ctrl</kbd> o <kbd>Shift</kbd>)</span>
+                                        <span class="text-muted opacity-50">&bull;</span>
+                                        <span>Formatos: <strong>JPG, PNG, WEBP</strong></span>
+                                        <span class="text-muted opacity-50">&bull;</span>
+                                        <span>Máx. 5MB por foto</span>
                                     </div>
                                 </div>
                             </div>
@@ -216,6 +269,48 @@
     </div>
 </div>
 
+<!-- Modal Elegante para Confirmar Eliminación de Foto (reemplaza alert/confirm nativo del navegador) -->
+<div class="modal fade" id="modalConfirmarEliminarFoto" tabindex="-1" aria-labelledby="modalEliminarFotoTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <div class="modal-body p-4 text-center">
+                <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                    <i class="fas fa-trash-alt fa-2x text-danger"></i>
+                </div>
+                <h5 class="fw-bold mb-1 text-dark" id="modalEliminarFotoTitulo">¿Eliminar esta foto?</h5>
+                <p class="text-muted small mb-3" id="modalEliminarFotoTexto">Se quitará del carrusel de fotos de tu producto.</p>
+                
+                <div class="mx-auto mb-3 rounded-3 overflow-hidden border shadow-sm" style="width: 120px; height: 120px; background-color: #f8fafc;">
+                    <img id="modalEliminarFotoPreview" src="" class="w-100 h-100 object-fit-cover" alt="Foto seleccionada">
+                </div>
+
+                <div id="modalEliminarFotoError" class="alert alert-danger py-2 small mb-3" style="display: none;"></div>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light rounded-pill px-4 py-2 fw-semibold flex-grow-1 border" data-bs-dismiss="modal" id="btnCancelarEliminarFoto">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4 py-2 fw-bold flex-grow-1 shadow-sm" id="btnConfirmarEliminarFoto">
+                        <i class="fas fa-trash-alt me-1"></i> Sí, eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast flotante de éxito -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+    <div id="toastNotificacionFoto" class="toast align-items-center text-bg-success border-0 rounded-4 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold">
+                <i class="fas fa-check-circle me-2"></i><span id="toastNotificacionTexto">Foto eliminada correctamente.</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+        </div>
+    </div>
+</div>
+
 <style>
     /* Estilos adicionales para inputs dentro del card */
     .form-control, .form-select {
@@ -226,13 +321,131 @@
         min-height: 120px;
         resize: vertical;
     }
+
+    /* Galería Moderna de Fotos Actuales */
+    .galeria-fotos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 14px;
+    }
+    .foto-card-wrapper {
+        aspect-ratio: 1 / 1;
+        width: 100%;
+    }
+    .foto-card-inner {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .foto-card-inner:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.15) !important;
+        border-color: #22c55e;
+    }
+    .foto-card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.35s ease;
+    }
+    .foto-card-inner:hover .foto-card-img {
+        transform: scale(1.05);
+    }
+    .foto-card-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, transparent 40%, rgba(0,0,0,0.5) 100%);
+        pointer-events: none;
+    }
+    .foto-badge-portada {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        font-size: 0.72rem;
+        padding: 4px 10px;
+        border-radius: 20px;
+        z-index: 3;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    .foto-badge-num {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 20px;
+        z-index: 3;
+    }
+    .btn-delete-foto-premium {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: #ef4444;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        cursor: pointer;
+        z-index: 5;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        transition: all 0.2s ease;
+    }
+    .btn-delete-foto-premium:hover {
+        background: #ef4444;
+        color: #ffffff;
+        transform: scale(1.12);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Dropzone Moderno */
+    .modern-dropzone {
+        border: 2.5px dashed #cbd5e1;
+        background: #f8fafc;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+    .modern-dropzone:hover, .modern-dropzone.dragover {
+        border-color: #22c55e;
+        background: #f0fdf4;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.1);
+    }
+    .dropzone-icon-circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+        transition: transform 0.2s ease;
+    }
+    .modern-dropzone:hover .dropzone-icon-circle {
+        transform: scale(1.08);
+    }
+
     .preview-card {
         position: relative;
-        width: 110px;
-        height: 110px;
-        border-radius: 0.75rem;
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
         border: 2px solid #e2e8f0;
         background: #ffffff;
         transition: transform 0.2s ease;
@@ -242,20 +455,21 @@
     }
     .preview-remove-btn {
         position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 22px;
-        height: 22px;
+        top: 6px;
+        right: 6px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
-        background: rgba(220, 38, 38, 0.9);
+        background: rgba(220, 38, 38, 0.95);
         color: white;
         border: none;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         cursor: pointer;
         z-index: 10;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         transition: all 0.2s ease;
     }
     .preview-remove-btn:hover {
@@ -264,10 +478,10 @@
     }
     .preview-badge {
         position: absolute;
-        bottom: 4px;
-        left: 4px;
-        font-size: 0.65rem;
-        padding: 2px 6px;
+        bottom: 6px;
+        left: 6px;
+        font-size: 0.68rem;
+        padding: 3px 8px;
         border-radius: 12px;
         z-index: 9;
     }
@@ -277,15 +491,44 @@
     document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('id_imagen');
         const dropzone = document.getElementById('dropzoneContainer');
+        const btnBrowseFiles = document.getElementById('btnExaminarArchivos');
         const previewContainer = document.getElementById('preview-nuevas-imagenes');
-        if (!fileInput || !previewContainer) return;
 
+        // Modal de confirmación de eliminación
+        const modalEl = document.getElementById('modalConfirmarEliminarFoto');
+        const modalInstance = modalEl ? new bootstrap.Modal(modalEl) : null;
+        const modalPreview = document.getElementById('modalEliminarFotoPreview');
+        const modalTexto = document.getElementById('modalEliminarFotoTexto');
+        const modalError = document.getElementById('modalEliminarFotoError');
+        const btnConfirmar = document.getElementById('btnConfirmarEliminarFoto');
+        const btnCancelar = document.getElementById('btnCancelarEliminarFoto');
+        const toastEl = document.getElementById('toastNotificacionFoto');
+        const toastInstance = toastEl ? new bootstrap.Toast(toastEl) : null;
+
+        let fotoPendienteEliminar = null;
         let selectedFiles = [];
 
+        // Conectar botón examinador y dropzone
+        if (btnBrowseFiles && fileInput) {
+            btnBrowseFiles.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fileInput.click();
+            });
+        }
+        if (dropzone && fileInput) {
+            dropzone.addEventListener('click', function(e) {
+                if (e.target.closest('#preview-nuevas-imagenes') || e.target.closest('#btnExaminarArchivos')) {
+                    return;
+                }
+                fileInput.click();
+            });
+        }
+
+        // Renderizado de previsualización de nuevas fotos a subir
         function renderPreviews() {
+            if (!previewContainer) return;
             previewContainer.innerHTML = '';
             if (selectedFiles.length > 0) {
-                previewContainer.style.removeProperty('display');
                 previewContainer.style.display = 'flex';
                 
                 selectedFiles.forEach((file, index) => {
@@ -293,11 +536,11 @@
                         const reader = new FileReader();
                         reader.onload = function(e) {
                             const col = document.createElement('div');
-                            col.className = 'preview-card m-1';
+                            col.className = 'preview-card m-2';
                             
                             const isFirst = index === 0;
                             const badgeHtml = isFirst 
-                                ? `<span class="badge bg-success preview-badge shadow-sm">#1 Portada</span>`
+                                ? `<span class="badge bg-success preview-badge shadow-sm">#1 Portada nueva</span>`
                                 : `<span class="badge bg-dark bg-opacity-75 preview-badge shadow-sm">#${index + 1}</span>`;
 
                             col.innerHTML = `
@@ -308,7 +551,7 @@
                                 ${badgeHtml}
                             `;
                             
-                            // Botón de eliminar archivo
+                            // Botón de quitar foto de la preselección
                             const removeBtn = col.querySelector('.preview-remove-btn');
                             removeBtn.addEventListener('click', function(ev) {
                                 ev.stopPropagation();
@@ -334,17 +577,18 @@
                 selectedFiles.forEach(file => dt.items.add(file));
                 fileInput.files = dt.files;
             } catch (err) {
-                console.warn('DataTransfer API no soportada', err);
+                console.warn('DataTransfer no soportada en este navegador', err);
             }
         }
 
-        // Selección normal por explorador de archivos
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files.length > 0) {
-                selectedFiles = Array.from(this.files);
-                renderPreviews();
-            }
-        });
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    selectedFiles = Array.from(this.files);
+                    renderPreviews();
+                }
+            });
+        }
 
         // Soporte Drag & Drop
         if (dropzone) {
@@ -374,6 +618,110 @@
                         renderPreviews();
                     }
                 }
+            });
+        }
+
+        // Interceptar clic en botón eliminar foto (Abre modal elegante en lugar de alert/confirm)
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.btn-eliminar-foto');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            var imgId = btn.getAttribute('data-img-id');
+            var imgUrl = btn.getAttribute('data-img-url');
+            var isPortada = btn.getAttribute('data-is-portada') === '1';
+            var deleteUrl = btn.getAttribute('data-delete-url');
+
+            fotoPendienteEliminar = { imgId: imgId, imgUrl: imgUrl, isPortada: isPortada, deleteUrl: deleteUrl, btn: btn };
+
+            if (modalPreview) modalPreview.src = imgUrl || '';
+            if (modalError) {
+                modalError.style.display = 'none';
+                modalError.textContent = '';
+            }
+            if (modalTexto) {
+                modalTexto.textContent = isPortada 
+                    ? 'Esta imagen es la portada actual. Si la eliminas, la siguiente foto ocupará su lugar.' 
+                    : 'Se quitará del carrusel de fotos de tu producto.';
+            }
+
+            if (modalInstance) {
+                modalInstance.show();
+            }
+        });
+
+        // Confirmar eliminación en el modal
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', function() {
+                if (!fotoPendienteEliminar) return;
+
+                btnConfirmar.disabled = true;
+                if (btnCancelar) btnCancelar.disabled = true;
+                btnConfirmar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Eliminando...';
+
+                var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+
+                fetch(fotoPendienteEliminar.deleteUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        if (modalInstance) modalInstance.hide();
+
+                        // Animar desaparición de la foto
+                        var item = document.getElementById('img-item-' + fotoPendienteEliminar.imgId);
+                        if (item) {
+                            item.style.transition = 'all 0.35s ease';
+                            item.style.opacity = '0';
+                            item.style.transform = 'scale(0.7)';
+                            setTimeout(function() {
+                                item.remove();
+                                // Actualizar contador en header
+                                var restantes = document.querySelectorAll('#galeria-imagenes-actuales .foto-card-wrapper');
+                                var badgeContador = document.getElementById('galeria-contador-badge');
+                                if (badgeContador) {
+                                    badgeContador.innerHTML = '<i class="fas fa-images me-1"></i>' + restantes.length + ' fotos';
+                                }
+                                // Si era la portada o ya no quedan fotos, recargar para consistencia visual
+                                if (fotoPendienteEliminar.isPortada || restantes.length === 0) {
+                                    window.location.reload();
+                                }
+                            }, 350);
+                        }
+
+                        // Mostrar Toast elegante
+                        if (toastInstance) {
+                            var toastTexto = document.getElementById('toastNotificacionTexto');
+                            if (toastTexto) toastTexto.textContent = data.message || 'Foto eliminada correctamente.';
+                            toastInstance.show();
+                        }
+                    } else {
+                        // Error sin alert nativo
+                        if (modalError) {
+                            modalError.textContent = data.error || 'No se pudo eliminar la imagen.';
+                            modalError.style.display = 'block';
+                        }
+                    }
+                })
+                .catch(function(err) {
+                    console.error(err);
+                    if (modalError) {
+                        modalError.textContent = 'Ocurrió un error de conexión al eliminar la imagen.';
+                        modalError.style.display = 'block';
+                    }
+                })
+                .finally(function() {
+                    btnConfirmar.disabled = false;
+                    if (btnCancelar) btnCancelar.disabled = false;
+                    btnConfirmar.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Sí, eliminar';
+                });
             });
         }
     });

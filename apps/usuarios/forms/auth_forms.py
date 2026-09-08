@@ -6,6 +6,7 @@ from apps.usuarios.models.profile_model import Tblusuarios
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+import re
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -70,8 +71,12 @@ class RegistroTblusuariosForm(forms.Form):  # Cambiar a forms.Form para manejar 
         correo = self.cleaned_data.get('correo')
         if correo:
             correo = correo.lower().strip()
+            # No permitir correos cuya parte local sea solo números
+            local_part = correo.split('@')[0]
+            if re.fullmatch(r'\d+', local_part):
+                raise forms.ValidationError('Los correos no pueden estar compuestos solo de números. Incluye letras en la parte del usuario.')
             if Tblusuarios.objects.filter(correo=correo).exists():
-                raise forms.ValidationError('Este correo Electrónico ya está registrado.')
+                raise forms.ValidationError('Este correo electrónico ya está registrado.')
         return correo
 
     def save(self, commit=True):

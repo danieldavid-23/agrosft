@@ -71,11 +71,21 @@ Definidos en `vite.config.js`:
 **Fetch pattern**:
 ```javascript
 async function fetchProducts() {
-  const res = await fetch(urls.marketplace + '?' + params, {
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  const data = await res.json()
-  products.value = data.products
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await fetch(urls.marketplace + '?' + params, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`)
+    const data = await res.json()
+    products.value = data.products || []
+  } catch (err) {
+    console.error(err)
+    error.value = 'No se pudieron cargar los productos. Intenta nuevamente.'
+  } finally {
+    loading.value = false
+  }
 }
 ```
 
@@ -140,18 +150,31 @@ export function getCSRFToken() {
 ```
 
 ### `api.js`
-Wrapper genérico para fetch con CSRF automático:
+Wrapper genérico para fetch con CSRF automático y manejo controlado de errores:
 ```javascript
 export async function apiFetch(url, options = {}) {
-  const res = await fetch(url, {
-    headers: {
-      'X-CSRFToken': getCSRFToken(),
-      'Content-Type': 'application/x-www-form-urlencoded',
-      ...options.headers,
-    },
-    ...options,
-  })
-  return res.json()
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'X-CSRFToken': getCSRFToken(),
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...options.headers,
+      },
+      ...options,
+    })
+    if (!res.ok) {
+      throw new Error(`Error ${res.status}: ${res.statusText || 'Petición fallida'}`)
+    }
+    const contentType = res.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      return await res.json()
+    }
+    return await res.text()
+  } catch (error) {
+    console.error('apiFetch error:', error)
+    throw error
+  }
 }
 ```
 

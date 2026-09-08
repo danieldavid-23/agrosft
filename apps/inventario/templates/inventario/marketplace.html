@@ -4,23 +4,45 @@
 
 {% block title %}{{ titulo|default:'Marketplace' }} - AGROST{% endblock %}
 
+{% block extra_css %}
+<link href="{% static 'dist/css/marketplace.css' %}?_v=4" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-    <!-- Encabezado Premium -->
-    <div class="row align-items-center mb-5">
-        <div class="col-md-12">
-            <h1 class="display-6 fw-bold mb-2">
-                                <i class="fas fa-store me-2" style="color: var(--primary-color)"></i>{{ titulo|default:'Marketplace' }}
-            </h1>
-            <p class="text-muted fs-5 mb-0">{{ subtitulo|default:'Productos disponibles de otros agricultores' }}</p>
+
+<!-- ===== HERO BANNER (Banner principal del inicio) ===== -->
+<div class="mp-hero">
+    <div class="mp-hero-glow mp-hero-glow-1"></div>
+    <div class="mp-hero-glow mp-hero-glow-2"></div>
+    <div class="mp-hero-pattern"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center mp-hero-row">
+            <div class="col-lg-8">
+                <div class="mp-badge mb-3">
+                    <i class="fas fa-leaf me-1"></i> Productos Frescos del Campo
+                </div>
+                <h1 class="mp-hero-title">
+                    <i class="fas fa-store me-2"></i>{{ titulo|default:'Marketplace' }}
+                </h1>
+                <p class="mp-hero-sub">{{ subtitulo|default:'Conecta con agricultores locales y descubre productos
+                    frescos del campo a tu mesa.' }}</p>
+            </div>
+            <div class="col-lg-4 text-end d-none d-lg-block">
+                <div class="mp-hero-icon-wrap">
+                    <img src="{% static 'img/agrosft_o.svg' %}" alt="Agrosft Logo" class="mp-hero-logo">
+                </div>
+            </div>
         </div>
     </div>
+</div>
+
+<div class="container py-5" id="mp-productos">
 
     {{ marketplace_json|json_script:"marketplace-data" }}
     <div id="vue-marketplace"></div>
     <script type="module" src="{% static 'dist/marketplace.js' %}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             var vueEl = document.getElementById('vue-marketplace');
             var fallbackEl = document.getElementById('django-marketplace-fallback');
             if (vueEl && fallbackEl && vueEl.children.length > 0) {
@@ -28,141 +50,975 @@
             }
         });
     </script>
-    
+
     <div id="django-marketplace-fallback">
-    <!-- Grid de Productos -->
-    <div class="row g-4">
-        {% for producto in productos %}
-        <div class="col-xl-3 col-lg-4 col-md-6">
-            <!-- Card de Producto con Hover Premium -->
-            <div class="card h-100 hover-card border-0 rounded-4 position-relative">
-                
-                <!-- Imagen del producto -->
-                <div class="product-image-container bg-light rounded-top-4 overflow-hidden position-relative">
-                    {% if producto.imagen %}
-                    <div class="image-wrapper">
-                        <img src="{{ producto.imagen }}" class="product-image" alt="{{ producto.nombre }}" loading="lazy">
-                    </div>
-                    {% else %}
-                    <div class="d-flex justify-content-center align-items-center h-100 bg-white" style="min-height: 220px;">
-                                                <div class="p-4 rounded-circle" style="background-color: var(--primary-light)">
-                            <i class="fas fa-seedling fa-3x" style="color: var(--secondary-color)"></i>
+
+        <!-- Grid de Productos -->
+        <div class="row g-4">
+            {% for producto in productos %}
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="mp-card h-100 position-relative">
+
+                    <!-- Imagen / Carrusel -->
+                    <div class="mp-card-img-wrap" data-card-carousel>
+
+                        {% if producto.imagenes and producto.imagenes|length > 1 %}
+                        <div class="card-carousel-slides w-100 h-100 position-relative">
+                            {% for img_url in producto.imagenes %}
+                            <div class="d-block card-carousel-slide {% if forloop.first %}active{% else %}d-none{% endif %}"
+                                data-index="{{ forloop.counter0 }}"
+                                data-imagenes="{% for u in producto.imagenes %}{{ u }}{% if not forloop.last %}|||{% endif %}{% endfor %}"
+                                data-nombre="{{ producto.nombre|escapejs }}"
+                                style="width:100%;height:100%;cursor:zoom-in;"
+                                onclick="abrirLightbox(this.dataset.imagenes, parseInt(this.dataset.index), this.dataset.nombre)">
+                                <img src="{{ img_url }}" class="mp-card-img" alt="{{ producto.nombre }}" loading="lazy">
+                            </div>
+                            {% endfor %}
                         </div>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Overlay Gradient -->
-                    <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-dark opacity-25"></div>
-                    
-                    <!-- Etiquetas de estado flotantes -->
-                    <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 align-items-end">
-                        {% if producto.esta_agotado %}
-                        <span class="badge bg-danger shadow-sm"><i class="fas fa-times-circle me-1"></i>Agotado</span>
-                        {% elif producto.stock < producto.stock_minimo %}
-                        <span class="badge bg-warning shadow-sm text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Últimas unid.</span>
-                        {% endif %}
-                        
-                        {% if producto.estado == 'pendiente' %}
-                        <span class="badge bg-secondary shadow-sm">Pendiente</span>
-                        {% endif %}
-                    </div>
-                </div>
 
-                <!-- Contenido de la Card -->
-                <div class="card-body p-4 d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title fw-bold mb-0 text-truncate" style="max-width: 70%;">{{ producto.nombre }}</h5>
-                        <span class="badge bg-light text-secondary border px-2 py-1"><i class="fas fa-tag me-1"></i>{{ producto.categoria_nombre }}</span>
-                    </div>
-                    
-                    <p class="card-text text-muted small mb-2 flex-grow-1 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                        {{ producto.descripcion }}
-                    </p>
-
-                    <!-- Vendedor -->
-                    <div class="mb-3 pb-2 border-bottom border-light">
-                        <small class="text-muted"><i class="fas fa-user me-1"></i>Vendido por:</small>
-                        <div class="fw-bold text-dark">{{ producto.agricultor_nombre }}</div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-end mt-auto pt-2 border-top border-light">
-                        <div>
-                            <span class="small text-muted d-block mb-1">Precio</span>
-                                                        <span class="fs-4 fw-black lh-1" style="color: var(--secondary-color)">{{ producto.precio|currency_cop }}</span>
-                        </div>
-                        <div class="text-end">
-                            <span class="small text-muted d-block mb-1">Disponibles</span>
-                            <span class="fw-bold {% if producto.stock < producto.stock_minimo %}text-warning{% else %}text-dark{% endif %}">
-                                <i class="fas fa-box me-1"></i>{{ producto.stock }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Footer de la Card (Acciones: Carrito y Detalle) -->
-                <div class="card-footer bg-white border-0 p-3 pt-0 rounded-bottom-4 text-center">
-                    <a href="{% url 'inventario:detalle' producto.id %}" class="btn btn-outline-primary d-block w-100 rounded-pill fw-bold shadow-sm mb-2">
-                        <i class="fas fa-eye me-1"></i> Ver Detalle
-                    </a>
-                    
-                    {% if not producto.esta_agotado %}
-                    <form action="{% url 'ventas:carrito_agregar' producto.id %}" method="post" class="w-100">
-                        {% csrf_token %}
-                        <input type="hidden" name="cantidad" value="1">
-                                                <button type="submit" class="btn d-block w-100 rounded-pill fw-bold shadow-sm text-white" style="background-color: var(--primary-color)">
-                            <i class="fas fa-cart-plus me-1"></i> Añadir al carrito
+                        <button type="button" class="mp-nav mp-nav-prev" onclick="navegarCarruselCard(this,-1,event)"
+                            title="Anterior">
+                            <i class="fas fa-chevron-left"></i>
                         </button>
-                    </form>
-                    {% else %}
-                    <button class="btn btn-secondary d-block w-100 rounded-pill fw-bold shadow-sm" disabled>
-                        <i class="fas fa-times-circle me-1"></i> Agotado
-                    </button>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <!-- Estado Vacío Premium -->
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 text-center py-5 my-4 bg-white">
-                <div class="card-body">
-                    <div class="mb-4">
-                        <i class="fas fa-box-open fa-4x text-muted opacity-50"></i>
-                    </div>
-                    <h4 class="text-muted mb-2">No hay productos disponibles</h4>
-                    <p class="text-muted mb-4">Aún no hay productos de otros agricultores en el marketplace.</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+                        <button type="button" class="mp-nav mp-nav-next" onclick="navegarCarruselCard(this,1,event)"
+                            title="Siguiente">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
 
-    <!-- Paginación -->
-    {% if pagination.has_prev or pagination.has_next %}
-    <nav class="mt-5 d-flex justify-content-center">
-        <ul class="pagination shadow-sm rounded-pill bg-white p-2">
-            {% if pagination.has_prev %}
-            <li class="page-item">
-                <a class="page-link rounded-pill me-1" href="?page={{ pagination.page|add:'-1' }}">
-                    <i class="fas fa-chevron-left"></i>
-                </a>
-            </li>
-            {% endif %}
-            
-            <li class="page-item active">
-                <span class="page-link rounded-pill">{{ pagination.page }}</span>
-            </li>
-            
-            {% if pagination.has_next %}
-            <li class="page-item">
-                <a class="page-link rounded-pill ms-1" href="?page={{ pagination.page|add:'1' }}">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
+                        <div class="mp-counter">
+                            <i class="fas fa-camera me-1"></i><span class="curr-slide">1</span>/{{
+                            producto.imagenes|length }}
+                        </div>
+                        <div class="mp-hint-expand">
+                            <i class="fas fa-expand me-1"></i>Ver todas
+                        </div>
+
+                        {% elif producto.imagen %}
+                        <div style="width:100%;height:100%;cursor:zoom-in;"
+                            onclick="abrirLightbox('{{ producto.imagen }}',0,'{{ producto.nombre|escapejs }}')">
+                            <img src="{{ producto.imagen }}" class="mp-card-img" alt="{{ producto.nombre }}"
+                                loading="lazy">
+                        </div>
+                        {% else %}
+                        <a href="{% url 'inventario:detalle' producto.id %}"
+                            class="d-flex justify-content-center align-items-center h-100 text-decoration-none">
+                            <div class="mp-no-img-icon">
+                                <i class="fas fa-seedling fa-3x"></i>
+                            </div>
+                        </a>
+                        {% endif %}
+
+                        <div class="mp-img-overlay"></div>
+
+                        <div class="mp-badges">
+                            {% if producto.esta_agotado %}
+                            <span class="mp-badge-status danger"><i class="fas fa-times-circle me-1"></i>Agotado</span>
+                            {% elif producto.stock < producto.stock_minimo %} <span class="mp-badge-status warning"><i
+                                    class="fas fa-fire me-1"></i>Últimas unid.</span>
+                                {% endif %}
+                                {% if producto.estado == 'pendiente' %}
+                                <span class="mp-badge-status secondary">Pendiente</span>
+                                {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Cuerpo -->
+                    <div class="mp-card-body d-flex flex-column">
+
+                        <div class="mp-chip mb-2">
+                            <i class="fas fa-tag me-1"></i>{{ producto.categoria_nombre }}
+                        </div>
+
+                        <h5 class="mp-card-title">{{ producto.nombre }}</h5>
+
+                        <p class="mp-card-desc flex-grow-1">{{ producto.descripcion }}</p>
+
+                        <div class="mp-vendor">
+                            <div class="mp-vendor-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <div class="mp-vendor-label">Vendido por</div>
+                                <div class="mp-vendor-name">{{ producto.agricultor_nombre }}</div>
+                            </div>
+                        </div>
+
+                        <div class="mp-price-row">
+                            <div>
+                                <div class="mp-price-label">Precio</div>
+                                <div class="mp-price">{{ producto.precio|currency_cop }}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="mp-price-label">Disponibles</div>
+                                <div class="mp-stock {% if producto.stock < producto.stock_minimo %}low{% endif %}">
+                                    <i class="fas fa-box me-1"></i>{{ producto.stock }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones -->
+                    <div class="mp-card-footer">
+                        <a href="{% url 'inventario:detalle' producto.id %}" class="mp-btn-outline">
+                            <i class="fas fa-eye me-1"></i> Ver Detalle
+                        </a>
+
+                        {% if not producto.esta_agotado %}
+                        <form action="{% url 'ventas:carrito_agregar' producto.id %}" method="post" class="w-100">
+                            {% csrf_token %}
+                            <input type="hidden" name="cantidad" value="1">
+                            <button type="submit" class="mp-btn-primary">
+                                <i class="fas fa-cart-plus me-1"></i> Añadir al carrito
+                            </button>
+                        </form>
+                        {% else %}
+                        <button class="mp-btn-disabled" disabled>
+                            <i class="fas fa-times-circle me-1"></i> Agotado
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% empty %}
+            <div class="col-12">
+                <div class="mp-empty">
+                    <div class="mp-empty-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <h4 class="mb-2 mt-4">No hay productos disponibles</h4>
+                    <p class="text-muted">Aún no hay productos de otros agricultores en el marketplace.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginación -->
+        {% if pagination.has_prev or pagination.has_next %}
+        <nav class="mt-5 d-flex justify-content-center">
+            <ul class="mp-pagination">
+                {% if pagination.has_prev %}
+                <li>
+                    <a class="mp-page-btn" href="?page={{ pagination.page|add:'-1' }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                <li>
+                    <span class="mp-page-btn active">{{ pagination.page }}</span>
+                </li>
+                {% if pagination.has_next %}
+                <li>
+                    <a class="mp-page-btn" href="?page={{ pagination.page|add:'1' }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
     </div>
 </div>
+
+
+<!-- ===== ESTILOS (Inicio / Marketplace) ===== -->
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    :root {
+        --mp-green: #3C8D3C;
+        /* Verde Bosque — identidad AgroSFT */
+        --mp-green-2: #2E7535;
+        /* Verde Bosque oscuro */
+        --mp-green-3: #62A96B;
+        /* Verde claro complementario */
+        --mp-amber: #E8853B;
+        /* Ámbar Cálido — CTA/precios */
+        --mp-dark: #12301D;
+        /* Verde profundo para el fallback del hero */
+        --mp-surface: #ffffff;
+        --mp-radius: 18px;
+        --mp-shadow: 0 4px 24px rgba(18, 48, 29, 0.08);
+        --mp-shadow-hover: 0 20px 50px rgba(60, 141, 60, 0.22);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ------------------------------------------------------------------
+   HERO (Banner principal del inicio)
+   ------------------------------------------------------------------ */
+    .mp-hero {
+        position: relative;
+        background: linear-gradient(128deg, #0f2417 0%, #1d4d2b 42%, #3C8D3C 100%);
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    /* textura de puntos sutiles sobre el gradiente */
+    .mp-hero-pattern {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+        background-size: 26px 26px;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .mp-hero-glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.4;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .mp-hero-glow-1 {
+        width: 520px;
+        height: 520px;
+        background: #62A96B;
+        top: -210px;
+        right: -120px;
+    }
+
+    .mp-hero-glow-2 {
+        width: 380px;
+        height: 380px;
+        background: #E8853B;
+        bottom: -160px;
+        left: 12%;
+        opacity: 0.18;
+    }
+
+    .mp-hero-row {
+        min-height: 340px;
+    }
+
+    .mp-hero>.container {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Chip superior */
+    .mp-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        backdrop-filter: blur(8px);
+        color: #E9F7EC;
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    /* Título del hero */
+    .mp-hero-title {
+        font-size: clamp(2.1rem, 4vw, 3.4rem);
+        font-weight: 900;
+        color: #ffffff;
+        line-height: 1.08;
+        margin-bottom: 0.9rem;
+        letter-spacing: -0.02em;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .mp-hero-sub {
+        font-size: 1.06rem;
+        color: rgba(255, 255, 255, 0.82);
+        max-width: 540px;
+        line-height: 1.6;
+    }
+
+    /* Fila de acción: botón CTA + texto secundario */
+    .mp-hero-cta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 1.4rem 0 1.6rem;
+        flex-wrap: wrap;
+    }
+
+    .mp-btn-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #E8853B 0%, #D97A30 100%);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.92rem;
+        padding: 12px 26px;
+        border-radius: 100px;
+        text-decoration: none;
+        box-shadow: 0 10px 26px rgba(232, 133, 59, 0.45);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .mp-btn-cta:hover {
+        transform: translateY(-2px);
+        color: #ffffff;
+        box-shadow: 0 14px 34px rgba(232, 133, 59, 0.55);
+    }
+
+    .mp-hero-hint {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Estadísticas del banner */
+    .mp-stats {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding: 16px 22px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        backdrop-filter: blur(10px);
+        border-radius: 18px;
+        width: fit-content;
+    }
+
+    .mp-stat {
+        text-align: center;
+    }
+
+    .mp-stat-num {
+        font-size: 1.7rem;
+        font-weight: 900;
+        color: #ffffff;
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .mp-stat-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 4px;
+    }
+
+    .mp-stat-sep {
+        width: 1px;
+        height: 34px;
+        background: rgba(255, 255, 255, 0.18);
+    }
+
+    /* Logo flotante */
+    .mp-hero-icon-wrap {
+        width: 170px;
+        height: 170px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25), inset 0 0 40px rgba(255, 255, 255, 0.05);
+        animation: floatIcon 4.5s ease-in-out infinite;
+    }
+
+    .mp-hero-logo {
+        width: 116px;
+        height: 116px;
+        object-fit: contain;
+        filter: drop-shadow(0 6px 18px rgba(255, 255, 255, 0.28));
+    }
+
+    @keyframes floatIcon {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-12px);
+        }
+    }
+
+    /* Responsive del hero en móvil */
+    @media (max-width: 992px) {
+        .mp-hero-row {
+            min-height: auto;
+            padding: 2.2rem 0;
+        }
+
+        .mp-stats {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* ------------------------------------------------------------------
+   TARJETAS DE PRODUCTO (fallback sin Vue)
+   ------------------------------------------------------------------ */
+    .mp-card {
+        background: var(--mp-surface);
+        border-radius: var(--mp-radius);
+        box-shadow: var(--mp-shadow);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        transition: transform 0.35s cubic-bezier(.22, .68, 0, 1.2), box-shadow 0.35s ease;
+        display: flex;
+        flex-direction: column;
+        animation: cardFadeIn 0.5s ease both;
+    }
+
+    .mp-card:hover {
+        transform: translateY(-8px) scale(1.01);
+        box-shadow: var(--mp-shadow-hover);
+    }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .col-xl-3:nth-child(1) .mp-card {
+        animation-delay: 0.05s;
+    }
+
+    .col-xl-3:nth-child(2) .mp-card {
+        animation-delay: 0.10s;
+    }
+
+    .col-xl-3:nth-child(3) .mp-card {
+        animation-delay: 0.15s;
+    }
+
+    .col-xl-3:nth-child(4) .mp-card {
+        animation-delay: 0.20s;
+    }
+
+    .col-xl-3:nth-child(5) .mp-card {
+        animation-delay: 0.25s;
+    }
+
+    .col-xl-3:nth-child(6) .mp-card {
+        animation-delay: 0.30s;
+    }
+
+    .col-xl-3:nth-child(7) .mp-card {
+        animation-delay: 0.35s;
+    }
+
+    .col-xl-3:nth-child(8) .mp-card {
+        animation-delay: 0.40s;
+    }
+
+    /* Imagen */
+    .mp-card-img-wrap {
+        height: 230px;
+        position: relative;
+        overflow: hidden;
+        background: #f0fdf4;
+        flex-shrink: 0;
+    }
+
+    .mp-card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+        transition: transform 0.5s ease;
+    }
+
+    .mp-card:hover .mp-card-img {
+        transform: scale(1.07);
+    }
+
+    .mp-img-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(15, 36, 23, 0.45) 0%, transparent 55%);
+        pointer-events: none;
+    }
+
+    /* Navegación del carrusel de imágenes */
+    .mp-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: #12301D;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        cursor: pointer;
+        z-index: 6;
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .mp-nav-prev {
+        left: 10px;
+    }
+
+    .mp-nav-next {
+        right: 10px;
+    }
+
+    .mp-card-img-wrap:hover .mp-nav {
+        opacity: 1;
+    }
+
+    .mp-nav:hover {
+        background: #ffffff;
+        transform: translateY(-50%) scale(1.12);
+    }
+
+    /* Badges de estado del producto */
+    .mp-badges {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-end;
+        z-index: 5;
+    }
+
+    .mp-badge-status {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 100px;
+        letter-spacing: 0.02em;
+        backdrop-filter: blur(4px);
+    }
+
+    .mp-badge-status.danger {
+        background: rgba(220, 38, 38, 0.92);
+        color: #fff;
+    }
+
+    .mp-badge-status.warning {
+        background: rgba(245, 158, 11, 0.92);
+        color: #fff;
+    }
+
+    .mp-badge-status.secondary {
+        background: rgba(15, 36, 23, 0.65);
+        color: #fff;
+    }
+
+    /* Contador / Hint */
+    .mp-counter,
+    .mp-hint-expand {
+        position: absolute;
+        bottom: 10px;
+        background: rgba(15, 36, 23, 0.7);
+        color: #fff;
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 100px;
+        z-index: 4;
+        pointer-events: none;
+        backdrop-filter: blur(4px);
+    }
+
+    .mp-counter {
+        left: 10px;
+    }
+
+    .mp-hint-expand {
+        right: 10px;
+    }
+
+    /* Sin imagen */
+    .mp-no-img-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(60, 141, 60, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3C8D3C;
+    }
+
+    /* Cuerpo de la tarjeta */
+    .mp-card-body {
+        padding: 20px 20px 14px;
+    }
+
+    .mp-chip {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #2E7535;
+        background: #E8F5E8;
+        padding: 3px 10px;
+        border-radius: 100px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .mp-card-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 6px;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .mp-card-desc {
+        font-size: 0.82rem;
+        color: #64748b;
+        line-height: 1.55;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-bottom: 14px;
+    }
+
+    /* Vendedor */
+    .mp-vendor {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-top: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f1f5f9;
+        margin-bottom: 14px;
+    }
+
+    .mp-vendor-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3C8D3C, #62A96B);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    .mp-vendor-label {
+        font-size: 0.68rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .mp-vendor-name {
+        font-size: 0.85rem;
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    /* Precio + disponibilidad */
+    .mp-price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .mp-price-label {
+        font-size: 0.68rem;
+        color: #94a3b8;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 2px;
+    }
+
+    .mp-price {
+        font-size: 1.35rem;
+        font-weight: 900;
+        color: #E8853B;
+        line-height: 1;
+        letter-spacing: -0.03em;
+    }
+
+    .mp-stock {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .mp-stock.low {
+        color: #d97706;
+    }
+
+    /* Pie de la tarjeta (botones) */
+    .mp-card-footer {
+        padding: 14px 20px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: #f8fafc;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .mp-btn-outline,
+    .mp-btn-primary,
+    .mp-btn-disabled {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-decoration: none;
+    }
+
+    .mp-btn-outline {
+        background: transparent;
+        border: 2px solid #3C8D3C;
+        color: #3C8D3C;
+    }
+
+    .mp-btn-outline:hover {
+        background: #3C8D3C;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .mp-btn-primary {
+        background: linear-gradient(135deg, #E8853B, #D97A30);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(232, 133, 59, 0.35);
+    }
+
+    .mp-btn-primary:hover {
+        box-shadow: 0 6px 22px rgba(232, 133, 59, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .mp-btn-disabled {
+        background: #e2e8f0;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    /* Estado vacío */
+    .mp-empty {
+        background: #fff;
+        border-radius: var(--mp-radius);
+        padding: 72px 40px;
+        text-align: center;
+        box-shadow: var(--mp-shadow);
+        border: 1px dashed #e2e8f0;
+    }
+
+    .mp-empty-icon {
+        width: 90px;
+        height: 90px;
+        background: #E8F5E8;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #62A96B;
+    }
+
+    /* Paginación */
+    .mp-pagination {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .mp-page-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        transition: all 0.2s ease;
+    }
+
+    .mp-page-btn:hover {
+        border-color: #3C8D3C;
+        color: #3C8D3C;
+        transform: translateY(-2px);
+    }
+
+    .mp-page-btn.active {
+        background: linear-gradient(135deg, #3C8D3C, #2E7535);
+        border-color: #3C8D3C;
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(60, 141, 60, 0.4);
+    }
+</style>
+
+<!-- ===== JS CARRUSEL ===== -->
+<script>
+    function navegarCarruselCard(btn, direction, event) {
+        if (event) { event.stopPropagation(); event.preventDefault(); }
+        var container = btn.closest('[data-card-carousel]');
+        if (!container) return;
+        var slides = container.querySelectorAll('.card-carousel-slide');
+        if (!slides || slides.length <= 1) return;
+        var activeIdx = -1;
+        slides.forEach(function (slide, idx) {
+            if (slide.classList.contains('active') || slide.style.display !== 'none') activeIdx = idx;
+        });
+        if (activeIdx === -1) activeIdx = 0;
+        var nextIdx = (activeIdx + direction + slides.length) % slides.length;
+        slides.forEach(function (slide, idx) {
+            if (idx === nextIdx) { slide.style.display = 'block'; slide.classList.add('active'); }
+            else { slide.style.display = 'none'; slide.classList.remove('active'); }
+        });
+        var counterEl = container.querySelector('.curr-slide');
+        if (counterEl) counterEl.textContent = nextIdx + 1;
+    }
+</script>
+
+<!-- ===== LIGHTBOX ===== -->
+<div id="lb-overlay"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
+    <div
+        style="position:absolute;top:0;left:0;right:0;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(0,0,0,0.7),transparent);">
+        <div>
+            <span id="lb-name" style="color:#fff;font-weight:700;font-size:1.05rem;"></span>
+            <span id="lb-counter" style="color:rgba(255,255,255,0.55);font-size:0.82rem;margin-left:10px;"></span>
+        </div>
+        <button onclick="cerrarLightbox()"
+            style="background:rgba(255,255,255,0.13);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:1.15rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:60px 80px;">
+        <img id="lb-img" src="" alt=""
+            style="max-width:100%;max-height:78vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5);transition:opacity 0.2s ease;">
+    </div>
+
+    <button id="lb-prev" onclick="lbNavegar(-1)"
+        style="position:absolute;left:14px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:#fff;width:48px;height:48px;border-radius:50%;font-size:1.2rem;cursor:pointer;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;transition:background 0.2s;"
+        onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <button id="lb-next" onclick="lbNavegar(1)"
+        style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:#fff;width:48px;height:48px;border-radius:50%;font-size:1.2rem;cursor:pointer;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;transition:background 0.2s;"
+        onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+
+    <div id="lb-filmstrip"
+        style="display:flex;gap:8px;padding:10px 20px;overflow-x:auto;background:rgba(0,0,0,0.55);width:100%;justify-content:center;backdrop-filter:blur(4px);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.3) transparent;">
+    </div>
+</div>
+
+<script>
+    var lbImages = [], lbIdx = 0;
+    function abrirLightbox(imagesStr, startIndex, nombre) {
+        lbImages = imagesStr.split('|||').filter(function (s) { return s.trim() !== ''; });
+        lbIdx = parseInt(startIndex) || 0;
+        document.getElementById('lb-name').textContent = nombre || '';
+        document.getElementById('lb-overlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        lbRenderizar(); lbRenderFilmstrip();
+    }
+    function cerrarLightbox() {
+        document.getElementById('lb-overlay').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    function lbNavegar(dir) {
+        if (lbImages.length <= 1) return;
+        lbIdx = (lbIdx + dir + lbImages.length) % lbImages.length;
+        lbRenderizar(); lbActualizarFilmstrip();
+    }
+    function lbRenderizar() {
+        var img = document.getElementById('lb-img');
+        img.style.opacity = '0';
+        setTimeout(function () { img.src = lbImages[lbIdx]; img.style.opacity = '1'; }, 150);
+        document.getElementById('lb-counter').textContent = (lbIdx + 1) + ' / ' + lbImages.length;
+        var show = lbImages.length > 1 ? 'flex' : 'none';
+        document.getElementById('lb-prev').style.display = show;
+        document.getElementById('lb-next').style.display = show;
+    }
+    function lbRenderFilmstrip() {
+        var strip = document.getElementById('lb-filmstrip');
+        strip.innerHTML = '';
+        if (lbImages.length <= 1) { strip.style.display = 'none'; return; }
+        strip.style.display = 'flex';
+        lbImages.forEach(function (src, i) {
+            var thumb = document.createElement('img');
+            thumb.src = src; thumb.alt = '';
+            thumb.style.cssText = 'width:62px;height:62px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid ' + (i === lbIdx ? '#fff' : 'transparent') + ';opacity:' + (i === lbIdx ? '1' : '0.5') + ';transition:all 0.2s;flex-shrink:0;';
+            thumb.onclick = function () { lbIdx = i; lbRenderizar(); lbActualizarFilmstrip(); };
+            strip.appendChild(thumb);
+        });
+    }
+    function lbActualizarFilmstrip() {
+        var thumbs = document.getElementById('lb-filmstrip').querySelectorAll('img');
+        thumbs.forEach(function (t, i) {
+            t.style.border = '2px solid ' + (i === lbIdx ? '#fff' : 'transparent');
+            t.style.opacity = i === lbIdx ? '1' : '0.5';
+        });
+        if (thumbs[lbIdx]) thumbs[lbIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+    document.addEventListener('keydown', function (e) {
+        if (document.getElementById('lb-overlay').style.display !== 'flex') return;
+        if (e.key === 'Escape') cerrarLightbox();
+        if (e.key === 'ArrowLeft') lbNavegar(-1);
+        if (e.key === 'ArrowRight') lbNavegar(1);
+    });
+    document.getElementById('lb-overlay').addEventListener('click', function (e) {
+        if (e.target === this) cerrarLightbox();
+    });
+</script>
+
 {% endblock %}

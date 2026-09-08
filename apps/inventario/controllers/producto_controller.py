@@ -236,6 +236,15 @@ def marketplace(request):
 
     categorias_list = get_categorias_cached()
 
+    # ---- Estadísticas para el banner (HÉROE) del inicio ----
+    # Se calculan sobre el queryset ya filtrado para mostrar cifras reales.
+    try:
+        num_agricultores = productos.values('id_usuario').distinct().count()
+    except Exception:
+        num_agricultores = 0
+    num_categorias = len(categorias_list) if categorias_list else 0
+    num_productos = productos.count()
+
     marketplace_data = {
         'initialProducts': productos_transformados,
         'categories': [{'id': c.id_categoria, 'nombre': c.nombre} for c in categorias_list],
@@ -252,6 +261,10 @@ def marketplace(request):
         'titulo': 'Marketplace',
         'subtitulo': 'Productos disponibles de otros agricultores',
         'marketplace_json': marketplace_data,
+        # Datos para el HÉROE: estadísticas reales del marketplace
+        'num_productos': num_productos,
+        'num_agricultores': num_agricultores,
+        'num_categorias': num_categorias,
     })
 
 
@@ -603,12 +616,35 @@ def editar_producto(request, pk):
     categorias = get_categorias_cached()
     estados = get_estados_cached()
     
+    # Preparar detalle de imágenes con IDs para poder eliminarlas individualmente
+    imagenes_detalle = []
+    if producto_usuario.id_producto.imagen:
+        try:
+            imagenes_detalle.append({
+                'id': 'portada',
+                'url': producto_usuario.id_producto.imagen.url,
+                'es_portada': True
+            })
+        except Exception:
+            pass
+    for sec in producto_usuario.id_producto.imagenes_secundarias.all():
+        try:
+            if sec.imagen:
+                imagenes_detalle.append({
+                    'id': str(sec.id),
+                    'url': sec.imagen.url,
+                    'es_portada': False
+                })
+        except Exception:
+            pass
+
     # Usar producto_form.html que ya existe
     return render(request, 'inventario/producto_form.html', {
         'form': form,
         'producto_usuario': producto_usuario,
         'producto': producto_usuario.id_producto,  # El template usa producto.nombre
         'imagenes': producto_usuario.id_producto.get_imagenes(),
+        'imagenes_detalle': imagenes_detalle,
         'categorias': categorias,
         'estados': estados,
         'titulo': 'Editar Producto',
@@ -713,3 +749,78 @@ def api_verificar_stock(request, producto_id):
     }
     
     return JsonResponse(data)
+
+
+@login_required
+def eliminar_imagen_producto(request, pk, img_id):
+    """
+    Elimina una imagen de un producto (sea la principal/portada o una secundaria).
+    Solo el propietario o un administrador pueden eliminar imágenes.
+    """
+    producto_usuario = get_object_or_404(
+        ProductoUsuario.objects.select_related('id_producto', 'id_usuario'),
+        id_producto_usuario=pk
+    )
+
+    # Verificar permisos
+    if producto_usuario.id_usuario != request.user and not request.user.is_staff:
+        msg = 'No tienes permiso para modificar las imágenes de este producto.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': msg}, status=403)
+        messages.error(request, msg)
+        return redirect('inventario:editar', pk=pk)
+
+    if request.method == 'POST':
+        producto = producto_usuario.id_producto
+        with transaction.atomic():
+            if str(img_id).lower() in ['portada', 'principal']:
+                # Eliminar imagen principal
+                if producto.imagen:
+                    try:
+                        # Si hay secundarias, promocionar la primera a principal
+                        primera_sec = producto.imagenes_secundarias.order_by('orden', 'id').first()
+                        if primera_sec:
+                            producto.imagen = primera_sec.imagen
+                            producto.save()
+                            primera_sec.delete()
+                        else:
+                            try:
+                                producto.imagen.delete(save=False)
+                            except Exception:
+                                pass
+                            producto.imagen = None
+                            producto.save()
+                    except Exception as e:
+                        logger.error(f"Error al eliminar imagen principal: {e}")
+                        producto.imagen = None
+                        producto.save()
+            else:
+                # Eliminar imagen secundaria de tblproducto_imagenes
+                try:
+                    sec_id = int(img_id)
+                    img_sec = ProductoImagen.objects.filter(id=sec_id, id_producto=producto).first()
+                    if img_sec:
+                        try:
+                            if img_sec.imagen:
+                                img_sec.imagen.delete(save=False)
+                        except Exception:
+                            pass
+                        img_sec.delete()
+                    else:
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                            return JsonResponse({'success': False, 'error': 'Imagen no encontrada.'}, status=404)
+                except ValueError:
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({'success': False, 'error': 'ID de imagen inválido.'}, status=400)
+
+        msg = 'Imagen eliminada exitosamente.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True, 
+                'message': msg,
+                'imagenes_restantes': producto.get_imagenes()
+            })
+        messages.success(request, msg)
+        return redirect('inventario:editar', pk=pk)
+
+    return redirect('inventario:editar', pk=pk)
