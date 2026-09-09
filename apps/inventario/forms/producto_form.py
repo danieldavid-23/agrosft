@@ -48,6 +48,7 @@ class ProductoForm(forms.Form):
     )
     imagen = MultipleFileField(
         required=False,
+        error_messages={'required': 'Campo obligatorio'},
         validators=[
             FileExtensionValidator(['jpg', 'jpeg', 'png', 'webp']),
             validate_image_size

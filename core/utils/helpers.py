@@ -190,3 +190,20 @@ def generar_whatsapp_link(telefono, mensaje=""):
         url += f"?text={mensaje_codificado}"
 
     return url
+
+
+def formatear_errores_form(form):
+    """
+    Retorna una cadena legible con los errores de un formulario Django,
+    sin HTML crudo, para mostrar en mensajes de usuario.
+    """
+    if not hasattr(form, 'errors'):
+        return ''
+    errores = form.errors.as_data()
+    partes = []
+    for campo, lista_errores in errores.items():
+        etiqueta = campo.replace('_', ' ').capitalize()
+        mensajes = '; '.join(str(e.message) for e in lista_errores)
+        mensajes = mensajes.replace('Este campo es obligatorio.', 'Campo obligatorio.')
+        partes.append(f'{etiqueta}: {mensajes}')
+    return ' - '.join(partes)

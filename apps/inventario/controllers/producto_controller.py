@@ -11,6 +11,7 @@ from apps.inventario.models import Categoria, Producto, ProductoImagen, Producto
 from apps.inventario.forms.producto_form import ProductoForm
 from apps.inventario.repositories.producto_repository import ProductoRepository
 from apps.usuarios.models.profile_model import Tblusuarios
+from core.utils.helpers import formatear_errores_form
 from apps.ventas.models.movimiento import TipoMovimiento, Movimiento, ProductoUsuarioMovimiento
 import json
 import logging
@@ -653,7 +654,8 @@ def editar_producto(request, pk):
         else:
             # Log de errores de validación para debugging
             logger.error(f"Errores de validación del formulario: {form.errors}")
-            messages.error(request, f'Error al validar el formulario: {form.errors}')
+            mensaje_error = formatear_errores_form(form) or 'Revisa los campos del formulario.'
+            messages.error(request, f'No se pudo guardar. {mensaje_error}')
     else:
         # Preparar datos para el formulario
         initial_data = {
