@@ -1,0 +1,49 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="card-header">
+        <span><i class="fas fa-exchange-alt me-2 text-success"></i>Movimientos de compra y venta</span>
+        <span class="badge-soft badge-blue">{{ movimientos|length }} movimientos</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo</th>
+                        <th>Usuario</th>
+                        <th class="text-end">Total</th>
+                        <th>Fecha</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in movimientos %}
+                    <tr>
+                        <td>#{{ m.id_movimiento }}</td>
+                        <td>
+                            {% if m.id_tipo_movimiento.tipo == 'venta' %}
+                            <span class="badge-soft badge-green"><i class="fas fa-arrow-up me-1"></i>Venta</span>
+                            {% else %}
+                            <span class="badge-soft badge-blue"><i class="fas fa-arrow-down me-1"></i>Compra</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ m.id_usuario.get_full_name }}</td>
+                        <td class="text-end fw-semibold">{{ m.obtener_total|floatformat:0 }}</td>
+                        <td>{{ m.obtener_fecha|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'administracion:movimiento_detalle' m.id_movimiento %}"
+                               class="btn btn-sm btn-outline-primary rounded-pill"><i class="fas fa-eye me-1"></i>Ver</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="empty-state"><i class="fas fa-exchange-alt"></i><p>Sin movimientos.</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

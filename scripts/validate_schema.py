@@ -15,7 +15,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from django.db import connection
-from apps.inventario.models import Producto, ProductoUsuario, Categoria, Estado
+from apps.inventario.models import Producto, ProductoUsuario, Categoria
 from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 from apps.usuarios.models.profile_model import Tblusuarios
 
@@ -146,7 +146,6 @@ def main():
         (Tblusuarios, 'tblusuarios'),
         (Categoria, 'tblcategoria'),
         (Producto, 'tblproducto'),
-        (Estado, 'estado'),
         (TipoMovimiento, 'tipo_movimiento'),
         (ProductoUsuario, 'tblproductos_has_tblusuarios'),
         (Movimiento, 'movimiento'),

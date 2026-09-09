@@ -7,16 +7,92 @@ from django.db import transaction
 from django.utils import timezone
 from django.core.cache import cache
 from decimal import Decimal
-from apps.inventario.models import Categoria, Producto, ProductoImagen, ProductoUsuario, Estado
+from apps.inventario.models import Categoria, Producto, ProductoImagen, ProductoUsuario
 from apps.inventario.forms.producto_form import ProductoForm
 from apps.inventario.repositories.producto_repository import ProductoRepository
 from apps.usuarios.models.profile_model import Tblusuarios
 from apps.ventas.models.movimiento import TipoMovimiento, Movimiento, ProductoUsuarioMovimiento
-from core.utils.helpers import EstadoProducto
 import json
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+@login_required
+def api_crear_categoria(request):
+    """
+    API AJAX para crear una nueva categoría.
+    POST JSON: {"nombre": "Hierbas aromáticas"}
+    Retorna JSON con la categoría creada o error de validación.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        # Fallback a form-encoded
+        data = {'nombre': request.POST.get('nombre', '')}
+
+    nombre = (data.get('nombre') or '').strip()
+
+    # Validaciones
+    if not nombre:
+        return JsonResponse({'success': False, 'error': 'El nombre de la categoría no puede estar vacío.'}, status=400)
+
+    if len(nombre) > 45:
+        return JsonResponse({'success': False, 'error': 'El nombre no puede superar los 45 caracteres.'}, status=400)
+
+    # Verificar duplicado (case-insensitive)
+    if Categoria.objects.filter(nombre__iexact=nombre, activo=True).exists():
+        existente = Categoria.objects.filter(nombre__iexact=nombre, activo=True).first()
+        return JsonResponse({
+            'success': False,
+            'error': f'La categoría "{existente.nombre}" ya existe.',
+            'duplicado': True,
+            'id': existente.id_categoria,
+            'nombre': existente.nombre,
+        }, status=409)
+
+    try:
+        categoria = Categoria.objects.create(
+            nombre=nombre,
+            activo=True
+        )
+        # Invalidar caché de categorías
+        cache.delete('categorias_activas')
+
+        logger.info(f"Nueva categoría creada vía AJAX: '{nombre}' (id={categoria.id_categoria}) por user {request.user.pk}")
+        return JsonResponse({
+            'success': True,
+            'id': categoria.id_categoria,
+            'nombre': categoria.nombre,
+        })
+    except Exception as e:
+        logger.exception("Error al crear categoría vía AJAX")
+        return JsonResponse({'success': False, 'error': f'Error al guardar: {str(e)}'}, status=500)
+
+
+@login_required
+def api_nombres_producto(request):
+    """
+    API AJAX para obtener nombres únicos de productos existentes (no eliminados).
+    GET → JSON: {"nombres": ["Cebolla", "Papa", "Tomate"]}
+    """
+    nombres_qs = Producto.objects.filter(
+        eliminado=False
+    ).exclude(
+        nombre__isnull=True
+    ).exclude(
+        nombre=''
+    ).values_list('nombre', flat=True).distinct().order_by('nombre')
+
+    # Deduplicar preservando orden alfabético
+    nombres = sorted(list(set(n.strip() for n in nombres_qs if n and n.strip())))
+
+    return JsonResponse({'nombres': nombres})
+
+
 
 
 def get_categorias_cached():
@@ -27,16 +103,6 @@ def get_categorias_cached():
         categorias = list(Categoria.objects.filter(activo=True))
         cache.set(cache_key, categorias, 3600)  # 1 hora
     return categorias
-
-
-def get_estados_cached():
-    """Obtiene estados con caché de 1 hora"""
-    cache_key = 'estados_producto'
-    estados = cache.get(cache_key)
-    if estados is None:
-        estados = list(Estado.objects.all())
-        cache.set(cache_key, estados, 3600)  # 1 hora
-    return estados
 
 
 @login_required
@@ -50,8 +116,7 @@ def listar_productos(request):
         id_usuario=request.user
     ).select_related(
         'id_producto__id_categoria',
-        'id_usuario',
-        'id_estado'
+        'id_usuario'
     ).order_by('-id_producto_usuario')
 
     # Aplicar filtros si es AJAX
@@ -96,7 +161,6 @@ def listar_productos(request):
             'precio': float(pu.precio),
             'stock': pu.obtener_stock(),
             'stock_minimo': pu.id_producto.stock_minimo,
-            'estado': pu.id_estado.estado,
             'categoria_nombre': pu.id_producto.id_categoria.nombre,
             'agricultor_id': pu.id_usuario.id_users,
             'esta_agotado': pu.cantidad <= 0,
@@ -119,12 +183,10 @@ def listar_productos(request):
         })
 
     categorias = get_categorias_cached()
-    estados = get_estados_cached()
 
     inventario_data = {
         'initialProducts': productos_transformados,
         'categories': [{'id': c.id_categoria, 'nombre': c.nombre} for c in categorias],
-        'estados': [{'id': e.id_estado, 'nombre': e.estado} for e in estados],
         'urls': {
             'listar': reverse('inventario:listar'),
             'crear': reverse('inventario:crear'),
@@ -143,7 +205,6 @@ def listar_productos(request):
         'subtitulo': 'Gestiona tus productos registrados',
         'inventario_json': inventario_data,
         'categorias': categorias,
-        'estados': estados,
     })
 
 
@@ -153,16 +214,12 @@ def marketplace(request):
     Vista del INICIO/MARKETPLACE - Muestra productos de OTROS usuarios
     Con botones de Agregar al carrito y Ver Detalle
     """
-    # Obtener productos de OTROS usuarios (excluyendo los del usuario actual) y que estén aprobados
-    estado_aprobado = EstadoProducto.APROBADO
+    # Obtener productos de OTROS usuarios (excluyendo los del usuario actual)
     productos = ProductoUsuario.objects.exclude(
         id_usuario=request.user
-    ).filter(
-        id_estado__estado=estado_aprobado
     ).select_related(
         'id_producto__id_categoria',
-        'id_usuario',
-        'id_estado'
+        'id_usuario'
     ).order_by('-id_producto_usuario')
     
     # Aplicar filtros si es AJAX
@@ -213,7 +270,6 @@ def marketplace(request):
             'precio': float(pu.precio),
             'stock': pu.obtener_stock(),
             'stock_minimo': pu.id_producto.stock_minimo,
-            'estado': pu.id_estado.estado,
             'categoria_nombre': pu.id_producto.id_categoria.nombre,
             'agricultor_id': pu.id_usuario.id_users,
             'agricultor_nombre': f"{pu.id_usuario.nombres} {pu.id_usuario.apellidos}",
@@ -275,28 +331,21 @@ def crear_producto(request):
     Usa el formulario ProductoForm y la plantilla producto_form.html.
     """
     if request.method == 'POST':
-        form = ProductoForm(request.POST, request.FILES)
+        form = ProductoForm(request.POST, request.FILES, requerir_imagen=True)
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    # 1. Determinar el estado inicial
-                    estado_obj = form.cleaned_data.get('id_estado')
-                    if not estado_obj:
-                        estado_obj = Estado.objects.filter(estado__iexact='aprobado').first() or Estado.objects.first()
-                    estado_str = estado_obj.estado.lower() if estado_obj else 'aprobado'
-
                     # Obtener todos los archivos de imagen enviados
                     archivos_imagen = request.FILES.getlist('imagen')
                     primera_imagen = archivos_imagen[0] if archivos_imagen else None
 
-                    # 2. Crear producto maestro en tblproducto
+                    # 1. Crear producto maestro en tblproducto
                     producto = Producto.objects.create(
                         nombre=form.cleaned_data['nombre'],
                         descripcion=form.cleaned_data.get('descripcion') or '',
                         id_categoria=form.cleaned_data['id_categoria'],
                         cantidad=form.cleaned_data['cantidad'],
                         stock_minimo=form.cleaned_data.get('stock_minimo') or 5,
-                        estado=estado_str,
                         imagen=primera_imagen
                     )
 
@@ -309,7 +358,7 @@ def crear_producto(request):
                                 orden=idx
                             )
 
-                    # 3. Crear relación en tblproductos_has_tblusuarios (ProductoUsuario)
+                    # 2. Crear relación en tblproductos_has_tblusuarios (ProductoUsuario)
                     precio_val = form.cleaned_data.get('precio')
                     if precio_val is None:
                         precio_val = Decimal('0.00')
@@ -317,12 +366,11 @@ def crear_producto(request):
                     pu = ProductoUsuario.objects.create(
                         id_producto=producto,
                         id_usuario=request.user,
-                        id_estado=estado_obj,
                         cantidad=Decimal(str(form.cleaned_data['cantidad'])),
                         precio=precio_val
                     )
 
-                    # 4. Registrar movimiento inicial de ingreso
+                    # 3. Registrar movimiento inicial de ingreso
                     try:
                         tipo_ingreso = TipoMovimiento.objects.filter(tipo__in=['compra', 'ingreso']).first()
                         if not tipo_ingreso:
@@ -352,17 +400,14 @@ def crear_producto(request):
             logger.error(f"Errores de validación al crear producto: {form.errors}")
             messages.error(request, 'Por favor corrige los errores indicados en el formulario.')
     else:
-        estado_aprobado = Estado.objects.filter(estado__iexact='aprobado').first() or Estado.objects.first()
-        form = ProductoForm(initial={'id_estado': estado_aprobado, 'stock_minimo': 5, 'cantidad': 1})
+        form = ProductoForm(initial={'stock_minimo': 5, 'cantidad': 1}, requerir_imagen=True)
 
     categorias = get_categorias_cached()
-    estados = get_estados_cached()
 
     return render(request, 'inventario/producto_form.html', {
         'form': form,
         'accion': 'crear',
         'categorias': categorias,
-        'estados': estados,
     })
 
 
@@ -411,17 +456,14 @@ def venta_directa(request):
                     'id_categoria': categoria,
                     'cantidad': 0,
                     'stock_minimo': 5,
-                    'estado': EstadoProducto.APROBADO.lower()
                 }
             )
-            estado_aprobado = Estado.objects.filter(estado__iexact='aprobado').first() or Estado.objects.first()
             precio_val = Decimal(str(precio_raw)) if precio_raw else Decimal('0.00')
             pu = ProductoUsuario.objects.create(
                 id_producto=prod_master,
                 id_usuario=request.user,
                 cantidad=Decimal(str(cantidad)), # Le asignamos la cantidad para que pueda venderse
-                precio=precio_val,
-                id_estado=estado_aprobado
+                precio=precio_val
             )
 
         # 2. Validar stock disponible
@@ -489,7 +531,6 @@ def venta_directa(request):
     # GET: Cargar datos para el formulario de Venta Directa
     form = ProductoForm()
     categorias = get_categorias_cached()
-    estados = get_estados_cached()
     
     # Productos del inventario del propio vendedor (con stock disponible)
     mis_productos = ProductoUsuario.objects.filter(
@@ -510,7 +551,6 @@ def venta_directa(request):
     return render(request, 'inventario/crear_producto.html', {
         'form': form,
         'categorias': categorias,
-        'estados': estados,
         'mis_productos': mis_productos,
         'clientes_disponibles': clientes_disponibles,
         'productos_existentes': productos_existentes
@@ -529,71 +569,87 @@ def editar_producto(request, pk):
         messages.error(request, 'No tienes permiso para editar este producto.')
         return redirect('inventario:listar')
     
-    if request.method == 'POST':
-        form = ProductoForm(request.POST, request.FILES)  # Eliminar instance= que no es válido para forms.Form
-        if form.is_valid():
-            with transaction.atomic():
-                # Actualizar campos del producto maestro (tblproducto)
-                producto = producto_usuario.id_producto
-                producto.nombre = form.cleaned_data['nombre']
-                producto.descripcion = form.cleaned_data['descripcion']
-                producto.id_categoria = form.cleaned_data['id_categoria']
-                
-                # Actualizar imágenes si se proporcionan nuevas (conservando existentes)
-                archivos_nuevos = request.FILES.getlist('imagen')
-                if archivos_nuevos:
-                    if not producto.imagen:
-                        producto.imagen = archivos_nuevos[0]
-                        archivos_a_agregar = archivos_nuevos[1:]
-                    else:
-                        archivos_a_agregar = archivos_nuevos
+    # Stock actual de la publicación (entero, unidades no fraccionables)
+    stock_actual = int(producto_usuario.cantidad)
 
-                    ultimo_orden = producto.imagenes_secundarias.count()
-                    for idx, img_file in enumerate(archivos_a_agregar, start=ultimo_orden + 1):
-                        ProductoImagen.objects.create(
-                            id_producto=producto,
-                            imagen=img_file,
-                            orden=idx
+    # Determinar si la publicación ya tiene al menos una imagen registrada
+    tiene_imagen = bool(producto_usuario.id_producto.imagen) or producto_usuario.id_producto.imagenes_secundarias.exists()
+
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, requerir_imagen=(not tiene_imagen))  # Eliminar instance= que no es válido para forms.Form
+        if form.is_valid():
+            nuevo_stock = int(form.cleaned_data['cantidad'])
+
+            # Validación de servidor: no se permite reducir el stock desde la edición.
+            if nuevo_stock < stock_actual:
+                messages.error(
+                    request,
+                    f'No puedes reducir las unidades de stock. '
+                    f'Stock actual: {stock_actual} unidad(es), intentas registrar: {nuevo_stock}. '
+                    f'Solo se permite reabastecer (valor igual o mayor al actual).'
+                )
+                form.add_error('cantidad', f'Debe ser igual o mayor al stock actual ({stock_actual}).')
+            else:
+                with transaction.atomic():
+                    # Actualizar campos del producto maestro (tblproducto)
+                    # NOTA: nombre y categoría NO son editables (se conservan del registro original).
+                    producto = producto_usuario.id_producto
+                    producto.descripcion = form.cleaned_data['descripcion']
+                    
+                    # Actualizar imágenes si se proporcionan nuevas (conservando existentes)
+                    archivos_nuevos = request.FILES.getlist('imagen')
+                    if archivos_nuevos:
+                        if not producto.imagen:
+                            producto.imagen = archivos_nuevos[0]
+                            archivos_a_agregar = archivos_nuevos[1:]
+                        else:
+                            archivos_a_agregar = archivos_nuevos
+
+                        ultimo_orden = producto.imagenes_secundarias.count()
+                        for idx, img_file in enumerate(archivos_a_agregar, start=ultimo_orden + 1):
+                            ProductoImagen.objects.create(
+                                id_producto=producto,
+                                imagen=img_file,
+                                orden=idx
+                            )
+                    
+                    # TODOS los usuarios pueden editar stock_minimo
+                    stock_minimo_value = form.cleaned_data.get('stock_minimo')
+                    if stock_minimo_value is not None:
+                        producto.stock_minimo = stock_minimo_value
+                    
+                    producto.save()
+                    logger.info(f"Producto maestro actualizado: {producto.nombre}, stock_minimo: {producto.stock_minimo}")
+                    
+                    # Actualizar campos específicos del usuario (tblproductos_has_tblusuarios)
+                    # NOTA: No se actualiza 'cantidad' aquí: el trigger de BD la gestiona.
+                    producto_usuario.precio = form.cleaned_data['precio']
+                    producto_usuario.save()
+                    
+                    # Reabastecimiento: cantidad nueva mayor que la actual
+                    diferencia = nuevo_stock - stock_actual
+                    if diferencia > 0:
+                        # El trigger trg_actualizar_stock_oferta suma 'diferencia' al stock.
+                        tipo_reab, _ = TipoMovimiento.objects.get_or_create(tipo='reabastecimiento')
+                        movimiento = Movimiento.objects.create(
+                            id_tipo_movimiento=tipo_reab,
+                            id_usuario=request.user
                         )
-                
-                # TODOS los usuarios pueden editar stock_minimo
-                stock_minimo_value = form.cleaned_data.get('stock_minimo')
-                if stock_minimo_value is not None:
-                    producto.stock_minimo = stock_minimo_value
-                
-                producto.save()
-                logger.info(f"Producto maestro actualizado: {producto.nombre}, stock_minimo: {producto.stock_minimo}")
-                
-                # Calcular diferencia para el movimiento de stock antes de actualizar
-                diferencia_stock = form.cleaned_data['cantidad'] - producto_usuario.cantidad
-                
-                # Actualizar campos específicos del usuario (tblproductos_has_tblusuarios)
-                # NOTA: No se actualiza 'cantidad' aquí para evitar conflictos con el trigger de BD
-                producto_usuario.precio = form.cleaned_data['precio']
-                
-                # Cualquier usuario puede cambiar el estado de su producto
-                if form.cleaned_data.get('id_estado'):
-                    producto_usuario.id_estado = form.cleaned_data['id_estado']
-                
-                producto_usuario.save()
-                
-                # Registrar el movimiento de stock si hubo cambio
-                if diferencia_stock != 0:
-                    tipo_venta, _ = TipoMovimiento.objects.get_or_create(tipo='venta')
-                    movimiento = Movimiento.objects.create(
-                        id_tipo_movimiento=tipo_venta,
-                        id_usuario=request.user
-                    )
-                    ProductoUsuarioMovimiento.objects.create(
-                        id_movimiento=movimiento,
-                        id_producto_usuario=producto_usuario,
-                        cantidad=diferencia_stock
-                    )
-                
-                logger.info(f"ProductoUsuario actualizado: cantidad={producto_usuario.cantidad}, precio={producto_usuario.precio}")
-                
-                messages.success(request, '¡Producto actualizado exitosamente!')
-                return redirect('inventario:listar')
+                        ProductoUsuarioMovimiento.objects.create(
+                            id_movimiento=movimiento,
+                            id_producto_usuario=producto_usuario,
+                            cantidad=diferencia
+                        )
+                        logger.info(
+                            f"Reabastecimiento registrado: +{diferencia} unidades para "
+                            f"ProductoUsuario #{producto_usuario.id_producto_usuario} "
+                            f"(movimiento #{movimiento.id_movimiento})"
+                        )
+                    
+                    logger.info(f"ProductoUsuario actualizado: cantidad={producto_usuario.cantidad}, precio={producto_usuario.precio}")
+                    
+                    messages.success(request, '¡Producto actualizado exitosamente!')
+                    return redirect('inventario:listar')
         else:
             # Log de errores de validación para debugging
             logger.error(f"Errores de validación del formulario: {form.errors}")
@@ -606,15 +662,17 @@ def editar_producto(request, pk):
             'id_categoria': producto_usuario.id_producto.id_categoria,
             'stock_minimo': producto_usuario.id_producto.stock_minimo,
             'imagen': producto_usuario.id_producto.imagen,
-            'cantidad': producto_usuario.cantidad,  # Ahora es Decimal, no necesita conversión
+            'cantidad': stock_actual,  # Entero: evita mostrar decimales (.00)
             'precio': producto_usuario.precio,
-            'id_estado': producto_usuario.id_estado,
         }
-        form = ProductoForm(initial=initial_data)
+        form = ProductoForm(initial=initial_data, requerir_imagen=(not tiene_imagen))
         # TODOS los usuarios pueden editar stock_minimo (sin restricciones)
 
+    # Configurar el campo 'cantidad' para impedir bajar el stock (form + input)
+    form.fields['cantidad'].widget.attrs['min'] = str(stock_actual)
+    form.fields['cantidad'].min_value = stock_actual
+
     categorias = get_categorias_cached()
-    estados = get_estados_cached()
     
     # Preparar detalle de imágenes con IDs para poder eliminarlas individualmente
     imagenes_detalle = []
@@ -646,7 +704,6 @@ def editar_producto(request, pk):
         'imagenes': producto_usuario.id_producto.get_imagenes(),
         'imagenes_detalle': imagenes_detalle,
         'categorias': categorias,
-        'estados': estados,
         'titulo': 'Editar Producto',
         'accion': 'editar'
     })
@@ -680,58 +737,6 @@ def eliminar_producto(request, pk):
         'producto_usuario': producto_usuario,
         'producto': producto_usuario.id_producto
     })
-
-# Nuevas funcionalidades para aprobar y rechazar productos
-@login_required
-def aprobar_producto(request, producto_id):
-    producto_usuario = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)
-    
-    if not (request.user.is_staff or request.user.is_superuser):
-        logger.warning(f"Permission denied: user {request.user.pk} attempted to approve product {producto_id}")
-        messages.error(request, 'No tienes permiso para aprobar este producto.')
-        return redirect('inventario:listar')
-    
-    # Cambiar el estado en el modelo ProductoUsuario
-    estado_aprobado = Estado.objects.get(estado=EstadoProducto.APROBADO)
-    producto_usuario.id_estado = estado_aprobado
-    producto_usuario.save()
-    
-    # Registrar en historial
-    ProductoRepository.log_action(
-        producto_id=producto_usuario.id_producto_usuario,
-        user_id=request.user.id_users,  # Usar id_users para el modelo Tblusuarios
-        action='aprobacion'
-    )
-    
-    logger.info(f"Product {producto_id} approved by user {request.user.pk}")
-    messages.success(request, 'Producto aprobado exitosamente.')
-    return redirect('inventario:listar')
-
-
-@login_required
-def rechazar_producto(request, producto_id):
-    producto_usuario = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)
-    
-    if not (request.user.is_staff or request.user.is_superuser):
-        logger.warning(f"Permission denied: user {request.user.pk} attempted to reject product {producto_id}")
-        messages.error(request, 'No tienes permiso para rechazar este producto.')
-        return redirect('inventario:listar')
-    
-    # Cambiar el estado en el modelo ProductoUsuario
-    estado_rechazado = Estado.objects.get(estado=EstadoProducto.RECHAZADO)
-    producto_usuario.id_estado = estado_rechazado
-    producto_usuario.save()
-    
-    # Registrar en historial
-    ProductoRepository.log_action(
-        producto_id=producto_usuario.id_producto_usuario,
-        user_id=request.user.id_users,  # Usar id_users para el modelo Tblusuarios
-        action='rechazo'
-    )
-    
-    logger.info(f"Product {producto_id} rejected by user {request.user.pk}")
-    messages.success(request, 'Producto rechazado exitosamente.')
-    return redirect('inventario:listar')
 
 
 def api_verificar_stock(request, producto_id):

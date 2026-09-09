@@ -1,0 +1,46 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="card-header">
+        <span><i class="fas fa-file-invoice-dollar me-2 text-success"></i>Facturas emitidas</span>
+        <span class="badge-soft badge-green">{{ facturas|length }} facturas</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th class="text-end">Total</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in facturas %}
+                    <tr>
+                        <td>#{{ f.id_factura }}</td>
+                        <td>{{ f.usuario.correo }}</td>
+                        <td class="text-end fw-semibold">{{ f.total|floatformat:0 }}</td>
+                        <td>
+                            {% if f.estado == 'emitida' %}<span class="badge-soft badge-green">Emitida</span>
+                            {% else %}<span class="badge-soft badge-red">Cancelada</span>{% endif %}
+                        </td>
+                        <td>{{ f.creada_en|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'administracion:factura_detalle' f.id_factura %}"
+                               class="btn btn-sm btn-outline-primary rounded-pill"><i class="fas fa-eye me-1"></i>Ver</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="empty-state"><i class="fas fa-file-invoice-dollar"></i><p>Sin facturas.</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

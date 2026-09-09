@@ -31,14 +31,14 @@ def producto_detail(request, pk):
         id_producto__eliminado=False,
     ).exclude(
         id_producto_usuario=pk
-    ).select_related('id_producto', 'id_estado', 'id_usuario')[:4]
+    ).select_related('id_producto', 'id_usuario')[:4]
     
     imagenes = producto.id_producto.get_imagenes()
-    
+
     contexto = {
         'producto': producto,
         'imagenes': imagenes,
-        'relacionados': relacionados
+        'relacionados': relacionados,
     }
     return render(request, 'inventario/Productosdetalles.html', contexto)
 
@@ -71,9 +71,9 @@ def producto_delete(request, pk):
 def dashboard_inventario(request):
     # Estadísticas generales
     total_productos = Producto.objects.filter(eliminado=False).count()
-    productos_activos = Producto.objects.filter(eliminado=False, estado='aprobado').count()
-    productos_pendientes = Producto.objects.filter(eliminado=False, estado='pendiente').count()
-    productos_rechazados = Producto.objects.filter(eliminado=False, estado='rechazado').count()
+    productos_activos = ProductoUsuario.objects.filter(id_producto__eliminado=False).count()
+    productos_pendientes = 0
+    productos_rechazados = 0
     
     contexto = {
         'total_productos': total_productos,
@@ -89,7 +89,6 @@ def dashboard_inventario(request):
 def listar_productos_api(request):
     """Endpoint para listar productos con posibilidad de filtrar"""
     productos = ProductoRepository.get_all_with_filters(
-        estado=request.GET.get('estado', ''),
         categoria_id=request.GET.get('categoria_id', ''),
         nombre=request.GET.get('nombre', '')
     )
@@ -104,7 +103,6 @@ def listar_productos_api(request):
             'categoria': producto.id_producto.id_categoria.nombre if hasattr(producto, 'id_producto') and producto.id_producto.id_categoria else '',
             'precio': float(producto.precio) if hasattr(producto, 'precio') else float(producto.precio if hasattr(producto, 'precio') else 0),
             'stock': int(producto.cantidad) if hasattr(producto, 'cantidad') else producto.cantidad,
-            'estado': producto.id_estado.estado if hasattr(producto, 'id_estado') else producto.estado,
             'imagen': image_cache_bust(producto.id_producto.imagen.url) if hasattr(producto, 'id_producto') and producto.id_producto.imagen else None,
             'fecha_creacion': producto.fecha_creacion.strftime('%d/%m/%Y %H:%M') if hasattr(producto, 'fecha_creacion') else ''
         })

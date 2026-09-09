@@ -27,12 +27,7 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Badge superpuesto a la imagen -->
-                    <div class="position-absolute top-0 start-0 p-3">
-                        <span class="badge {% if producto.estado == 'aprobado' %}bg-success{% elif producto.estado == 'pendiente' %}bg-warning text-dark{% else %}bg-danger{% endif %} px-3 py-2 shadow-sm rounded-pill fs-6 border border-white">
-                            {{ producto.get_estado_display }}
-                        </span>
-                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -88,7 +83,7 @@
                 </div>
                 
                 <!-- Botón de Acción Principal (Comprar / Gestionar) -->
-                {% if user.id == producto.agricultor_id or user.is_staff or user.is_superuser %}
+                {% if user.id == producto.agricultor_id %}
                 <div class="card-footer bg-light border-0 p-3 pt-0 rounded-bottom-4">
                     <div class="d-flex flex-column flex-sm-row gap-2 pt-3">
                         <a href="{% url 'inventario:editar' producto.id %}" class="btn btn-primary btn-lg flex-grow-1 rounded-pill fw-bold shadow-sm">

@@ -79,7 +79,7 @@ def prueba_insercion():
     
     try:
         # Crear un objeto de prueba
-        from apps.inventario.models import Producto, Estado
+        from apps.inventario.models import Producto
         from apps.usuarios.models.profile_model import Tblusuarios
         
         # Obtener o crear datos de prueba
@@ -95,17 +95,10 @@ def prueba_insercion():
             print("⚠️  No hay productos en la BD, saltando prueba de inserción")
             return True
         
-        if Estado.objects.exists():
-            estado = Estado.objects.first()
-        else:
-            print("⚠️  No hay estados en la BD, saltando prueba de inserción")
-            return True
-        
         print("\n📝 Creando ProductoUsuario de prueba...")
         pu = ProductoUsuario(
             id_producto=producto,
             id_usuario=usuario,
-            id_estado=estado,
             cantidad=15.50,  # Decimal directo, no string
             precio=25.99
         )

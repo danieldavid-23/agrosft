@@ -29,8 +29,8 @@ class MovimientoAdmin(admin.ModelAdmin):
 
 @admin.register(ProductoUsuarioMovimiento)
 class ProductoUsuarioMovimientoAdmin(admin.ModelAdmin):
-    list_display = ['id_movimiento_usuario', 'id_producto_usuario', 'id_movimiento', 'cantidad_display', 'calificacion_display', 'fecha_movimiento']
-    list_filter = ['fecha_movimiento', 'calificacion']
+    list_display = ['id_movimiento_usuario', 'id_producto_usuario', 'id_movimiento', 'cantidad_display', 'fecha_movimiento']
+    list_filter = ['fecha_movimiento']
     search_fields = ['id_producto_usuario__id_producto__nombre', 'id_movimiento__id_usuario__nombres']
     ordering = ['-fecha_movimiento']
     list_per_page = 20
@@ -40,10 +40,3 @@ class ProductoUsuarioMovimientoAdmin(admin.ModelAdmin):
         color = '#dc2626' if obj.cantidad < 0 else '#059669'
         return format_html('<span style="color: {}; font-weight: bold;">{}</span>', color, obj.cantidad)
     cantidad_display.short_description = 'Cantidad'
-
-    def calificacion_display(self, obj):
-        if obj.calificacion:
-            estrellas = '★' * int(obj.calificacion) + '☆' * (5 - int(obj.calificacion))
-            return f'{estrellas} ({obj.calificacion})'
-        return '-'
-    calificacion_display.short_description = 'Calificación'

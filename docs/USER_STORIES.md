@@ -100,7 +100,7 @@
 
 **Criterios de Aceptación**:
 - [x] Formulario solicita: nombre, descripción, categoría, precio, cantidad, stock mínimo
-- [x] Permite subir una fotografía del producto (JPG/JPEG/PNG/WEBP, máx. 5MB)
+- [x] La fotografía del producto es **obligatoria** (JPG/JPEG/PNG/WEBP, máx. 5MB); sin imagen el formulario no se guarda
 - [x] Si el producto ya existe en el catálogo, reutiliza el registro maestro
 - [x] Crea relación ProductoUsuario con estado "Pendiente"
 - [x] Si cantidad > 0, registra movimiento inicial de stock
@@ -154,11 +154,15 @@ graph TD
 **Requisitos relacionados**: [[REQUIREMENTS#RF-I03]]
 
 **Criterios de Aceptación**:
-- [x] Solo el dueño o admin puede editar
+- [x] Solo el dueño puede editar
 - [x] Formulario precargado con datos actuales
-- [x] Si cambia la cantidad, registra movimiento de diferencia de stock
-- [x] No actualiza stock directamente (lo hace el trigger de BD)
-- [x] Admin puede cambiar stock_minimo
+- [x] **Nombre y categoría no son modificables** (se muestran solo lectura al editar)
+- [x] La fotografía es obligatoria en edición cuando la publicación no tiene ninguna imagen registrada
+- [x] La cantidad de stock se muestra como **número entero** (sin decimales ni `.00`)
+- [x] No se puede reducir el stock: el input tiene `step="1"` y `min="<stock_actual>"`, y la validación JS impide ingresar un valor menor
+- [x] Validación server-side: si `nuevo_stock < stock_actual` retorna mensaje de error y cancela la operación
+- [x] Si la cantidad aumenta (`diferencia > 0`), registra un `Movimiento` de tipo **`reabastecimiento`** y su detalle (`cantidad = diferencia`)
+- [x] No actualiza stock directamente (lo hace el trigger de BD `trg_actualizar_stock_oferta`)
 
 **Implementación**: `apps/inventario/controllers/producto_controller.py` → `editar_producto()`
 

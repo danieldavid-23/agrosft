@@ -173,21 +173,6 @@
               <p class="mb-0">{{ producto.id_producto.id_categoria.nombre }}</p>
             </div>
             <div class="col-md-6">
-              <h5>Estado:</h5>
-              <p class="mb-0">
-                <span class="badge bg-{% if producto.id_estado.estado == 'aprobado' %}success{% elif producto.id_estado.estado == 'pendiente' %}secondary{% elif producto.id_estado.estado == 'rechazado' %}danger{% else %}dark{% endif %}">
-                  {{ producto.id_estado.estado|capfirst }}
-                </span>
-              </p>
-            </div>
-          </div>
-
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <h5>Precio:</h5>
-              <p class="mb-0 fw-bold text-success">{{ producto.precio|currency_cop }}</p>
-            </div>
-            <div class="col-md-6">
               <h5>Cantidad Disponible:</h5>
               <p class="mb-0">
                 <span class="badge {% if producto.cantidad <= producto.id_producto.stock_minimo %}bg-warning text-dark{% else %}bg-success{% endif %}">
@@ -241,7 +226,7 @@
             <a href="{% url 'inventario:listar' %}" class="btn btn-secondary">
               <i class="fas fa-arrow-left me-2"></i>Volver a la lista
             </a>
-            {% if producto.id_usuario.id_users == user.id_users or user.is_staff or user.is_superuser %}
+            {% if producto.id_usuario.id_users == user.id_users %}
             <a href="{% url 'inventario:editar' producto.id_producto_usuario %}" class="btn btn-primary ms-2">
               <i class="fas fa-edit me-2"></i>Editar
             </a>

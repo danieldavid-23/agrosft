@@ -43,10 +43,8 @@ def layout_data(request):
     urls['historial'] = _url('usuarios:historial')
     urls['cambiar_password'] = _url('usuarios:cambiar_password')
 
-    urls['admin_usuarios'] = _url('usuarios:admin_usuarios_list')
-    urls['admin_categorias'] = _url('usuarios:admin_categorias_list')
-    urls['admin_moderacion'] = _url('usuarios:admin_moderacion')
-    urls['admin_estadisticas'] = _url('usuarios:admin_estadisticas')
+    # Panel de administración (visible solo para staff/superuser)
+    urls['panel_admin'] = _url('administracion:dashboard', '#')
 
 
 

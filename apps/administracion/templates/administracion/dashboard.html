@@ -1,0 +1,154 @@
+{% extends 'administracion/base_panel.html' %}
+{% load humanize %}
+
+{% block content %}
+<!-- ===== Tarjetas de estadísticas ===== -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#e8f5e8;color:#25632c;"><i class="fas fa-users"></i></div>
+            <div class="stat-value">{{ stats.usuarios }}</div>
+            <div class="stat-label">Usuarios totales</div>
+            <div class="mt-2"><span class="badge-soft badge-green">{{ stats.usuarios_activos }} activos</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#eff6ff;color:#1e40af;"><i class="fas fa-boxes"></i></div>
+            <div class="stat-value">{{ stats.productos }}</div>
+            <div class="stat-label">Productos en catálogo</div>
+            <div class="mt-2"><span class="badge-soft badge-blue">{{ stats.publicaciones }} publicaciones</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fffbeb;color:#b45309;"><i class="fas fa-file-invoice-dollar"></i></div>
+            <div class="stat-value">{{ stats.monto_facturado|floatformat:0|intcomma }}</div>
+            <div class="stat-label">COP facturados</div>
+            <div class="mt-2"><span class="badge-soft badge-amber">{{ stats.facturas }} facturas</span></div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fee2e2;color:#991b1b;"><i class="fas fa-box"></i></div>
+            <div class="stat-value">{{ stats.stock_total }}</div>
+            <div class="stat-label">Stock total</div>
+            <div class="mt-2"><span class="badge-soft badge-red">{{ stats.stock_bajo }} con stock bajo</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Actividad reciente + resumen ===== -->
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="panel-card mb-3">
+            <div class="card-header">
+                <span>Resumen rápido</span>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="fas fa-tags text-success me-2"></i>Categorías</span>
+                        <strong>{{ stats.categorias }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="fas fa-exchange-alt text-primary me-2"></i>Movimientos</span>
+                        <strong>{{ stats.movimientos }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="fas fa-user-plus text-info me-2"></i>Usuarios (7 días)</span>
+                        <strong>{{ stats.nuevos_usuarios_semana }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="fas fa-receipt text-warning me-2"></i>Facturas (7 días)</span>
+                        <strong>{{ stats.facturas_semana }}</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <div class="card-header">
+                <span>Últimas acciones de auditoría</span>
+            </div>
+            <div class="card-body p-0">
+                {% if ultimas_auditorias %}
+                <ul class="list-group list-group-flush">
+                    {% for log in ultimas_auditorias %}
+                    <li class="list-group-item px-3 py-2">
+                        <div class="d-flex justify-content-between">
+                            <strong class="small">{{ log.accion }}</strong>
+                            <small class="text-muted">{{ log.fecha|date:"d/m H:i" }}</small>
+                        </div>
+                        <small class="text-muted">{{ log.objetivo|default:'—' }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="empty-state p-4"><i class="fas fa-shield-alt"></i><p>Sin registros de auditoría.</p></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="panel-card mb-3">
+            <div class="card-header">
+                <span>Últimos usuarios registrados</span>
+                <a href="{% url 'administracion:usuarios' %}" class="btn btn-sm btn-link text-decoration-none">Ver todos</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead><tr><th>Usuario</th><th>Correo</th><th>Registro</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            {% for u in ultimos_usuarios %}
+                            <tr>
+                                <td class="fw-semibold">{{ u.get_full_name }}</td>
+                                <td>{{ u.correo }}</td>
+                                <td>{{ u.fecha_creacion|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if u.is_active %}<span class="badge-soft badge-green">Activo</span>
+                                    {% else %}<span class="badge-soft badge-red">Inactivo</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4"><div class="empty-state"><p>Sin usuarios.</p></div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <div class="card-header">
+                <span>Últimas facturas</span>
+                <a href="{% url 'administracion:facturas' %}" class="btn btn-sm btn-link text-decoration-none">Ver todas</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                        <thead><tr><th>Factura</th><th>Usuario</th><th>Total</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            {% for f in ultimas_facturas %}
+                            <tr>
+                                <td class="fw-semibold">#{{ f.id_factura }}</td>
+                                <td>{{ f.usuario.correo }}</td>
+                                <td>{{ f.total|floatformat:0 }}</td>
+                                <td>
+                                    {% if f.estado == 'emitida' %}<span class="badge-soft badge-green">Emitida</span>
+                                    {% else %}<span class="badge-soft badge-red">Cancelada</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4"><div class="empty-state"><p>Sin facturas.</p></div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

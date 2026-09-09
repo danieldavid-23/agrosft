@@ -1,0 +1,68 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="card-header">
+        <span><i class="fas fa-boxes me-2 text-success"></i>Catálogo de productos</span>
+        <span class="badge-soft badge-green">{{ productos|length }} productos</span>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar producto..." value="{{ q }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="categoria" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    {% for c in categorias %}
+                    <option value="{{ c.id_categoria }}" {% if categoria == c.id_categoria|stringformat:'s' %}selected{% endif %}>{{ c.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-admin-primary w-100"><i class="fas fa-filter me-1"></i>Filtrar</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Stock mín.</th>
+                        <th>Estado</th>
+                        <th>Registro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos %}
+                    <tr>
+                        <td>#{{ p.id_producto }}</td>
+                        <td class="fw-semibold">{{ p.nombre }}</td>
+                        <td>{{ p.id_categoria.nombre|default:'—' }}</td>
+                        <td class="text-center">
+                            <span class="fw-bold {% if p.cantidad <= p.stock_minimo %}text-danger{% else %}text-success{% endif %}">{{ p.cantidad }}</span>
+                        </td>
+                        <td class="text-center">{{ p.stock_minimo }}</td>
+                        <td>
+                            {% if p.eliminado %}<span class="badge-soft badge-red">Eliminado</span>
+                            {% elif p.cantidad <= p.stock_minimo %}<span class="badge-soft badge-amber">Stock bajo</span>
+                            {% else %}<span class="badge-soft badge-green">Disponible</span>{% endif %}
+                        </td>
+                        <td>{{ p.fecha_creacion|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7"><div class="empty-state"><i class="fas fa-box-open"></i><p>Sin productos.</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

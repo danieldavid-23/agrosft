@@ -26,9 +26,9 @@
 
 | ID | Requisito | Prioridad | Estado |
 |---|---|---|---|
-| RF-I01 | El sistema debe permitir crear productos con nombre, descripción, categoría, precio, cantidad y stock mínimo | Alta | ✅ Implementado |
+| RF-I01 | El sistema debe permitir crear productos con nombre, descripción, categoría, precio, cantidad, stock mínimo y **fotografía obligatoria** | Alta | ✅ Implementado |
 | RF-I02 | El sistema debe listar los productos del usuario actual (Mi Inventario) | Alta | ✅ Implementado |
-| RF-I03 | El sistema debe permitir editar productos existentes | Alta | ✅ Implementado |
+| RF-I03 | El sistema debe permitir editar productos existentes. El stock solo puede **mantenerse o aumentar** (reabastecimiento); **nombre y categoría no son editables** | Alta | ✅ Implementado |
 | RF-I04 | El sistema debe permitir eliminar productos (soft delete) | Alta | ✅ Implementado |
 | RF-I05 | El sistema debe mostrar un marketplace con productos de otros usuarios aprobados | Alta | ✅ Implementado |
 | RF-I06 | El sistema debe permitir buscar productos por nombre | Media | ✅ Implementado |
@@ -37,7 +37,7 @@
 | RF-I09 | El sistema debe permitir al admin aprobar o rechazar productos publicados | Alta | ✅ Implementado |
 | RF-I10 | El sistema debe paginar los resultados del marketplace (12 por página) | Media | ✅ Implementado |
 | RF-I11 | El sistema debe paginar los resultados del inventario personal (10 por página) | Media | ✅ Implementado |
-| RF-I12 | El sistema debe registrar movimiento de stock al crear/editar productos | Alta | ✅ Implementado |
+| RF-I12 | El sistema debe registrar movimiento de stock al crear/editar productos. Cada incremento de stock desde la edición genera un movimiento `reabastecimiento` con su detalle | Alta | ✅ Implementado |
 | RF-I13 | El sistema debe alertar cuando el stock esté por debajo del mínimo | Media | 🔶 Parcial (badge visual) |
 | RF-I14 | El sistema debe permitir verificar stock vía API endpoint | Baja | ✅ Implementado |
 | RF-I15 | El sistema debe permitir subir una fotografía por producto (JPG, JPEG, PNG, WEBP; máx. 5MB) | Alta | ✅ Implementado |

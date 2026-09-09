@@ -71,17 +71,6 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
-                <div class="inv-stat card border-0 shadow-sm rounded-4">
-                    <div class="card-body d-flex align-items-center gap-3">
-                        <div class="inv-stat-icon bg-accent-light"><i class="fas fa-box text-info"></i></div>
-                        <div>
-                            <div class="inv-stat-value fw-bold">{{ estados|length }}</div>
-                            <div class="inv-stat-label text-muted small">Estados</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Barra de Filtros y Búsqueda -->
@@ -188,7 +177,7 @@
                         <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-dark opacity-25"
                             style="pointer-events: none;"></div>
 
-                        <!-- Etiquetas de estado flotantes -->
+<!-- Etiquetas de estado flotantes -->
                         <div class="position-absolute top-0 end-0 p-3 d-flex flex-column gap-2 align-items-end"
                             style="z-index: 4;">
                             {% if producto.esta_agotado %}
@@ -197,10 +186,6 @@
                             {% elif producto.stock < producto.stock_minimo %} <span
                                 class="badge bg-warning shadow-sm text-dark"><i
                                     class="fas fa-exclamation-triangle me-1"></i>Últimas unid.</span>
-                                {% endif %}
-
-                                {% if producto.estado == 'pendiente' %}
-                                <span class="badge bg-secondary shadow-sm">Pendiente</span>
                                 {% endif %}
                         </div>
                     </div>

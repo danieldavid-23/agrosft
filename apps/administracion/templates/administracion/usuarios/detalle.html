@@ -1,0 +1,106 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Columna perfil -->
+    <div class="col-lg-4">
+        <div class="panel-card">
+            <div class="card-body text-center">
+                <div class="detail-avatar">{{ usuario.get_short_name|slice:":1" }}</div>
+                <h4 class="fw-bold mb-1">{{ usuario.get_full_name }}</h4>
+                <p class="text-muted mb-1">{{ usuario.correo }}</p>
+                <p class="text-muted mb-3"><i class="fas fa-phone me-1"></i>{{ usuario.telefono|default:'Sin teléfono' }}</p>
+
+                <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+                    {% if usuario.is_superuser %}<span class="badge-soft badge-red">Superadministrador</span>{% endif %}
+                    {% if usuario.is_staff %}<span class="badge-soft badge-blue">Staff</span>{% endif %}
+                    {% if usuario.is_active %}<span class="badge-soft badge-green">Activo</span>
+                    {% else %}<span class="badge-soft badge-red">Inactivo</span>{% endif %}
+                </div>
+
+                <div class="d-flex justify-content-center gap-2">
+                    {% if usuario.is_active %}
+                    <form method="post" action="{% url 'administracion:usuario_estado' usuario.id_users %}"
+                          onsubmit="return confirm('¿Desactivar esta cuenta?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger rounded-pill">
+                            <i class="fas fa-user-slash me-1"></i>Desactivar
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="{% url 'administracion:usuario_estado' usuario.id_users %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success rounded-pill">
+                            <i class="fas fa-user-check me-1"></i>Activar
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'administracion:usuarios' %}" class="btn btn-outline-secondary rounded-pill">
+                        <i class="fas fa-arrow-left me-1"></i>Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna info -->
+    <div class="col-lg-8">
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-md-4">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-success">{{ publicaciones }}</div>
+                    <div class="stat-label">Publicaciones</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-primary">{{ movimientos }}</div>
+                    <div class="stat-label">Movimientos</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="stat-card text-center">
+                    <div class="stat-value text-warning">{{ usuario.fecha_creacion|date:"Y" }}</div>
+                    <div class="stat-label">Año de registro</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <div class="card-header"><span>Datos de la cuenta</span></div>
+            <div class="card-body">
+                <table class="table admin-table mb-0">
+                    <tbody>
+                        <tr><td class="fw-semibold" style="width:180px;">ID de usuario</td><td>#{{ usuario.id_users }}</td></tr>
+                        <tr><td class="fw-semibold">Nombres</td><td>{{ usuario.nombres }}</td></tr>
+                        <tr><td class="fw-semibold">Apellidos</td><td>{{ usuario.apellidos }}</td></tr>
+                        <tr><td class="fw-semibold">Correo</td><td>{{ usuario.correo }}</td></tr>
+                        <tr><td class="fw-semibold">Teléfono</td><td>{{ usuario.telefono|default:'—' }}</td></tr>
+                        <tr><td class="fw-semibold">Último acceso</td><td>{{ usuario.last_login|date:"d/m/Y H:i"|default:'Nunca' }}</td></tr>
+                        <tr><td class="fw-semibold">Registro</td><td>{{ usuario.fecha_creacion|date:"d/m/Y H:i" }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if perfil %}
+        <div class="panel-card mt-3">
+            <div class="card-header"><span>Perfil extendido</span></div>
+            <div class="card-body">
+                <table class="table admin-table mb-0">
+                    <tbody>
+                        <tr><td class="fw-semibold" style="width:180px;">Biografía</td><td>{{ perfil.biografia|default:'—' }}</td></tr>
+                        <tr><td class="fw-semibold">Sitio web</td><td>{{ perfil.sitio_web|default:'—' }}</td></tr>
+                        <tr><td class="fw-semibold">Idioma</td><td>{{ perfil.idioma_preferido }}</td></tr>
+                        <tr><td class="fw-semibold">Zona horaria</td><td>{{ perfil.zona_horaria }}</td></tr>
+                        <tr><td class="fw-semibold">Notificaciones</td>
+                            <td>{% if perfil.notificaciones_activas %}<span class="badge-soft badge-green">Activas</span>
+                                {% else %}<span class="badge-soft badge-gray">Inactivas</span>{% endif %}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

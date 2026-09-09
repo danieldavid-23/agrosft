@@ -135,51 +135,6 @@ GET  /usuarios/password-reset-complete/
 
 ---
 
-### 1.7 Panel de Administración de Usuarios (Staff / Superusuario)
-
-> Requieren `request.user.is_staff == True` o `request.user.is_superuser == True`. Implementados en `apps/usuarios/controllers/admin_usuarios_controller.py`.
-
-**Gestión de usuarios**:
-```
-GET  /usuarios/admin-usuarios/                        → Listar usuarios
-GET  /usuarios/admin-usuarios/crear/                  → Formulario crear
-POST /usuarios/admin-usuarios/crear/                  → Crear usuario
-GET  /usuarios/admin-usuarios/editar/<pk>/            → Formulario editar
-POST /usuarios/admin-usuarios/editar/<pk>/            → Editar usuario
-POST /usuarios/admin-usuarios/toggle-activo/<pk>/     → Activar/desactivar cuenta
-```
-
-**Estadísticas**:
-```
-GET /usuarios/admin-estadisticas/                     → Panel de estadísticas
-```
-
-**Moderación de productos**:
-```
-GET  /usuarios/admin-moderacion/                      → Lista de productos pendientes
-POST /usuarios/admin-moderacion/aprobar/<pk>/         → Aprobar producto
-POST /usuarios/admin-moderacion/rechazar/<pk>/        → Rechazar producto
-```
-
-**Gestión de categorías**:
-```
-GET  /usuarios/admin-categorias/                      → Listar categorías
-GET  /usuarios/admin-categorias/crear/                → Formulario crear
-POST /usuarios/admin-categorias/crear/                → Crear categoría
-GET  /usuarios/admin-categorias/editar/<pk>/          → Formulario editar
-POST /usuarios/admin-categorias/editar/<pk>/          → Editar categoría
-POST /usuarios/admin-categorias/toggle/<pk>/          → Activar/desactivar categoría
-```
-
-**Reportes CSV**:
-```
-GET /usuarios/admin-reporte/usuarios/                 → CSV de usuarios
-GET /usuarios/admin-reporte/productos/                → CSV de productos
-GET /usuarios/admin-reporte/ventas/                   → CSV de ventas
-```
-
----
-
 ## 2. Inventario (`/inventario/`)
 
 ### 2.1 Mi Inventario

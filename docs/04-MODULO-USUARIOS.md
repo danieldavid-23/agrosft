@@ -41,7 +41,7 @@ graph LR
     C --> D[TblusuariosAuthBackend]
     D --> E[SELECT por correo]
     E --> F[check_password hash]
-    F -->|OK| G[login + redirect: staff/superuser → admin_usuarios_list, no-staff → marketplace]
+    F -->|OK| G[login + redirect a marketplace]
     F -->|Fail| H[Error: Credenciales inválidas]
 ```
 

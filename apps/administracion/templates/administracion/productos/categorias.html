@@ -1,0 +1,43 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="card-header">
+        <span><i class="fas fa-tags me-2 text-success"></i>Categorías de productos</span>
+        <span class="badge-soft badge-green">{{ categorias|length }} categorías</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for c in categorias %}
+            <div class="col-md-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="stat-icon" style="background:#e8f5e8;color:#25632c;"><i class="fas fa-tag"></i></div>
+                        {% if c.activo %}
+                        <form method="post" action="{% url 'administracion:categoria_eliminar' c.id_categoria %}"
+                              onsubmit="return confirm('¿Desactivar la categoría {{ c.nombre }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Desactivar">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="badge-soft badge-gray">Inactiva</span>
+                        {% endif %}
+                    </div>
+                    <div class="stat-value" style="font-size:1.1rem;">{{ c.nombre }}</div>
+                    <div class="stat-label mb-2">{{ c.descripcion|default:'Sin descripción'|truncatechars:60 }}</div>
+                    <div class="mt-2">
+                        <span class="badge-soft badge-blue">{{ c.num_productos }} productos</span>
+                        {% if c.activo %}<span class="badge-soft badge-green">Activa</span>
+                        {% else %}<span class="badge-soft badge-gray">Desactivada</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12"><div class="empty-state"><i class="fas fa-tags"></i><p>Sin categorías.</p></div></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

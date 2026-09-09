@@ -1,4 +1,7 @@
-from .calificacion_form import CalificacionForm
-from .resena_form import ResenaForm
+from .movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 
-__all__ = ['CalificacionForm', 'ResenaForm']
+__all__ = [
+    'Movimiento',
+    'ProductoUsuarioMovimiento',
+    'TipoMovimiento',
+]

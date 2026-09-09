@@ -56,7 +56,7 @@ graph TB
 
 | Capa | Responsabilidad | Ubicación |
 |---|---|---|
-| **Layout Vue** | Navbar, footer, notificaciones (3 estados: guest/user/admin) | `frontend/src/layout/LayoutApp.vue` |
+| **Layout Vue** | Navbar, footer, notificaciones (2 estados: guest/user) | `frontend/src/layout/LayoutApp.vue` |
 | **Presentación** | Templates Django + Componentes Vue por página | `templates/`, `frontend/src/*/` |
 | **Context Processor** | Inyecta JSON con datos de layout a Vue | `core/context_processors.py` |
 | **Routing** | Mapeo URL → Controller | `config/urls.py`, `apps/*/urls.py` |
@@ -119,6 +119,8 @@ apps/inventario/
 
 > [!note] `TipoMovimiento` consolidado (2026-09-07)
 > El duplicado de `TipoMovimiento` en `apps.inventario` fue eliminado ([[DECISIONS#ADR-015]]). `apps.inventario.models` re-exporta ahora el canónico desde `apps.ventas.models.movimiento`.
+>
+> A partir de 2026-09-09 se añade el tipo **`reabastecimiento`** (ver [[DECISIONS#ADR-023]]), usado por `editar_producto()` para registrar incrementos de stock con cantidad positiva. El trigger `trg_actualizar_stock_oferta` suma el stock automáticamente para este tipo.
 
 **Arquitectura Dual de Productos**:
 
@@ -158,7 +160,7 @@ apps/ventas/
 
 ```mermaid
 graph LR
-    TM[tipo_movimiento<br>compra/venta/rechazada/vendida] -->|1:N| M[movimiento<br>Header de transacción]
+    TM[tipo_movimiento<br>compra/venta/rechazada/vendida/cancelada/reabastecimiento] -->|1:N| M[movimiento<br>Header de transacción]
     M -->|1:N| PUM[tblproductos_has_tblusuarios_has_movimiento<br>Detalles]
     PUM -->|N:1| PU[ProductoUsuario<br>Publicación]
     M -->|N:1| U[tblusuarios<br>Comprador]
@@ -177,6 +179,7 @@ graph LR
 | `rechazada` | Rechazada | Vendedor rechazó |
 | `vendida` | Completada | Transacción finalizada |
 | `cancelada` | Cancelada | Venta cancelada (desde estado `venta`) |
+| `reabastecimiento` | — (no es solicitud) | Entrada de stock desde la edición de producto (cantidad positiva) |
 
 ### 2.5 `apps.clientes` — Historial
 
@@ -249,7 +252,7 @@ graph TB
     FooterVue -->|mount| FooterDOM
 ```
 
-`NavbarApp.vue` recibe como props el objeto completo de datos (`user`, `urls`, `cart_count`, `messages`) y maneja 3 estados (guest/user/staff), notificaciones toast y dropdown de usuario. La rama staff usa las URLs admin expuestas por `layout_data` (`urls.admin_usuarios`, `urls.admin_categorias`, `urls.admin_moderacion`, `urls.admin_estadisticas`). `FooterApp.vue` recibe solo `urls` y renderiza el logo SVG oficial. Ambos componentes son **no-scoped** y reutilizan las clases CSS de Bootstrap 5 y las variables CSS del proyecto (`frontend/src/style.css`).
+`NavbarApp.vue` recibe como props el objeto completo de datos (`user`, `urls`, `cart_count`, `messages`) y maneja 2 estados (guest/user), notificaciones toast y dropdown de usuario con navegación estándar unificada. `FooterApp.vue` recibe solo `urls` y renderiza el logo SVG oficial. Ambos componentes son **no-scoped** y reutilizan las clases CSS de Bootstrap 5 y las variables CSS del proyecto (`frontend/src/style.css`).
 
 ### 3.2 Integración Django + Vue (Componentes de Página)
 

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import FileExtensionValidator
 from core.utils.helpers import validate_image_size
-from apps.inventario.models import Producto, Categoria, ProductoUsuario, Estado
+from apps.inventario.models import Producto, Categoria, ProductoUsuario
 
 
 class MultipleFileInput(forms.FileInput):
@@ -23,6 +23,8 @@ class MultipleFileField(forms.FileField):
     def clean(self, data, initial=None):
         single_file_clean = super().clean
         if isinstance(data, (list, tuple)):
+            if not data and self.required:
+                raise forms.ValidationError(self.error_messages['required'], code='required')
             result = [single_file_clean(d, initial) for d in data if d]
         else:
             result = single_file_clean(data, initial)
@@ -52,7 +54,7 @@ class ProductoForm(forms.Form):
         ]
     )
     
-    # Campo stock_minimo (solo administradores pueden editar)
+    # Campo stock_minimo
     stock_minimo = forms.IntegerField(
         min_value=0,
         required=False,
@@ -60,37 +62,30 @@ class ProductoForm(forms.Form):
     )
     
     # Campos para la relación específica usuario-producto (tblproductos_has_tblusuarios)
-    cantidad = forms.IntegerField(  # IntegerField: solo permite números enteros
+    cantidad = forms.IntegerField(
         min_value=0,
         widget=forms.NumberInput(attrs={
             'class': 'form-control', 
             'placeholder': 'Cantidad disponible',
-            'step': '1'  # Solo permite incrementos de 1 (enteros)
+            'step': '1'
         })
     )
     precio = forms.DecimalField(
         max_digits=10,
         decimal_places=2,
-        required=False,  # Opcional en venta directa de un producto ya registrado (se toma su precio existente)
+        required=False,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Precio unitario'})
     )
-    id_estado = forms.ModelChoiceField(
-        queryset=Estado.objects.all(),
-        empty_label="Seleccione un estado",
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        required=False  # Solo para ediciones por parte del admin
-    )
- 
+
     def __init__(self, *args, **kwargs):
-        # Permitir inicializar con datos de ProductoUsuario
         initial_data = kwargs.pop('initial', {})
+        requerir_imagen = kwargs.pop('requerir_imagen', False)
         super().__init__(*args, **kwargs)
+        if requerir_imagen:
+            self.fields['imagen'].required = True
         
-        # Si se proporcionan datos iniciales de un ProductoUsuario existente
         if initial_data:
-            # Mapear los campos relacionados
             if 'nombre' in initial_data and hasattr(initial_data['nombre'], 'pk'):
-                # Si se pasó un objeto Producto, extraer sus datos
                 producto = initial_data['nombre']
                 self.fields['nombre'].initial = producto.nombre
                 self.fields['descripcion'].initial = producto.descripcion
@@ -99,17 +94,15 @@ class ProductoForm(forms.Form):
                 if hasattr(producto, 'imagen'):
                     self.fields['imagen'].initial = producto.imagen
             elif 'nombre' in initial_data:
-                # Si se pasaron valores directamente
                 self.fields['nombre'].initial = initial_data.get('nombre', '')
                 self.fields['descripcion'].initial = initial_data.get('descripcion', '')
                 self.fields['id_categoria'].initial = initial_data.get('id_categoria')
                 self.fields['stock_minimo'].initial = initial_data.get('stock_minimo', 5)
                 self.fields['imagen'].initial = initial_data.get('imagen')
             
-            # Datos específicos del ProductoUsuario
-            self.fields['cantidad'].initial = initial_data.get('cantidad', 0)
+            cantidad_initial = initial_data.get('cantidad', 0)
+            self.fields['cantidad'].initial = int(cantidad_initial) if cantidad_initial is not None else 0
             self.fields['precio'].initial = initial_data.get('precio', 0)
-            self.fields['id_estado'].initial = initial_data.get('id_estado')
 
 
 class ProductoBusquedaForm(forms.Form):
@@ -122,11 +115,5 @@ class ProductoBusquedaForm(forms.Form):
         queryset=Categoria.objects.all(),
         required=False,
         empty_label="Todas las categorías",
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    estado = forms.ModelChoiceField(
-        queryset=Estado.objects.all(),
-        required=False,
-        empty_label="Todos los estados",
         widget=forms.Select(attrs={'class': 'form-control'})
     )

@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',      # Needed for sessions
     'django.contrib.messages',      # Needed for messages
     'django.contrib.staticfiles',   # Needed for static files
+    'django.contrib.humanize',      # Para formato de números en el panel admin
     
     'core',
     'apps.usuarios',
@@ -92,6 +93,7 @@ INSTALLED_APPS = [
     'apps.clientes',
     'apps.ventas',
     'apps.facturacion',  # Facturacion y pasarelas de pago
+    'apps.administracion',  # Panel de Administración personalizado
     'social_django',  # Agregado para Google OAuth
 ]
 

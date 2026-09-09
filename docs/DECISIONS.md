@@ -707,6 +707,159 @@ Unificar la condición de privilegios administrativos para que tanto `is_staff` 
 
 ---
 
+## ADR-021: Eliminación del Panel Web de Administración y Unificación de Experiencia
+
+**Fecha**: 2026-09-08
+**Estado**: Aceptada (Reemplaza a ADR-018, ADR-019 y ADR-020)
+
+### Contexto
+
+El sistema contaba con un panel de administración web personalizado (`admin_usuarios_controller.py`, vistas de estadísticas, categorías, moderación de productos, reportes y gestión de usuarios) y bifurcaciones de navegación condicional en el navbar para usuarios staff y superusuarios. El requerimiento del proyecto exige eliminar cualquier interfaz o rastro visual de panel administrativo personalizado en la aplicación principal, manteniendo una experiencia uniforme orientada exclusivamente al flujo natural de usuario/marketplace.
+
+### Decisión
+
+1. **Eliminación del Controlador y Rutas Admin**: Se elimina completamente `apps/usuarios/controllers/admin_usuarios_controller.py` y sus correspondientes rutas en `apps/usuarios/urls.py` (`admin-usuarios/`, `admin-categorias/`, `admin-moderacion/`, `admin-estadisticas/`, `admin-reporte/`).
+2. **Eliminación de Plantillas Admin**: Se borran las plantillas asociadas en `templates/usuarios/` (`admin_usuarios_list.html`, `admin_usuario_form.html`, `admin_categorias.html`, `admin_categoria_form.html`, `admin_moderacion.html`, `admin_estadisticas.html`).
+3. **Unificación de Navegación (NavbarApp.vue)**: Se remueve la rama condicional de staff/superusuario. Todos los usuarios autenticados disponen de la navegación estándar: *Inicio*, *Mi Inventario*, *Clientes*, *Ventas*, *Solicitudes*, *Mis Compras* y *Carrito*.
+4. **Redirección Estándar**: `LoginView.post` y `home_redirect` en `/` redirigen a todos los usuarios autenticados al marketplace (`inventario:marketplace`).
+5. **Limpieza de Context Processors**: Se retiran del objeto `urls` global de `layout_data` todas las claves `admin_*`.
+
+### Consecuencias
+
+- ✅ Experiencia de usuario uniforme y simplificada; no hay menús paralelos ni paneles secundarios en la interfaz de usuario.
+- ✅ Reducción significativa de superficie de código y mantenimiento al eliminar controladores y plantillas no deseadas.
+- ✅ Reemplaza y anula las decisiones de redirección y bifurcación previa (ADR-018, ADR-019, ADR-020).
+- ✅ El backend Django Admin nativo (`/admin/`) permanece intacto para labores técnicas internas.
+
+### Archivos Afectados
+
+- `apps/usuarios/controllers/admin_usuarios_controller.py` (eliminado)
+- `apps/usuarios/urls.py`
+- `apps/usuarios/controllers/auth_controller.py`
+- `config/urls.py`
+- `core/context_processors.py`
+- `frontend/src/layout/NavbarApp.vue`
+- `templates/base.html`
+- `templates/usuarios/admin_*.html` (eliminadas)
+
+---
+
+## ADR-022: Selectores Dinámicos para Categoría y Nombre de Producto en Formulario de Registro
+
+**Fecha**: 2026-09-08  
+**Estado**: Aceptada  
+
+### Contexto
+
+En el formulario de registro y edición de productos (`producto_form.html`), la selección de **Categoría** usaba un `<select>` estático derivado del campo `ModelChoiceField` de Django que no permitía agregar nuevas categorías al instante. Por otro lado, el **Nombre del Producto** usaba un campo de texto libre `<input text>` que impedía reutilizar nombres de productos ya registrados en el catálogo.
+
+### Decisión
+
+1. **Selector Dinámico de Categoría**:
+   - Se mantiene el modelo y la persistencia de MariaDB (`tblcategoria`).
+   - Se agrega el endpoint AJAX `api_crear_categoria` (POST JSON) para la creación de categorías en tiempo real.
+   - El selector muestra una opción visual `+ Agregar categoría` que despliega un formulario inline con validación sin recargar la página.
+2. **Selector Dinámico de Nombre de Producto**:
+   - Se agrega el endpoint AJAX `api_nombres_producto` (GET) que devuelve la lista deduplicada de nombres de productos de la base de datos.
+   - El input de texto original se transforma en un `<select>` interactivo que ofrece sugerencias de productos existentes o la opción `+ Agregar nuevo producto` mediante un formulario inline.
+3. **Compatibilidad Transparente con Django Form**:
+   - No se modificó la clase `ProductoForm` de Django.
+   - La selección del usuario se sincroniza mediante JS en campos ocultos que alimentan los nombres de input esperados por Django (`nombre` e `id_categoria`), garantizando que la validación y el guardado del controlador continúen operando exactamente igual.
+
+### Consecuencias
+
+- ✅ Agiliza el registro de productos eliminando la necesidad de navegar a otras pantallas para crear categorías.
+- ✅ Favorece la estandarización de nombres en el catálogo de inventario.
+- ✅ Cero breaking changes en la persistencia existente o en `ProductoForm`.
+
+### Archivos Afectados
+
+- `apps/inventario/controllers/producto_controller.py`
+- `apps/inventario/urls.py`
+- `apps/inventario/templates/inventario/producto_form.html`
+
+---
+
+## ADR-023: Tipo de Movimiento 'reabastecimiento' y Stock Gestionado por Trigger
+
+**Fecha**: 2026-09-09  
+**Estado**: Aceptada  
+
+### Contexto
+
+El módulo de edición de producto (`editar_producto()`) permitía anteriormente reducir el stock directamente y registraba los cambios con tipo `venta` (abastecimiento legacy), lo que generaba confusión semántica y permitía valores negativos no deseados. El requerimiento era:
+1. Impedir la reducción de stock desde la edición (solo reabastecimiento/ingreso).
+2. Registrar cada incremento con un tipo semántico propio: `reabastecimiento`.
+3. Mantener la regla de oro: **el trigger de BD es la única fuente de verdad para el stock**.
+
+### Decisión
+
+1. **Nuevo tipo de movimiento**: `reabastecimiento` (INSERT en `tipo_movimiento`, script `insertar_tipo_reabastecimiento.sql`).
+2. **Trigger actualizado**: `trg_actualizar_stock_oferta` (script `trigger_reabastecimiento_stock.sql`) suma stock para tipos `venta` (legacy abastecimiento) y `reabastecimiento`; ignora `compra`; protege contra stock negativo.
+3. **Backend (`editar_producto`)**:
+   - Valida server-side: `nuevo_stock >= stock_actual`. Si menor → error y cancelación.
+   - Calcula `diferencia = nuevo_stock - stock_actual`.
+   - Si `diferencia > 0`: crea `Movimiento(tipo='reabastecimiento')` + `ProductoUsuarioMovimiento(cantidad=+diferencia)`.
+   - **No toca** `ProductoUsuario.cantidad` en Python (trigger lo actualiza).
+4. **Frontend**: campo `cantidad` como entero (`step="1"`, `min=stock_actual`), validación JS en vivo que impide valores < stock actual.
+5. **Formulario**: `initial['cantidad']` casteado a `int` (elimina `.00` visual).
+
+### Consecuencias
+
+- ✅ Semántica clara: `reabastecimiento` = entrada de stock desde edición.
+- ✅ Integridad: BD controla stock (trigger), Python solo registra intención.
+- ✅ UX: usuario nunca ve decimales en stock; input bloquea reducción.
+- ✅ Trazabilidad: cada reabastecimiento queda en historial de movimientos con tipo propio.
+- ⚠️ Requiere ejecutar scripts SQL en BD (`insertar_tipo_reabastecimiento.sql` y `trigger_reabastecimiento_stock.sql`) antes de desplegar.
+
+### Archivos Afectados
+
+- `scripts/insertar_tipo_reabastecimiento.sql` (nuevo)
+- `scripts/trigger_reabastecimiento_stock.sql` (nuevo)
+- `scripts/asegurar_tipos_movimiento.py`
+- `apps/inventario/controllers/producto_controller.py`
+- `apps/inventario/forms/producto_form.py`
+- `apps/inventario/templates/inventario/producto_form.html`
+- `docs/REQUIREMENTS.md`, `USER_STORIES.md`, `ARCHITECTURE.md`, `DATABASE.md`, `09-CONFIGURACION.md`, `CHANGELOG.md`
+
+---
+
+## ADR-024: Nombre y Categoría Inmutables en Edición + Fotografía Obligatoria
+
+**Fecha**: 2026-09-09  
+**Estado**: Aceptada  
+
+### Contexto
+
+En el módulo de edición de producto se permitía modificar el `nombre` y la `categoría` de un producto ya publicado, lo que podía romper la trazabilidad del catálogo maestro. Adicionalmente, el registro de productos permitía crear publicaciones sin ninguna fotografía, degradando la experiencia del marketplace.
+
+### Decisión
+
+1. **Nombre y categoría inmutables en edición**:
+   - En `editar_producto()`, se eliminan las asignaciones `producto.nombre` y `producto.id_categoria` (el backend ya no los sobrescribe).
+   - En `producto_form.html`, en modo edición (`accion == 'editar'`) los selectores dinámicos se sustituyen por campos de solo lectura (`disabled readonly`) con el valor actual, manteniendo ocultos `{{ form.nombre }}` y `{{ form.id_categoria }}` para que el formulario siga validando.
+2. **Fotografía obligatoria**:
+   - `ProductoForm` acepta el kwarg `requerir_imagen` que marca `imagen.required = True`.
+   - `MultipleFileField.clean` permite que `required` aplique también a listas vacías (antes devolvía `[]` sin validar).
+   - En `crear_producto`, la imagen es **siempre** obligatoria.
+   - En `editar_producto`, es obligatoria **solo** si la publicación no tiene imagen (`tiene_imagen == False`).
+
+### Consecuencias
+
+- ✅ Evita cambiar identidad de un producto ya publicado (integridad del catálogo).
+- ✅ Garantiza que toda publicación nueva tenga al menos una fotografía.
+- ✅ Validación doble: frontend (UI de solo lectura y nota de obligatorio) y backend (required).
+- ⚠️ Publicaciones existentes sin imagen seguirán apareciendo hasta que se editen (se les exigirá imagen en el próximo guardado).
+
+### Archivos Afectados
+
+- `apps/inventario/forms/producto_form.py`
+- `apps/inventario/controllers/producto_controller.py`
+- `apps/inventario/templates/inventario/producto_form.html`
+- `docs/REQUIREMENTS.md`, `USER_STORIES.md`, `CHANGELOG.md`
+
+---
+
 ## ADR-021: Facturación Separada por Vendedor — 1 Pedido = 1 Factura por Vendedor
 
 **Fecha**: 2026-09-09
@@ -781,7 +934,6 @@ La función `crear_factura_desde_carrito` generaba una sola factura con todos lo
 | ADR-018 | Redirección post-login por rol (is_staff) | Aceptada | Auth / Usuarios |
 | ADR-019 | Navbar específico para staff (is_staff) | Aceptada | Frontend / Auth |
 | ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Aceptada | Auth / Admin / Frontend |
-| ADR-021 | Facturación separada por vendedor (1 Pedido = 1 Factura por vendedor) | Aceptada | Facturación / Seguridad |
 
 ---
 

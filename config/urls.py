@@ -27,8 +27,6 @@ admin.site.index_title = 'Gestión de la Plataforma Agrícola'
 def home_redirect(request):
     """Redirigir según estado de autenticación"""
     if request.user.is_authenticated:
-        if request.user.is_staff or request.user.is_superuser:
-            return redirect('usuarios:admin_usuarios_list')
         return redirect('inventario:marketplace')
     return redirect('usuarios:login')
 
@@ -40,6 +38,7 @@ urlpatterns = [
     path('clientes/', include('apps.clientes.urls', namespace='clientes')),
     path('ventas/', include('apps.ventas.urls', namespace='ventas')),
     path('facturacion/', include('apps.facturacion.urls', namespace='facturacion')),
+    path('panel-admin/', include('apps.administracion.urls', namespace='administracion')),
     path('oauth/', include('social_django.urls', namespace='social')),
     path('admin/', admin.site.urls),
 ]

@@ -8,6 +8,46 @@
 ## [Unreleased]
 
 ### Changed (2026-09-09)
+- **Nombre y categoría inmutables al editar producto + fotografía obligatoria (ADR-024)**:
+  - `apps/inventario/controllers/producto_controller.py`: `editar_producto()` ya no sobrescribe `producto.nombre` ni `producto.id_categoria`; la imagen es obligatoria en edición cuando la publicación no tiene imagen (`requerir_imagen=(not tiene_imagen)`).
+  - `apps/inventario/controllers/producto_controller.py`: `crear_producto()` instancia `ProductoForm(..., requerir_imagen=True)`.
+  - `apps/inventario/forms/producto_form.py`: `ProductoForm` acepta `requerir_imagen` (marca `imagen.required`); `MultipleFileField.clean` valida `required` sobre listas vacías.
+  - `apps/inventario/templates/inventario/producto_form.html`: en edición, nombre y categoría se muestran en solo lectura (`disabled readonly`) con nota "no se puede modificar"; asterisco condicional; la galería indica obligatoriedad con `form.imagen.field.required`.
+  - Documentación actualizada: `REQUIREMENTS.md` (RF-I01, RF-I03), `USER_STORIES.md` (US-05, US-07), `DECISIONS.md` (ADR-024).
+
+### Added (2026-09-09)
+- **Reabastecimiento de inventario desde la edición de producto (ADR-023)**:
+  - `scripts/insertar_tipo_reabastecimiento.sql`: nuevo script idempotente que asegura la existencia del tipo `reabastecimiento` en `tipo_movimiento`.
+  - `scripts/trigger_reabastecimiento_stock.sql`: nueva versión del trigger `trg_actualizar_stock_oferta` con allowlist explícita (`venta`, `reabastecimiento` suman stock) y conservación de la protección anti-stock-negativo.
+  - `scripts/asegurar_tipos_movimiento.py`: añade `'reabastecimiento'` a la lista de tipos requeridos.
+  - `apps/inventario/controllers/producto_controller.py`: `editar_producto()` ahora valida server-side que `nuevo_stock >= stock_actual`, registra el incremento como `Movimiento(tipo='reabastecimiento')` + `ProductoUsuarioMovimiento(cantidad=diferencia)`, y deja al trigger de BD la actualización del stock (sin doble conteo).
+  - `apps/inventario/forms/producto_form.py`: el campo `cantidad` se castea a `int` (elimina el `.00` visual) y se establece `min = stock_actual` en la vista de edición.
+  - `apps/inventario/templates/inventario/producto_form.html`: el campo `Unidades` muestra nota informativa en edición y un listener JS impide tipear/ingresar valores por debajo del stock actual; valida adicionalmente al enviar el formulario.
+  - Documentación actualizada: `REQUIREMENTS.md` (RF-I03, RF-I12), `USER_STORIES.md` (US-07), `ARCHITECTURE.md` (módulo ventas/inventario), `DATABASE.md` (`tipo_movimiento` y trigger), `09-CONFIGURACION.md` (seed), `DECISIONS.md` (ADR-023).
+
+### Added (2026-09-08)
+- **Selectores Dinámicos para Categoría y Nombre de Producto en Formulario de Registro** (ADR-022):
+  - `apps/inventario/controllers/producto_controller.py`: Creados dos endpoints AJAX:
+    - `api_crear_categoria`: Permite la creación inmediata de categorías vía POST JSON con validaciones (duplicados, vacíos, longitud) e invalidación de caché.
+    - `api_nombres_producto`: Retorna lista JSON deduplicada de nombres de productos existentes.
+  - `apps/inventario/urls.py`: Registradas las rutas `/inventario/api/crear-categoria/` y `/inventario/api/nombres-producto/`.
+  - `apps/inventario/templates/inventario/producto_form.html`:
+    - Reemplazado input de texto libre por selector dinámico con opción "+ Agregar nuevo producto" y formulario inline.
+    - Reemplazado select estático de categoría por selector dinámico con opción "+ Agregar categoría" y formulario inline.
+    - Sincronización transparente con campos ocultos `form.nombre` e `form.id_categoria` de Django.
+
+### Removed (2026-09-08)
+- **Eliminación total del panel web de administración y unificación de navegación (ADR-021)**:
+  - Eliminado el controlador `apps/usuarios/controllers/admin_usuarios_controller.py`.
+  - Eliminadas todas las rutas `admin-...` de `apps/usuarios/urls.py` (usuarios, categorías, moderación, estadísticas, reportes CSV).
+  - Eliminadas las plantillas asociadas en `templates/usuarios/` (`admin_usuarios_list.html`, `admin_usuario_form.html`, `admin_categorias.html`, `admin_categoria_form.html`, `admin_moderacion.html`, `admin_estadisticas.html`).
+  - `frontend/src/layout/NavbarApp.vue`: Eliminada la rama de administrador; todos los usuarios autenticados disponen de la navegación estándar de usuario (Inicio, Mi Inventario, Clientes, Ventas, Solicitudes, Mis Compras, Carrito).
+  - `core/context_processors.py`: Removidas todas las URLs administrativas del payload global de layout.
+  - `apps/usuarios/controllers/auth_controller.py` y `config/urls.py`: Removidas las redirecciones a administración; el inicio de sesión y la raíz siempre dirigen al marketplace (`inventario:marketplace`).
+  - `templates/base.html`: Versión de assets incrementada a `?_v=20260908_3` tras recompilar el bundle Vue con `npm run build`.
+  - Plantillas de inventario depuradas de verificaciones de admin (`listar_productos.html`, `Productosdetalles.html`, `producto_detail.html`).
+
+### Changed (2026-09-09)
 - **Facturación separada por vendedor** — 1 Pedido = 1 Factura por vendedor (ADR-021):
   - **Modelo**: campo `vendedor` (FK nullable a `tblusuarios`) añadido a `Factura` (`apps/facturacion/models.py`), con migración `0003_factura_vendedor`.
   - **Servicio**: `FacturaService.crear_facturas_desde_carrito` ahora agrupa por `pu.id_usuario` (vendedor) y genera N facturas en una sola transacción atómica. Nuevo método `crear_facturas_desde_movimiento` genera o reutiliza facturas desde un movimiento existente. `obtener_o_crear_factura_desde_movimiento` mantiene compatibilidad legacy.

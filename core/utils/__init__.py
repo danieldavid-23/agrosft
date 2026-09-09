@@ -1,1 +1,1 @@
-from core.utils.helpers import safe_int, safe_decimal, EstadoProducto, EstadoSolicitud
+from core.utils.helpers import safe_int, safe_decimal, EstadoSolicitud

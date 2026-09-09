@@ -6,9 +6,9 @@ Ejecutar: python manage.py shell < scripts/asegurar_tipos_movimiento.py
 from apps.ventas.models.movimiento import TipoMovimiento
 
 def asegurar_tipos_movimiento():
-    """Crea los tipos de movimiento 'compra' y 'venta' si no existen"""
+    """Crea los tipos de movimiento básicos si no existen"""
     
-    tipos_requeridos = ['compra', 'venta']
+    tipos_requeridos = ['compra', 'venta', 'reabastecimiento']
     
     for tipo in tipos_requeridos:
         obj, created = TipoMovimiento.objects.get_or_create(
