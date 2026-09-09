@@ -8,7 +8,7 @@
 
 | URL | Name | Descripción |
 |---|---|---|
-| `/` | `home` | Redirige según estado: staff/superusuario → `admin_usuarios_list`, autenticado → `marketplace`, invitado → `login` |
+| `/` | `home` | Redirige según estado: autenticado → `marketplace`, invitado → `login` |
 | `/admin/` | — | Django Admin (habilitado) |
 | `/oauth/` | `social:begin` | Rutas de Google OAuth2 |
 
@@ -20,7 +20,7 @@
 
 | URL | Name | Auth | Métodos | Descripción |
 |---|---|---|---|---|
-| `login/` | `usuarios:login` | No | GET, POST | Formulario de inicio de sesión (redirige staff/superusuario → `admin_usuarios_list`, no-staff → `marketplace`, o `next`) |
+| `login/` | `usuarios:login` | No | GET, POST | Formulario de inicio de sesión (redirige a `marketplace`, o `next`) |
 | `registro/` | `usuarios:registro` | No | GET, POST | Formulario de registro |
 | `logout/` | `usuarios:logout` | No | GET, POST | Cerrar sesión |
 | `perfil/` | `usuarios:perfil` | Sí | GET, POST | Ver/editar perfil + imagen |
@@ -33,25 +33,7 @@
 | `password-reset-confirm/<uidb64>/<token>/` | `usuarios:password_reset_confirm` | No | GET, POST | Reset con token |
 | `password-reset-complete/` | `usuarios:password_reset_complete` | No | GET | Reset completado |
 
-### Panel de administración (staff / superusuario)
-
-| URL | Name | Auth | Métodos | Descripción |
-|---|---|---|---|---|
-| `admin-usuarios/` | `usuarios:admin_usuarios_list` | Sí (staff) | GET | Listar usuarios |
-| `admin-usuarios/crear/` | `usuarios:admin_usuario_crear` | Sí (staff) | GET, POST | Crear usuario |
-| `admin-usuarios/editar/<pk>/` | `usuarios:admin_usuario_editar` | Sí (staff) | GET, POST | Editar usuario |
-| `admin-usuarios/toggle-activo/<pk>/` | `usuarios:admin_usuario_toggle_activo` | Sí (staff) | POST | Activar/desactivar |
-| `admin-estadisticas/` | `usuarios:admin_estadisticas` | Sí (staff) | GET | Estadísticas del sistema |
-| `admin-moderacion/` | `usuarios:admin_moderacion` | Sí (staff) | GET | Productos pendientes |
-| `admin-moderacion/aprobar/<pk>/` | `usuarios:admin_aprobar_producto` | Sí (staff) | POST | Aprobar producto |
-| `admin-moderacion/rechazar/<pk>/` | `usuarios:admin_rechazar_producto` | Sí (staff) | POST | Rechazar producto |
-| `admin-categorias/` | `usuarios:admin_categorias_list` | Sí (staff) | GET | Listar categorías |
-| `admin-categorias/crear/` | `usuarios:admin_categoria_crear` | Sí (staff) | GET, POST | Crear categoría |
-| `admin-categorias/editar/<pk>/` | `usuarios:admin_categoria_editar` | Sí (staff) | GET, POST | Editar categoría |
-| `admin-categorias/toggle/<pk>/` | `usuarios:admin_categoria_toggle` | Sí (staff) | POST | Activar/desactivar categoría |
-| `admin-reporte/usuarios/` | `usuarios:admin_reporte_usuarios_csv` | Sí (staff) | GET | Exportar CSV usuarios |
-| `admin-reporte/productos/` | `usuarios:admin_reporte_productos_csv` | Sí (staff) | GET | Exportar CSV productos |
-| `admin-reporte/ventas/` | `usuarios:admin_reporte_ventas_csv` | Sí (staff) | GET | Exportar CSV ventas |
+---
 
 ---
 

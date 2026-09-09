@@ -707,6 +707,43 @@ Unificar la condición de privilegios administrativos para que tanto `is_staff` 
 
 ---
 
+## ADR-021: Eliminación del Panel Web de Administración y Unificación de Experiencia
+
+**Fecha**: 2026-09-08
+**Estado**: Aceptada (Reemplaza a ADR-018, ADR-019 y ADR-020)
+
+### Contexto
+
+El sistema contaba con un panel de administración web personalizado (`admin_usuarios_controller.py`, vistas de estadísticas, categorías, moderación de productos, reportes y gestión de usuarios) y bifurcaciones de navegación condicional en el navbar para usuarios staff y superusuarios. El requerimiento del proyecto exige eliminar cualquier interfaz o rastro visual de panel administrativo personalizado en la aplicación principal, manteniendo una experiencia uniforme orientada exclusivamente al flujo natural de usuario/marketplace.
+
+### Decisión
+
+1. **Eliminación del Controlador y Rutas Admin**: Se elimina completamente `apps/usuarios/controllers/admin_usuarios_controller.py` y sus correspondientes rutas en `apps/usuarios/urls.py` (`admin-usuarios/`, `admin-categorias/`, `admin-moderacion/`, `admin-estadisticas/`, `admin-reporte/`).
+2. **Eliminación de Plantillas Admin**: Se borran las plantillas asociadas en `templates/usuarios/` (`admin_usuarios_list.html`, `admin_usuario_form.html`, `admin_categorias.html`, `admin_categoria_form.html`, `admin_moderacion.html`, `admin_estadisticas.html`).
+3. **Unificación de Navegación (NavbarApp.vue)**: Se remueve la rama condicional de staff/superusuario. Todos los usuarios autenticados disponen de la navegación estándar: *Inicio*, *Mi Inventario*, *Clientes*, *Ventas*, *Solicitudes*, *Mis Compras* y *Carrito*.
+4. **Redirección Estándar**: `LoginView.post` y `home_redirect` en `/` redirigen a todos los usuarios autenticados al marketplace (`inventario:marketplace`).
+5. **Limpieza de Context Processors**: Se retiran del objeto `urls` global de `layout_data` todas las claves `admin_*`.
+
+### Consecuencias
+
+- ✅ Experiencia de usuario uniforme y simplificada; no hay menús paralelos ni paneles secundarios en la interfaz de usuario.
+- ✅ Reducción significativa de superficie de código y mantenimiento al eliminar controladores y plantillas no deseadas.
+- ✅ Reemplaza y anula las decisiones de redirección y bifurcación previa (ADR-018, ADR-019, ADR-020).
+- ✅ El backend Django Admin nativo (`/admin/`) permanece intacto para labores técnicas internas.
+
+### Archivos Afectados
+
+- `apps/usuarios/controllers/admin_usuarios_controller.py` (eliminado)
+- `apps/usuarios/urls.py`
+- `apps/usuarios/controllers/auth_controller.py`
+- `config/urls.py`
+- `core/context_processors.py`
+- `frontend/src/layout/NavbarApp.vue`
+- `templates/base.html`
+- `templates/usuarios/admin_*.html` (eliminadas)
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -725,9 +762,10 @@ Unificar la condición de privilegios administrativos para que tanto `is_staff` 
 | ADR-012 | Solicitudes server-side (reversión) | Aceptada | Módulo ventas |
 | ADR-013 | Soporte de imágenes (producto + perfil) | Aceptada | Inventario / Usuarios |
 | ADR-014 | Carrusel de imágenes y tamaño uniforme | Aceptada | Inventario / Marketplace |
-| ADR-018 | Redirección post-login por rol (is_staff) | Aceptada | Auth / Usuarios |
-| ADR-019 | Navbar específico para staff (is_staff) | Aceptada | Frontend / Auth |
-| ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Aceptada | Auth / Admin / Frontend |
+| ADR-018 | Redirección post-login por rol (is_staff) | Reemplazada (ADR-021) | Auth / Usuarios |
+| ADR-019 | Navbar específico para staff (is_staff) | Reemplazada (ADR-021) | Frontend / Auth |
+| ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Reemplazada (ADR-021) | Auth / Admin / Frontend |
+| ADR-021 | Eliminación de panel web admin y unificación de experiencia | Aceptada | Arquitectura / UI / Usuarios |
 
 ---
 

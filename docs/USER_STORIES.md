@@ -154,11 +154,10 @@ graph TD
 **Requisitos relacionados**: [[REQUIREMENTS#RF-I03]]
 
 **Criterios de Aceptación**:
-- [x] Solo el dueño o admin puede editar
+- [x] Solo el dueño puede editar
 - [x] Formulario precargado con datos actuales
 - [x] Si cambia la cantidad, registra movimiento de diferencia de stock
 - [x] No actualiza stock directamente (lo hace el trigger de BD)
-- [x] Admin puede cambiar stock_minimo
 
 **Implementación**: `apps/inventario/controllers/producto_controller.py` → `editar_producto()`
 

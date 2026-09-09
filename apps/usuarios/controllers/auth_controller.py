@@ -144,12 +144,10 @@ class LoginView(View):
                     
                     messages.success(request, f'Bienvenido, {user.get_full_name()}!')
                     
-                    # Redirigir según el rol del usuario
+                    # Redirigir al marketplace
                     next_url = request.GET.get('next', None)
                     if next_url:
                         return redirect(next_url)
-                    if user.is_staff or user.is_superuser:
-                        return redirect('usuarios:admin_usuarios_list')
                     return redirect('inventario:marketplace')
                 else:
                     messages.error(request, 'Tu cuenta está inactiva.')

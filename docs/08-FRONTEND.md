@@ -46,9 +46,8 @@ Definidos en `vite.config.js`:
 **Props**: `user`, `urls`, `cart_count`, `messages` (JSON inyectado por `core.context_processors.layout_data`)
 
 **Funcionalidades**:
-- Navbar con 3 estados: no autenticado, autenticado, staff (roles, carrito, dropdown de usuario)
-- **Rama staff / superusuario** (`user.is_staff || user.is_superuser`): muestra solo los 4 módulos del panel de administración (Usuarios, Categorías, Moderación, Estadísticas) vía `urls.admin_*`, más el dropdown de usuario.
-- **Rama usuario**: enlaces de usuario (Inicio, Mi Inventario, Clientes, Ventas, Solicitudes, Mis Compras, carrito) más el dropdown de usuario.
+- Navbar con 2 estados: no autenticado (Términos, Iniciar Sesión, Registrarse) y autenticado (Inicio, Mi Inventario, Clientes, Ventas, Solicitudes, Mis Compras, carrito, dropdown de usuario)
+- Navegación unificada y uniforme para todos los usuarios autenticados.
 - Footer con logo SVG oficial de AGROSFT
 - Notificaciones toast con auto-dismiss (animación escalonada)
 - Componente **no-scoped**: reutiliza clases Bootstrap 5 y variables CSS del proyecto

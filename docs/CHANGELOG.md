@@ -8,6 +8,17 @@
 ## [Unreleased]
 
 ### Removed (2026-09-08)
+- **Eliminación total del panel web de administración y unificación de navegación (ADR-021)**:
+  - Eliminado el controlador `apps/usuarios/controllers/admin_usuarios_controller.py`.
+  - Eliminadas todas las rutas `admin-...` de `apps/usuarios/urls.py` (usuarios, categorías, moderación, estadísticas, reportes CSV).
+  - Eliminadas las plantillas asociadas en `templates/usuarios/` (`admin_usuarios_list.html`, `admin_usuario_form.html`, `admin_categorias.html`, `admin_categoria_form.html`, `admin_moderacion.html`, `admin_estadisticas.html`).
+  - `frontend/src/layout/NavbarApp.vue`: Eliminada la rama de administrador; todos los usuarios autenticados disponen de la navegación estándar de usuario (Inicio, Mi Inventario, Clientes, Ventas, Solicitudes, Mis Compras, Carrito).
+  - `core/context_processors.py`: Removidas todas las URLs administrativas del payload global de layout.
+  - `apps/usuarios/controllers/auth_controller.py` y `config/urls.py`: Removidas las redirecciones a administración; el inicio de sesión y la raíz siempre dirigen al marketplace (`inventario:marketplace`).
+  - `templates/base.html`: Versión de assets incrementada a `?_v=20260908_3` tras recompilar el bundle Vue con `npm run build`.
+  - Plantillas de inventario depuradas de verificaciones de admin (`listar_productos.html`, `Productosdetalles.html`, `producto_detail.html`).
+
+### Removed (2026-09-08)
 - **Eliminación de la vista y módulo de Auditoría del panel de administración**:
   - `apps/usuarios/controllers/admin_usuarios_controller.py`: Eliminada la vista `admin_audit_logs`.
   - `apps/usuarios/urls.py`: Eliminada la ruta `/usuarios/admin-auditoria/` y su import.
