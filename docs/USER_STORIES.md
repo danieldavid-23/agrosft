@@ -156,8 +156,11 @@ graph TD
 **Criterios de Aceptación**:
 - [x] Solo el dueño puede editar
 - [x] Formulario precargado con datos actuales
-- [x] Si cambia la cantidad, registra movimiento de diferencia de stock
-- [x] No actualiza stock directamente (lo hace el trigger de BD)
+- [x] La cantidad de stock se muestra como **número entero** (sin decimales ni `.00`)
+- [x] No se puede reducir el stock: el input tiene `step="1"` y `min="<stock_actual>"`, y la validación JS impide ingresar un valor menor
+- [x] Validación server-side: si `nuevo_stock < stock_actual` retorna mensaje de error y cancela la operación
+- [x] Si la cantidad aumenta (`diferencia > 0`), registra un `Movimiento` de tipo **`reabastecimiento`** y su detalle (`cantidad = diferencia`)
+- [x] No actualiza stock directamente (lo hace el trigger de BD `trg_actualizar_stock_oferta`)
 
 **Implementación**: `apps/inventario/controllers/producto_controller.py` → `editar_producto()`
 

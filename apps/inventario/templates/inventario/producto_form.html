@@ -161,6 +161,14 @@
                                     <span class="input-group-text bg-light border-end-0"><i class="fas fa-box"></i></span>
                                     {{ form.cantidad }}
                                 </div>
+                                {% if accion == 'editar' %}
+                                <div class="form-text small text-muted mt-1" id="cantidad-ayuda">
+                                    <i class="fas fa-arrow-up text-success me-1"></i>
+                                    Solo se permite reabastecer. El stock actual es
+                                    <strong id="cantidad-stock-actual">{{ form.cantidad.field.widget.attrs.min }}</strong> unidad(es)
+                                    y no puede reducirse.
+                                </div>
+                                {% endif %}
                                 {% if form.cantidad.errors %}
                                 <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.cantidad.errors.0 }}</div>
                                 {% endif %}
@@ -1005,6 +1013,62 @@
                     btnConfirmar.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Sí, eliminar';
                 });
             });
+        }
+
+        // ==========================================
+        // VALIDACIÓN DE STOCK (REABASTECIMIENTO)
+        // Impide reducir las unidades por debajo del stock actual.
+        // ==========================================
+        const campoCantidad = document.getElementById('id_cantidad');
+        if (campoCantidad) {
+            const stockMinimo = parseInt(campoCantidad.getAttribute('min'), 10);
+            const stockMin = Number.isFinite(stockMinimo) ? stockMinimo : 0;
+
+            // Asegurar que el input sea entero y con step=1
+            campoCantidad.setAttribute('step', '1');
+
+            function validarCantidad() {
+                let valor = parseInt(campoCantidad.value, 10);
+                if (Number.isNaN(valor)) {
+                    valor = stockMin;
+                }
+                if (valor < stockMin) {
+                    campoCantidad.value = stockMin;
+                    campoCantidad.setCustomValidity('No puedes reducir las unidades por debajo del stock actual (' + stockMin + ').');
+                } else {
+                    campoCantidad.setCustomValidity('');
+                }
+            }
+
+            // Impedir bajar con flechas/manual/teclado
+            campoCantidad.addEventListener('input', function() {
+                // Validación en vivo sin bloquear el tipeo parcial excesivamente
+                const num = parseInt(this.value, 10);
+                if (!Number.isNaN(num) && num < stockMin) {
+                    this.setCustomValidity('No puedes reducir las unidades por debajo del stock actual (' + stockMin + ').');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            campoCantidad.addEventListener('change', validarCantidad);
+            campoCantidad.addEventListener('paste', function() {
+                setTimeout(validarCantidad, 0);
+            });
+
+            // Doble verificación antes de enviar el formulario
+            const formProducto = campoCantidad.closest('form');
+            if (formProducto) {
+                formProducto.addEventListener('submit', function(e) {
+                    validarCantidad();
+                    const num = parseInt(campoCantidad.value, 10);
+                    if (campoCantidad.value === '' || Number.isNaN(num) || num < stockMin) {
+                        e.preventDefault();
+                        campoCantidad.value = stockMin;
+                        campoCantidad.setCustomValidity('No puedes reducir las unidades por debajo del stock actual (' + stockMin + ').');
+                        campoCantidad.reportValidity();
+                    }
+                });
+            }
         }
     });
 </script>

@@ -224,7 +224,7 @@ INSERT INTO estado (estado) VALUES
 
 -- Tipos de movimiento
 INSERT INTO tipo_movimiento (tipo_movimiento) VALUES
-('compra'), ('venta'), ('rechazada'), ('vendida');
+('compra'), ('venta'), ('rechazada'), ('vendida'), ('cancelada'), ('reabastecimiento');
 ```
 
 ---

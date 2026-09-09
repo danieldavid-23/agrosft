@@ -119,6 +119,8 @@ apps/inventario/
 
 > [!note] `TipoMovimiento` consolidado (2026-09-07)
 > El duplicado de `TipoMovimiento` en `apps.inventario` fue eliminado ([[DECISIONS#ADR-015]]). `apps.inventario.models` re-exporta ahora el canónico desde `apps.ventas.models.movimiento`.
+>
+> A partir de 2026-09-09 se añade el tipo **`reabastecimiento`** (ver [[DECISIONS#ADR-023]]), usado por `editar_producto()` para registrar incrementos de stock con cantidad positiva. El trigger `trg_actualizar_stock_oferta` suma el stock automáticamente para este tipo.
 
 **Arquitectura Dual de Productos**:
 
@@ -158,7 +160,7 @@ apps/ventas/
 
 ```mermaid
 graph LR
-    TM[tipo_movimiento<br>compra/venta/rechazada/vendida] -->|1:N| M[movimiento<br>Header de transacción]
+    TM[tipo_movimiento<br>compra/venta/rechazada/vendida/cancelada/reabastecimiento] -->|1:N| M[movimiento<br>Header de transacción]
     M -->|1:N| PUM[tblproductos_has_tblusuarios_has_movimiento<br>Detalles]
     PUM -->|N:1| PU[ProductoUsuario<br>Publicación]
     M -->|N:1| U[tblusuarios<br>Comprador]
@@ -177,6 +179,7 @@ graph LR
 | `rechazada` | Rechazada | Vendedor rechazó |
 | `vendida` | Completada | Transacción finalizada |
 | `cancelada` | Cancelada | Venta cancelada (desde estado `venta`) |
+| `reabastecimiento` | — (no es solicitud) | Entrada de stock desde la edición de producto (cantidad positiva) |
 
 ### 2.5 `apps.clientes` — Historial
 

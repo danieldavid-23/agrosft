@@ -95,7 +95,8 @@ class ProductoForm(forms.Form):
                 self.fields['stock_minimo'].initial = initial_data.get('stock_minimo', 5)
                 self.fields['imagen'].initial = initial_data.get('imagen')
             
-            self.fields['cantidad'].initial = initial_data.get('cantidad', 0)
+            cantidad_initial = initial_data.get('cantidad', 0)
+            self.fields['cantidad'].initial = int(cantidad_initial) if cantidad_initial is not None else 0
             self.fields['precio'].initial = initial_data.get('precio', 0)
 
 

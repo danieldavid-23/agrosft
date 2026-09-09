@@ -780,6 +780,50 @@ En el formulario de registro y edición de productos (`producto_form.html`), la 
 
 ---
 
+## ADR-023: Tipo de Movimiento 'reabastecimiento' y Stock Gestionado por Trigger
+
+**Fecha**: 2026-09-09  
+**Estado**: Aceptada  
+
+### Contexto
+
+El módulo de edición de producto (`editar_producto()`) permitía anteriormente reducir el stock directamente y registraba los cambios con tipo `venta` (abastecimiento legacy), lo que generaba confusión semántica y permitía valores negativos no deseados. El requerimiento era:
+1. Impedir la reducción de stock desde la edición (solo reabastecimiento/ingreso).
+2. Registrar cada incremento con un tipo semántico propio: `reabastecimiento`.
+3. Mantener la regla de oro: **el trigger de BD es la única fuente de verdad para el stock**.
+
+### Decisión
+
+1. **Nuevo tipo de movimiento**: `reabastecimiento` (INSERT en `tipo_movimiento`, script `insertar_tipo_reabastecimiento.sql`).
+2. **Trigger actualizado**: `trg_actualizar_stock_oferta` (script `trigger_reabastecimiento_stock.sql`) suma stock para tipos `venta` (legacy abastecimiento) y `reabastecimiento`; ignora `compra`; protege contra stock negativo.
+3. **Backend (`editar_producto`)**:
+   - Valida server-side: `nuevo_stock >= stock_actual`. Si menor → error y cancelación.
+   - Calcula `diferencia = nuevo_stock - stock_actual`.
+   - Si `diferencia > 0`: crea `Movimiento(tipo='reabastecimiento')` + `ProductoUsuarioMovimiento(cantidad=+diferencia)`.
+   - **No toca** `ProductoUsuario.cantidad` en Python (trigger lo actualiza).
+4. **Frontend**: campo `cantidad` como entero (`step="1"`, `min=stock_actual`), validación JS en vivo que impide valores < stock actual.
+5. **Formulario**: `initial['cantidad']` casteado a `int` (elimina `.00` visual).
+
+### Consecuencias
+
+- ✅ Semántica clara: `reabastecimiento` = entrada de stock desde edición.
+- ✅ Integridad: BD controla stock (trigger), Python solo registra intención.
+- ✅ UX: usuario nunca ve decimales en stock; input bloquea reducción.
+- ✅ Trazabilidad: cada reabastecimiento queda en historial de movimientos con tipo propio.
+- ⚠️ Requiere ejecutar scripts SQL en BD (`insertar_tipo_reabastecimiento.sql` y `trigger_reabastecimiento_stock.sql`) antes de desplegar.
+
+### Archivos Afectados
+
+- `scripts/insertar_tipo_reabastecimiento.sql` (nuevo)
+- `scripts/trigger_reabastecimiento_stock.sql` (nuevo)
+- `scripts/asegurar_tipos_movimiento.py`
+- `apps/inventario/controllers/producto_controller.py`
+- `apps/inventario/forms/producto_form.py`
+- `apps/inventario/templates/inventario/producto_form.html`
+- `docs/REQUIREMENTS.md`, `USER_STORIES.md`, `ARCHITECTURE.md`, `DATABASE.md`, `09-CONFIGURACION.md`, `CHANGELOG.md`
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -803,6 +847,7 @@ En el formulario de registro y edición de productos (`producto_form.html`), la 
 | ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Reemplazada (ADR-021) | Auth / Admin / Frontend |
 | ADR-021 | Eliminación de panel web admin y unificación de experiencia | Aceptada | Arquitectura / UI / Usuarios |
 | ADR-022 | Selectores dinámicos para Categoría y Nombre de Producto | Aceptada | Inventario / UI / UX |
+| ADR-023 | Tipo 'reabastecimiento' + stock por trigger | Aceptada | Edición inventario + BD |
 
 ---
 

@@ -569,69 +569,85 @@ def editar_producto(request, pk):
         messages.error(request, 'No tienes permiso para editar este producto.')
         return redirect('inventario:listar')
     
+    # Stock actual de la publicación (entero, unidades no fraccionables)
+    stock_actual = int(producto_usuario.cantidad)
+
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)  # Eliminar instance= que no es válido para forms.Form
         if form.is_valid():
-            with transaction.atomic():
-                # Actualizar campos del producto maestro (tblproducto)
-                producto = producto_usuario.id_producto
-                producto.nombre = form.cleaned_data['nombre']
-                producto.descripcion = form.cleaned_data['descripcion']
-                producto.id_categoria = form.cleaned_data['id_categoria']
-                
-                # Actualizar imágenes si se proporcionan nuevas (conservando existentes)
-                archivos_nuevos = request.FILES.getlist('imagen')
-                if archivos_nuevos:
-                    if not producto.imagen:
-                        producto.imagen = archivos_nuevos[0]
-                        archivos_a_agregar = archivos_nuevos[1:]
-                    else:
-                        archivos_a_agregar = archivos_nuevos
+            nuevo_stock = int(form.cleaned_data['cantidad'])
 
-                    ultimo_orden = producto.imagenes_secundarias.count()
-                    for idx, img_file in enumerate(archivos_a_agregar, start=ultimo_orden + 1):
-                        ProductoImagen.objects.create(
-                            id_producto=producto,
-                            imagen=img_file,
-                            orden=idx
+            # Validación de servidor: no se permite reducir el stock desde la edición.
+            if nuevo_stock < stock_actual:
+                messages.error(
+                    request,
+                    f'No puedes reducir las unidades de stock. '
+                    f'Stock actual: {stock_actual} unidad(es), intentas registrar: {nuevo_stock}. '
+                    f'Solo se permite reabastecer (valor igual o mayor al actual).'
+                )
+                form.add_error('cantidad', f'Debe ser igual o mayor al stock actual ({stock_actual}).')
+            else:
+                with transaction.atomic():
+                    # Actualizar campos del producto maestro (tblproducto)
+                    producto = producto_usuario.id_producto
+                    producto.nombre = form.cleaned_data['nombre']
+                    producto.descripcion = form.cleaned_data['descripcion']
+                    producto.id_categoria = form.cleaned_data['id_categoria']
+                    
+                    # Actualizar imágenes si se proporcionan nuevas (conservando existentes)
+                    archivos_nuevos = request.FILES.getlist('imagen')
+                    if archivos_nuevos:
+                        if not producto.imagen:
+                            producto.imagen = archivos_nuevos[0]
+                            archivos_a_agregar = archivos_nuevos[1:]
+                        else:
+                            archivos_a_agregar = archivos_nuevos
+
+                        ultimo_orden = producto.imagenes_secundarias.count()
+                        for idx, img_file in enumerate(archivos_a_agregar, start=ultimo_orden + 1):
+                            ProductoImagen.objects.create(
+                                id_producto=producto,
+                                imagen=img_file,
+                                orden=idx
+                            )
+                    
+                    # TODOS los usuarios pueden editar stock_minimo
+                    stock_minimo_value = form.cleaned_data.get('stock_minimo')
+                    if stock_minimo_value is not None:
+                        producto.stock_minimo = stock_minimo_value
+                    
+                    producto.save()
+                    logger.info(f"Producto maestro actualizado: {producto.nombre}, stock_minimo: {producto.stock_minimo}")
+                    
+                    # Actualizar campos específicos del usuario (tblproductos_has_tblusuarios)
+                    # NOTA: No se actualiza 'cantidad' aquí: el trigger de BD la gestiona.
+                    producto_usuario.precio = form.cleaned_data['precio']
+                    producto_usuario.save()
+                    
+                    # Reabastecimiento: cantidad nueva mayor que la actual
+                    diferencia = nuevo_stock - stock_actual
+                    if diferencia > 0:
+                        # El trigger trg_actualizar_stock_oferta suma 'diferencia' al stock.
+                        tipo_reab, _ = TipoMovimiento.objects.get_or_create(tipo='reabastecimiento')
+                        movimiento = Movimiento.objects.create(
+                            id_tipo_movimiento=tipo_reab,
+                            id_usuario=request.user
                         )
-                
-                # TODOS los usuarios pueden editar stock_minimo
-                stock_minimo_value = form.cleaned_data.get('stock_minimo')
-                if stock_minimo_value is not None:
-                    producto.stock_minimo = stock_minimo_value
-                
-                producto.save()
-                logger.info(f"Producto maestro actualizado: {producto.nombre}, stock_minimo: {producto.stock_minimo}")
-                
-                # Calcular diferencia para el movimiento de stock antes de actualizar
-                diferencia_stock = form.cleaned_data['cantidad'] - producto_usuario.cantidad
-                
-                # Actualizar campos específicos del usuario (tblproductos_has_tblusuarios)
-                # NOTA: No se actualiza 'cantidad' aquí para evitar conflictos con el trigger de BD
-                producto_usuario.precio = form.cleaned_data['precio']
-                
-                
-                
-                producto_usuario.save()
-                
-                # Registrar el movimiento de stock si hubo cambio
-                if diferencia_stock != 0:
-                    tipo_venta, _ = TipoMovimiento.objects.get_or_create(tipo='venta')
-                    movimiento = Movimiento.objects.create(
-                        id_tipo_movimiento=tipo_venta,
-                        id_usuario=request.user
-                    )
-                    ProductoUsuarioMovimiento.objects.create(
-                        id_movimiento=movimiento,
-                        id_producto_usuario=producto_usuario,
-                        cantidad=diferencia_stock
-                    )
-                
-                logger.info(f"ProductoUsuario actualizado: cantidad={producto_usuario.cantidad}, precio={producto_usuario.precio}")
-                
-                messages.success(request, '¡Producto actualizado exitosamente!')
-                return redirect('inventario:listar')
+                        ProductoUsuarioMovimiento.objects.create(
+                            id_movimiento=movimiento,
+                            id_producto_usuario=producto_usuario,
+                            cantidad=diferencia
+                        )
+                        logger.info(
+                            f"Reabastecimiento registrado: +{diferencia} unidades para "
+                            f"ProductoUsuario #{producto_usuario.id_producto_usuario} "
+                            f"(movimiento #{movimiento.id_movimiento})"
+                        )
+                    
+                    logger.info(f"ProductoUsuario actualizado: cantidad={producto_usuario.cantidad}, precio={producto_usuario.precio}")
+                    
+                    messages.success(request, '¡Producto actualizado exitosamente!')
+                    return redirect('inventario:listar')
         else:
             # Log de errores de validación para debugging
             logger.error(f"Errores de validación del formulario: {form.errors}")
@@ -644,11 +660,15 @@ def editar_producto(request, pk):
             'id_categoria': producto_usuario.id_producto.id_categoria,
             'stock_minimo': producto_usuario.id_producto.stock_minimo,
             'imagen': producto_usuario.id_producto.imagen,
-            'cantidad': producto_usuario.cantidad,  # Ahora es Decimal, no necesita conversión
+            'cantidad': stock_actual,  # Entero: evita mostrar decimales (.00)
             'precio': producto_usuario.precio,
         }
         form = ProductoForm(initial=initial_data)
         # TODOS los usuarios pueden editar stock_minimo (sin restricciones)
+
+    # Configurar el campo 'cantidad' para impedir bajar el stock (form + input)
+    form.fields['cantidad'].widget.attrs['min'] = str(stock_actual)
+    form.fields['cantidad'].min_value = stock_actual
 
     categorias = get_categorias_cached()
     

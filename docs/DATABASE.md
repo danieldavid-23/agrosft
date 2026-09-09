@@ -171,7 +171,7 @@ erDiagram
 | `id_tipo_movimiento` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
 | `tipo_movimiento` | VARCHAR(45) | No | — | Nombre del tipo |
 
-**Valores**: `compra` (id=1), `venta` (id=2), `vendida` (id=3), `rechazada` (id=4), `cancelada` (id=5)  
+**Valores**: `compra` (id=1), `venta` (id=2), `vendida` (id=3), `rechazada` (id=4), `cancelada` (id=5), `reabastecimiento`  
 **Modelo Django**: `apps.ventas.models.movimiento.TipoMovimiento`
 
 ---
@@ -311,14 +311,14 @@ La BD actual tiene **5 triggers** activos (verificado en MariaDB 2026-06-24):
 
 **Acciones**:
 1. Obtiene el `tipo_movimiento` asociado vía JOIN con `movimiento` → `tipo_movimiento`
-2. Si el movimiento es de **venta** (abastecimiento): actualiza `cantidad = cantidad + NEW.cantidad` en `tblproductos_has_tblusuarios`
-3. Si el movimiento es de **compra**: actualiza `cantidad = cantidad - NEW.cantidad` en `tblproductos_has_tblusuarios`
-4. **Protección**: Si se realiza una compra (descuento), verifica que `stock_actual - NEW.cantidad >= 0`. Emite `SIGNAL SQLSTATE '45000'` si es insuficiente para garantizar la integridad de los datos.
+2. Si el movimiento es de entrada (tipos `venta` = abastecimiento legacy y `reabastecimiento`): actualiza `cantidad = cantidad + NEW.cantidad` en `tblproductos_has_tblusuarios`
+3. Los movimientos de tipo `compra` (solicitudes pendientes) **no** afectan el stock
+4. **Protección**: Si `NEW.cantidad < 0` (salida), verifica que `stock_actual + NEW.cantidad >= 0`. Emite `SIGNAL SQLSTATE '45000'` si es insuficiente para garantizar la integridad de los datos.
 5. Si `NEW.calificacion IS NOT NULL`, recalcula `calificacion_promedio` como AVG de todas las calificaciones de esa publicación.
 
 > [!important] Comportamiento clave
-> - `'venta'` (abastecimiento): **suma** la cantidad ingresada al stock.
-> - `'compra'`: **descuenta** la cantidad adquirida.
+> - `'venta'` y `'reabastecimiento'` (abastecimiento): **suman** la cantidad ingresada al stock.
+> - `'compra'`: no afecta stock (solicitud pendiente); el descuento ocurre al pasar a `'vendida'` vía `trg_descontar_stock_vendida`.
 > - La base de datos es la fuente única de verdad sobre la disponibilidad real de los productos, previniendo stocks negativos.
 
 ---

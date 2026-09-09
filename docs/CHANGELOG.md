@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+### Added (2026-09-09)
+- **Reabastecimiento de inventario desde la edición de producto (ADR-023)**:
+  - `scripts/insertar_tipo_reabastecimiento.sql`: nuevo script idempotente que asegura la existencia del tipo `reabastecimiento` en `tipo_movimiento`.
+  - `scripts/trigger_reabastecimiento_stock.sql`: nueva versión del trigger `trg_actualizar_stock_oferta` con allowlist explícita (`venta`, `reabastecimiento` suman stock) y conservación de la protección anti-stock-negativo.
+  - `scripts/asegurar_tipos_movimiento.py`: añade `'reabastecimiento'` a la lista de tipos requeridos.
+  - `apps/inventario/controllers/producto_controller.py`: `editar_producto()` ahora valida server-side que `nuevo_stock >= stock_actual`, registra el incremento como `Movimiento(tipo='reabastecimiento')` + `ProductoUsuarioMovimiento(cantidad=diferencia)`, y deja al trigger de BD la actualización del stock (sin doble conteo).
+  - `apps/inventario/forms/producto_form.py`: el campo `cantidad` se castea a `int` (elimina el `.00` visual) y se establece `min = stock_actual` en la vista de edición.
+  - `apps/inventario/templates/inventario/producto_form.html`: el campo `Unidades` muestra nota informativa en edición y un listener JS impide tipear/ingresar valores por debajo del stock actual; valida adicionalmente al enviar el formulario.
+  - Documentación actualizada: `REQUIREMENTS.md` (RF-I03, RF-I12), `USER_STORIES.md` (US-07), `ARCHITECTURE.md` (módulo ventas/inventario), `DATABASE.md` (`tipo_movimiento` y trigger), `09-CONFIGURACION.md` (seed), `DECISIONS.md` (ADR-023).
+
 ### Added (2026-09-08)
 - **Selectores Dinámicos para Categoría y Nombre de Producto en Formulario de Registro** (ADR-022):
   - `apps/inventario/controllers/producto_controller.py`: Creados dos endpoints AJAX:
