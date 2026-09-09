@@ -45,6 +45,14 @@ def listar_compras(request):
             for d in detalles
         ))
 
+        # Build per-product info for the list view
+        productos_info = []
+        for d in detalles:
+            productos_info.append({
+                'movimiento_usuario_id': d.id_movimiento_usuario,
+                'nombre': d.id_producto_usuario.id_producto.nombre,
+            })
+
         compras.append({
             'id': mov.id_movimiento,
             'fecha': mov.obtener_fecha(),
@@ -54,6 +62,7 @@ def listar_compras(request):
             'badge_class': ESTADOS_BADGE.get(tipo, 'bg-secondary'),
             'icono': ESTADOS_ICONO.get(tipo, 'fa-question'),
             'tipo_interno': tipo,
+            'productos_info': productos_info,
         })
 
     return render(request, 'ventas/compras/compra_list.html', {
@@ -69,7 +78,7 @@ def detalle_compra(request, pk):
     movimiento = get_object_or_404(Movimiento, pk=pk, id_usuario=request.user)
     tipo = movimiento.id_tipo_movimiento.tipo
 
-    productos = ProductoUsuarioMovimiento.objects.filter(
+    productos_qs = ProductoUsuarioMovimiento.objects.filter(
         id_movimiento=movimiento
     ).select_related(
         'id_producto_usuario__id_producto',
@@ -79,8 +88,16 @@ def detalle_compra(request, pk):
 
     total = float(sum(
         abs(d.cantidad) * d.id_producto_usuario.precio
-        for d in productos
+        for d in productos_qs
     ))
+
+    # Attach metadata to each product line
+    productos = []
+    for d in productos_qs:
+        productos.append({
+            'detalle': d,
+            'movimiento_usuario_id': d.id_movimiento_usuario,
+        })
 
     return render(request, 'ventas/compras/compra_detail.html', {
         'compra': {

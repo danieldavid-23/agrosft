@@ -200,22 +200,3 @@ class ProductoUsuario(models.Model):
         from core.utils.helpers import safe_int
         val = safe_int(self.cantidad)
         return max(0, val)
-
-
-class Calificacion(models.Model):
-    """
-    Modelo que representa la tabla calificacion en la base de datos
-    NOTA: Esta tabla parece ser una escala de referencia pero solo tiene 1 registro (valor 5).
-    Las calificaciones reales se almacenan en ProductoUsuarioMovimiento.calificacion
-    """
-    id_calificacion = models.AutoField(primary_key=True, db_column='id_calificacion')
-    calificacion = models.IntegerField(db_column='calificacion')
-
-    class Meta:
-        db_table = 'calificacion'
-        managed = False
-        verbose_name = 'Calificación (Referencia)'
-        verbose_name_plural = 'Calificaciones (Referencia)'
-
-    def __str__(self):
-        return f"Calificación: {self.calificacion}"

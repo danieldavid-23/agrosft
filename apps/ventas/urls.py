@@ -1,5 +1,5 @@
 from django.urls import path
-from .controllers import venta_controller, solicitud_controller, carrito_controller, calificacion_controller, compra_controller
+from .controllers import venta_controller, solicitud_controller, carrito_controller, compra_controller
 
 app_name = 'ventas'
 
@@ -31,8 +31,4 @@ urlpatterns = [
     # Mis Compras (vista del comprador)
     path('compras/', compra_controller.listar_compras, name='compra_list'),
     path('compras/<int:pk>/', compra_controller.detalle_compra, name='compra_detail'),
-
-    # Calificaciones
-    path('calificaciones/calificar/<int:movimiento_id>/', calificacion_controller.calificar_transaccion, name='calificar_transaccion'),
-    path('calificaciones/historial/', calificacion_controller.historial_movimientos, name='historial_movimientos'),
 ]

@@ -88,7 +88,6 @@ class ProductoUsuarioMovimiento(models.Model):
     - Registra qué producto de qué vendedor se está comprando/vendiendo
     - Almacena la cantidad movida (positiva=abastecimiento, negativa=venta)
     - Contiene la fecha del movimiento (fecha_movimiento)
-    - Permite calificar cada transacción individualmente
     - Los triggers actualizan automáticamente el stock y calificación_promedio
     """
     id_movimiento_usuario = models.AutoField(

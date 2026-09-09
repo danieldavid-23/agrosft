@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models.producto import Producto, Categoria, ProductoUsuario, Estado, Calificacion
+from .models.producto import Producto, Categoria, ProductoUsuario, Estado
 from apps.ventas.models.movimiento import TipoMovimiento
 
 
@@ -24,12 +24,6 @@ class TipoMovimientoAdmin(admin.ModelAdmin):
     list_display = ['id_tipo_movimiento', 'tipo']
     search_fields = ['tipo']
     ordering = ['id_tipo_movimiento']
-
-
-@admin.register(Calificacion)
-class CalificacionAdmin(admin.ModelAdmin):
-    list_display = ['id_calificacion', 'calificacion']
-    ordering = ['id_calificacion']
 
 
 @admin.register(Producto)
