@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Iniciar Sesión - AgroSFT{% endblock %}
+{% block title %}Iniciar Sesión - AGROSFT{% endblock %}
 
 {% block content %}
 <style>
@@ -16,18 +16,22 @@
         padding: 2rem 1rem;
         font-family: 'Inter', sans-serif;
     }
+
     .auth-page * {
         box-sizing: border-box;
         font-family: 'Inter', sans-serif;
     }
+
     .auth-page a {
         text-decoration: none;
     }
+
     .auth-page button {
         appearance: none;
         -webkit-appearance: none;
         font-family: 'Inter', sans-serif;
     }
+
     .auth-page input {
         appearance: none;
         -webkit-appearance: none;
@@ -60,6 +64,7 @@
         position: relative;
         overflow: hidden;
     }
+
     .auth-hero::before {
         content: '';
         position: absolute;
@@ -68,10 +73,11 @@
         width: 130%;
         height: 130%;
         background:
-            radial-gradient(ellipse at 25% 40%, rgba(255,255,255,0.10) 0%, transparent 55%),
-            radial-gradient(ellipse at 85% 15%, rgba(255,255,255,0.05) 0%, transparent 45%);
+            radial-gradient(ellipse at 25% 40%, rgba(255, 255, 255, 0.10) 0%, transparent 55%),
+            radial-gradient(ellipse at 85% 15%, rgba(255, 255, 255, 0.05) 0%, transparent 45%);
         pointer-events: none;
     }
+
     .auth-hero::after {
         content: '';
         position: absolute;
@@ -80,9 +86,10 @@
         width: 260px;
         height: 260px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
         pointer-events: none;
     }
+
     .auth-hero-logo {
         width: 76px;
         height: 76px;
@@ -94,8 +101,9 @@
         margin-bottom: 1.6rem;
         position: relative;
         z-index: 1;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     }
+
     .auth-hero-logo img {
         width: 54px;
         height: 54px;
@@ -103,6 +111,7 @@
         object-fit: contain;
         display: block;
     }
+
     .auth-hero h2 {
         margin: 0 0 0.5rem 0;
         color: #ffffff;
@@ -112,15 +121,17 @@
         position: relative;
         z-index: 1;
     }
+
     .auth-hero .auth-hero-sub {
         margin: 0;
-        color: rgba(255,255,255,0.82);
+        color: rgba(255, 255, 255, 0.82);
         font-size: 0.9rem;
         line-height: 1.65;
         max-width: 300px;
         position: relative;
         z-index: 1;
     }
+
     .auth-hero-features {
         margin-top: 2rem;
         display: flex;
@@ -132,20 +143,22 @@
         position: relative;
         z-index: 1;
     }
+
     .auth-hero-feature {
         display: flex;
         align-items: center;
         gap: 12px;
-        color: rgba(255,255,255,0.88);
+        color: rgba(255, 255, 255, 0.88);
         font-size: 0.85rem;
         font-weight: 500;
     }
+
     .auth-hero-feature i {
         width: 28px;
         height: 28px;
         border-radius: 8px;
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.14);
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.14);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -162,11 +175,13 @@
         justify-content: center;
         padding: 2.75rem 2.25rem;
     }
+
     .auth-form-inner {
         width: 100%;
         max-width: 400px;
         margin: 0 auto;
     }
+
     .auth-form-title {
         margin: 0 0 0.3rem 0;
         color: #27402d;
@@ -174,9 +189,11 @@
         font-weight: 800;
         letter-spacing: -0.025em;
     }
+
     .auth-form-logo {
         display: none;
     }
+
     .auth-form-subtitle {
         margin: 0 0 1.75rem 0;
         color: #74837a;
@@ -188,6 +205,7 @@
     .auth-field {
         margin-bottom: 1.25rem;
     }
+
     .auth-field-label {
         display: block;
         margin-bottom: 0.45rem;
@@ -197,10 +215,12 @@
         text-transform: uppercase;
         letter-spacing: 0.9px;
     }
+
     .auth-input-wrap {
         position: relative;
     }
-    .auth-input-wrap > i {
+
+    .auth-input-wrap>i {
         position: absolute;
         left: 15px;
         top: 50%;
@@ -211,6 +231,7 @@
         z-index: 1;
         transition: color 0.2s ease;
     }
+
     .auth-input-wrap input {
         width: 100%;
         height: 48px;
@@ -224,31 +245,38 @@
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
         outline: none;
     }
+
     .auth-input-wrap input::placeholder {
         color: #a5aea8;
         font-weight: 400;
     }
+
     .auth-input-wrap input:hover {
         border-color: #c6cfc8;
     }
+
     .auth-input-wrap input:focus {
         border-color: #3C8D3C;
         background-color: #ffffff;
         box-shadow: 0 0 0 4px rgba(60, 141, 60, 0.14);
     }
-    .auth-input-wrap input:focus ~ i,
-    .auth-input-wrap input:focus + i {
+
+    .auth-input-wrap input:focus~i,
+    .auth-input-wrap input:focus+i {
         color: #3C8D3C;
     }
+
     .auth-input-wrap input.is-invalid {
         border-color: #e35d5d;
         background-color: #fff7f7;
     }
+
     .auth-input-wrap input.is-invalid:focus {
         box-shadow: 0 0 0 4px rgba(227, 93, 93, 0.12);
     }
-    .auth-input-wrap input.is-invalid ~ i,
-    .auth-input-wrap input.is-invalid + i {
+
+    .auth-input-wrap input.is-invalid~i,
+    .auth-input-wrap input.is-invalid+i {
         color: #e35d5d;
     }
 
@@ -273,6 +301,7 @@
         transition: color 0.2s ease, background 0.2s ease;
         z-index: 1;
     }
+
     .auth-pw-toggle:hover,
     .auth-pw-toggle:focus-visible {
         color: #3C8D3C;
@@ -292,6 +321,7 @@
         line-height: 1.4;
         animation: authfadein 0.25s ease;
     }
+
     .auth-field-error i {
         margin-top: 1px;
         font-size: 0.78rem;
@@ -311,10 +341,12 @@
         line-height: 1.45;
         animation: authslide 0.3s ease;
     }
+
     .auth-alert i {
         flex-shrink: 0;
         font-size: 0.95rem;
     }
+
     .auth-alert-error {
         background: #fef2f2;
         border: 1px solid #f5c2c2;
@@ -328,12 +360,14 @@
         text-align: right;
         margin: -0.4rem 0 1.4rem 0;
     }
+
     .auth-forgot a {
         color: #3C8D3C;
         font-size: 0.82rem;
         font-weight: 600;
         transition: color 0.2s ease;
     }
+
     .auth-forgot a:hover {
         color: #25632C;
         text-decoration: underline;
@@ -360,6 +394,7 @@
         position: relative;
         overflow: hidden;
     }
+
     .auth-btn-primary::after {
         content: '';
         position: absolute;
@@ -367,38 +402,45 @@
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
         transition: left 0.5s ease;
     }
+
     .auth-btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 22px rgba(60, 141, 60, 0.40);
     }
+
     .auth-btn-primary:hover::after {
         left: 100%;
     }
+
     .auth-btn-primary:active {
         transform: translateY(0);
         box-shadow: 0 2px 8px rgba(60, 141, 60, 0.30);
     }
+
     .auth-btn-primary:disabled {
         opacity: 0.65;
         cursor: not-allowed;
         transform: none;
         box-shadow: none;
     }
+
     .auth-btn-primary .auth-spinner {
         display: none;
         width: 18px;
         height: 18px;
-        border: 2.5px solid rgba(255,255,255,0.35);
+        border: 2.5px solid rgba(255, 255, 255, 0.35);
         border-top-color: #ffffff;
         border-radius: 50%;
         animation: authspin 0.7s linear infinite;
     }
+
     .auth-btn-primary.is-loading {
         pointer-events: none;
     }
+
     .auth-btn-primary.is-loading .auth-spinner {
         display: inline-block;
     }
@@ -415,6 +457,7 @@
         text-transform: uppercase;
         letter-spacing: 0.7px;
     }
+
     .auth-divider::before,
     .auth-divider::after {
         content: '';
@@ -440,15 +483,18 @@
         cursor: pointer;
         transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
     }
+
     .auth-btn-google:hover {
         border-color: #c2cbc5;
         background: #fafbfa;
         box-shadow: 0 2px 8px rgba(16, 40, 20, 0.06);
         transform: translateY(-1px);
     }
+
     .auth-btn-google:active {
         transform: translateY(0);
     }
+
     .auth-btn-google svg {
         flex-shrink: 0;
     }
@@ -461,15 +507,18 @@
         font-size: 0.88rem;
         line-height: 1.8;
     }
+
     .auth-footer a {
         color: #3C8D3C;
         font-weight: 600;
         transition: color 0.2s ease;
     }
+
     .auth-footer a:hover {
         color: #25632C;
         text-decoration: underline;
     }
+
     .auth-footer .auth-footer-small {
         font-size: 0.8rem;
         font-weight: 400;
@@ -477,15 +526,33 @@
 
     /* ── Animaciones ── */
     @keyframes authfadein {
-        from { opacity: 0; transform: translateY(-3px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-3px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     @keyframes authslide {
-        from { opacity: 0; transform: translateY(-6px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     @keyframes authspin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     /* ── Responsive ── */
@@ -494,18 +561,32 @@
             flex: 0 0 320px;
             padding: 2.25rem 1.75rem;
         }
-        .auth-hero-features { display: none; }
-        .auth-hero-logo { margin-bottom: 1.1rem; }
-        .auth-hero h2 { font-size: 1.35rem; }
+
+        .auth-hero-features {
+            display: none;
+        }
+
+        .auth-hero-logo {
+            margin-bottom: 1.1rem;
+        }
+
+        .auth-hero h2 {
+            font-size: 1.35rem;
+        }
     }
+
     @media (max-width: 700px) {
-        .auth-hero { display: none; }
+        .auth-hero {
+            display: none;
+        }
+
         .auth-form-logo {
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1.25rem;
         }
+
         .auth-form-logo img {
             width: 56px;
             height: 56px;
@@ -514,12 +595,24 @@
             display: block;
             box-shadow: 0 4px 14px rgba(16, 40, 20, 0.12);
         }
-        .auth-page { padding: 1.25rem 0.75rem; }
-        .auth-card { border-radius: 18px; }
-        .auth-form { padding: 2rem 1.25rem; }
+
+        .auth-page {
+            padding: 1.25rem 0.75rem;
+        }
+
+        .auth-card {
+            border-radius: 18px;
+        }
+
+        .auth-form {
+            padding: 2rem 1.25rem;
+        }
     }
+
     @media (max-width: 380px) {
-        .auth-form { padding: 1.5rem 1rem; }
+        .auth-form {
+            padding: 1.5rem 1rem;
+        }
     }
 </style>
 
@@ -528,10 +621,11 @@
         <!-- Panel izquierdo -->
         <div class="auth-hero">
             <div class="auth-hero-logo">
-                <img src="{% static 'img/agrosft_o.svg' %}" alt="AgroSFT">
+                <img src="{% static 'img/agrosft_o.svg' %}" alt="AGROSFT">
             </div>
-            <h2>AgroSFT</h2>
-            <p class="auth-hero-sub">Gestión agrícola inteligente. Conecta, vende y administra tus productos de forma sencilla.</p>
+            <h2>AGROSFT</h2>
+            <p class="auth-hero-sub">Gestión agrícola inteligente. Conecta, vende y administra tus productos de forma
+                sencilla.</p>
             <div class="auth-hero-features">
                 <div class="auth-hero-feature"><i class="fas fa-check"></i><span>Marketplace agrícola</span></div>
                 <div class="auth-hero-feature"><i class="fas fa-check"></i><span>Gestión de inventario</span></div>
@@ -543,16 +637,16 @@
         <div class="auth-form">
             <div class="auth-form-inner">
                 <div class="auth-form-logo">
-                    <img src="{% static 'img/agrosft_o.svg' %}" alt="AgroSFT">
+                    <img src="{% static 'img/agrosft_o.svg' %}" alt="AGROSFT">
                 </div>
                 <h1 class="auth-form-title">Bienvenido de nuevo</h1>
                 <p class="auth-form-subtitle">Ingresa tus credenciales para acceder a tu cuenta</p>
 
                 {% if form.non_field_errors %}
-                    <div class="auth-alert auth-alert-error" role="alert">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</span>
-                    </div>
+                <div class="auth-alert auth-alert-error" role="alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</span>
+                </div>
                 {% endif %}
 
                 <form method="post" novalidate>
@@ -562,36 +656,35 @@
                         <label class="auth-field-label" for="id_username">Correo electrónico</label>
                         <div class="auth-input-wrap">
                             <input type="text" name="username" id="id_username"
-                                   value="{{ form.username.value|default:'' }}"
-                                   placeholder="tucorreo@ejemplo.com" autocomplete="email" required
-                                   {% if form.username.errors %}class="is-invalid"{% endif %}>
+                                value="{{ form.username.value|default:'' }}" placeholder="tucorreo@ejemplo.com"
+                                autocomplete="email" required {% if form.username.errors %}class="is-invalid"{% endif %}>
                             <i class="fas fa-envelope" aria-hidden="true"></i>
                         </div>
                         {% if form.username.errors %}
-                            <div class="auth-field-error">
-                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
-                                <span>{% for error in form.username.errors %}{{ error }}{% endfor %}</span>
-                            </div>
+                        <div class="auth-field-error">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                            <span>{% for error in form.username.errors %}{{ error }}{% endfor %}</span>
+                        </div>
                         {% endif %}
                     </div>
 
                     <div class="auth-field">
                         <label class="auth-field-label" for="id_password">Contraseña</label>
                         <div class="auth-input-wrap">
-                            <input type="password" name="password" id="id_password"
-                                   placeholder="Ingresa tu contraseña" autocomplete="current-password" required
-                                   {% if form.password.errors %}class="is-invalid"{% endif %}>
+                            <input type="password" name="password" id="id_password" placeholder="Ingresa tu contraseña"
+                                autocomplete="current-password" required {% if form.password.errors %}class="is-invalid"
+                                {% endif %}>
                             <i class="fas fa-lock" aria-hidden="true"></i>
                             <button type="button" class="auth-pw-toggle" onclick="togglePassword()"
-                                    aria-label="Mostrar u ocultar contraseña">
+                                aria-label="Mostrar u ocultar contraseña">
                                 <i class="fas fa-eye" id="eye-icon"></i>
                             </button>
                         </div>
                         {% if form.password.errors %}
-                            <div class="auth-field-error">
-                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
-                                <span>{% for error in form.password.errors %}{{ error }}{% endfor %}</span>
-                            </div>
+                        <div class="auth-field-error">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                            <span>{% for error in form.password.errors %}{{ error }}{% endfor %}</span>
+                        </div>
                         {% endif %}
                     </div>
 
@@ -609,17 +702,22 @@
 
                 <a href="{% url 'social:begin' 'google-oauth2' %}" class="auth-btn-google">
                     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                        <path fill="#4285F4" d="M46.5 24c0-1.61-.15-3.16-.42-4.69H24v9.09h12.75C36.18 31.06 33 34.85 28.74 37.66l7.73 6C41.01 39.85 46.5 32.74 46.5 24z"/>
-                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        <path fill="#EA4335"
+                            d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                        <path fill="#4285F4"
+                            d="M46.5 24c0-1.61-.15-3.16-.42-4.69H24v9.09h12.75C36.18 31.06 33 34.85 28.74 37.66l7.73 6C41.01 39.85 46.5 32.74 46.5 24z" />
+                        <path fill="#FBBC05"
+                            d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                        <path fill="#34A853"
+                            d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
                     </svg>
                     Iniciar sesión con Google
                 </a>
 
                 <div class="auth-footer">
                     <div>¿No tienes cuenta? <a href="{% url 'usuarios:registro' %}">Regístrate aquí</a></div>
-                    <div><a href="{% url 'usuarios:terminos' %}" class="auth-footer-small">Términos y Condiciones</a></div>
+                    <div><a href="{% url 'usuarios:terminos' %}" class="auth-footer-small">Términos y Condiciones</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -641,11 +739,11 @@
         }
     }
 
-    (function() {
+    (function () {
         const form = document.querySelector('.auth-form form');
         const btn = document.getElementById('login-btn');
         if (form && btn) {
-            form.addEventListener('submit', function() {
+            form.addEventListener('submit', function () {
                 btn.classList.add('is-loading');
                 btn.disabled = true;
             });

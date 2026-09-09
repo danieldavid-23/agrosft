@@ -525,7 +525,7 @@ def editar_producto(request, pk):
     )
     
     # Verificar que el usuario sea el dueño o admin
-    if producto_usuario.id_usuario != request.user and not request.user.is_staff:
+    if producto_usuario.id_usuario != request.user and not (request.user.is_staff or request.user.is_superuser):
         messages.error(request, 'No tienes permiso para editar este producto.')
         return redirect('inventario:listar')
     
@@ -659,7 +659,7 @@ def eliminar_producto(request, pk):
     )
     
     # Verificar que el usuario sea el dueño o admin
-    if producto_usuario.id_usuario != request.user and not request.user.is_staff:
+    if producto_usuario.id_usuario != request.user and not (request.user.is_staff or request.user.is_superuser):
         msg = 'No tienes permiso para eliminar este producto.'
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'error': msg})
@@ -686,7 +686,7 @@ def eliminar_producto(request, pk):
 def aprobar_producto(request, producto_id):
     producto_usuario = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)
     
-    if not request.user.is_staff:
+    if not (request.user.is_staff or request.user.is_superuser):
         logger.warning(f"Permission denied: user {request.user.pk} attempted to approve product {producto_id}")
         messages.error(request, 'No tienes permiso para aprobar este producto.')
         return redirect('inventario:listar')
@@ -712,7 +712,7 @@ def aprobar_producto(request, producto_id):
 def rechazar_producto(request, producto_id):
     producto_usuario = get_object_or_404(ProductoUsuario, id_producto_usuario=producto_id)
     
-    if not request.user.is_staff:
+    if not (request.user.is_staff or request.user.is_superuser):
         logger.warning(f"Permission denied: user {request.user.pk} attempted to reject product {producto_id}")
         messages.error(request, 'No tienes permiso para rechazar este producto.')
         return redirect('inventario:listar')
@@ -763,7 +763,7 @@ def eliminar_imagen_producto(request, pk, img_id):
     )
 
     # Verificar permisos
-    if producto_usuario.id_usuario != request.user and not request.user.is_staff:
+    if producto_usuario.id_usuario != request.user and not (request.user.is_staff or request.user.is_superuser):
         msg = 'No tienes permiso para modificar las imágenes de este producto.'
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'error': msg}, status=403)

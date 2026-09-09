@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Mi Perfil - AgroSFT{% endblock %}
+{% block title %}Mi Perfil - AGROSFT{% endblock %}
 
 {% block content %}
 <style>
@@ -8,6 +8,7 @@
         min-height: calc(100vh - 200px);
         padding: 2rem 1rem;
     }
+
     .profile-layout {
         max-width: 900px;
         margin: 0 auto;
@@ -15,6 +16,7 @@
         grid-template-columns: 300px 1fr;
         gap: 2rem;
     }
+
     /* Sidebar del perfil */
     .profile-sidebar {
         background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
@@ -25,6 +27,7 @@
         position: relative;
         overflow: hidden;
     }
+
     .profile-sidebar::before {
         content: '';
         position: absolute;
@@ -32,18 +35,21 @@
         right: -30%;
         width: 60%;
         height: 60%;
-        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
     }
+
     .avatar-wrapper {
         position: relative;
         display: inline-block;
         margin-bottom: 1.25rem;
     }
-    .avatar-img, .avatar-initials {
+
+    .avatar-img,
+    .avatar-initials {
         width: 120px;
         height: 120px;
         border-radius: 50%;
-        border: 4px solid rgba(255,255,255,0.3);
+        border: 4px solid rgba(255, 255, 255, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -52,13 +58,16 @@
         color: white;
         object-fit: cover;
     }
+
     .avatar-initials {
-        background: rgba(255,255,255,0.15);
+        background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(4px);
     }
+
     .avatar-img {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
     }
+
     .avatar-edit-btn {
         position: absolute;
         bottom: 4px;
@@ -73,14 +82,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         transition: transform 0.2s, background 0.2s;
         font-size: 0.85rem;
     }
+
     .avatar-edit-btn:hover {
         transform: scale(1.1);
         background: var(--primary-light);
     }
+
     .sidebar-name {
         font-size: 1.35rem;
         font-weight: 700;
@@ -88,6 +99,7 @@
         position: relative;
         z-index: 1;
     }
+
     .sidebar-role {
         font-size: 0.8rem;
         font-weight: 600;
@@ -98,6 +110,7 @@
         position: relative;
         z-index: 1;
     }
+
     .sidebar-stats {
         display: flex;
         flex-direction: column;
@@ -106,6 +119,7 @@
         position: relative;
         z-index: 1;
     }
+
     .stat-item {
         display: flex;
         align-items: center;
@@ -113,11 +127,13 @@
         font-size: 0.85rem;
         opacity: 0.9;
     }
+
     .stat-item i {
         width: 20px;
         text-align: center;
         opacity: 0.7;
     }
+
     .sidebar-actions {
         margin-top: 1.5rem;
         display: flex;
@@ -126,13 +142,14 @@
         position: relative;
         z-index: 1;
     }
+
     .sidebar-action-btn {
         display: flex;
         align-items: center;
         gap: 10px;
         padding: 10px 16px;
         border-radius: 12px;
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
         color: white;
         text-decoration: none;
         font-size: 0.9rem;
@@ -143,11 +160,13 @@
         width: 100%;
         text-align: left;
     }
+
     .sidebar-action-btn:hover {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255, 255, 255, 0.2);
         color: white;
         text-decoration: none;
     }
+
     .sidebar-action-btn.danger:hover {
         background: rgba(239, 68, 68, 0.3);
     }
@@ -158,19 +177,22 @@
         flex-direction: column;
         gap: 1.5rem;
     }
+
     .profile-card {
         background: #ffffff;
         border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
         border: 1px solid #f1f5f9;
     }
+
     .profile-card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1.5rem;
     }
+
     .profile-card-title {
         font-size: 1.15rem;
         font-weight: 700;
@@ -179,9 +201,11 @@
         align-items: center;
         gap: 8px;
     }
+
     .profile-card-title i {
         color: var(--primary-color);
     }
+
     .btn-edit-profile {
         padding: 8px 20px;
         border-radius: 12px;
@@ -196,13 +220,16 @@
         align-items: center;
         gap: 6px;
     }
+
     .btn-edit-profile:hover {
         background: var(--primary-color);
         color: white;
     }
+
     .form-group-modern {
         margin-bottom: 1.25rem;
     }
+
     .form-group-modern label {
         display: block;
         font-weight: 600;
@@ -212,6 +239,7 @@
         color: var(--text-muted);
         margin-bottom: 0.4rem;
     }
+
     .form-input-readonly {
         width: 100%;
         padding: 12px 16px;
@@ -222,6 +250,7 @@
         background: #f8fafc;
         transition: all 0.3s ease;
     }
+
     .form-input-editable {
         width: 100%;
         padding: 12px 16px;
@@ -234,9 +263,11 @@
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
         transition: all 0.3s ease;
     }
+
     .form-input-editable:focus {
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
     }
+
     .form-input-locked {
         width: 100%;
         padding: 12px 16px;
@@ -247,16 +278,19 @@
         background: #f1f5f9;
         cursor: not-allowed;
     }
+
     .form-hint {
         font-size: 0.75rem;
         color: var(--text-muted);
         margin-top: 4px;
     }
+
     .btn-row {
         display: flex;
         gap: 0.75rem;
         margin-top: 1.5rem;
     }
+
     .btn-save {
         padding: 10px 24px;
         border-radius: 12px;
@@ -272,10 +306,12 @@
         align-items: center;
         gap: 6px;
     }
+
     .btn-save:hover {
         transform: translateY(-1px);
         box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
     }
+
     .btn-cancel-edit {
         padding: 10px 24px;
         border-radius: 12px;
@@ -287,22 +323,26 @@
         cursor: pointer;
         transition: all 0.2s;
     }
+
     .btn-cancel-edit:hover {
         border-color: #cbd5e1;
         color: var(--text-main);
     }
+
     /* Info cards */
     .info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
     }
+
     .info-card-modern {
         background: #f8fafc;
         border: 1px solid #f1f5f9;
         border-radius: 16px;
         padding: 1.25rem;
     }
+
     .info-card-modern h5 {
         font-size: 0.9rem;
         font-weight: 700;
@@ -312,7 +352,12 @@
         align-items: center;
         gap: 6px;
     }
-    .info-card-modern h5 i { color: var(--primary-color); font-size: 0.85rem; }
+
+    .info-card-modern h5 i {
+        color: var(--primary-color);
+        font-size: 0.85rem;
+    }
+
     .info-row {
         display: flex;
         justify-content: space-between;
@@ -320,8 +365,16 @@
         padding: 6px 0;
         font-size: 0.85rem;
     }
-    .info-row .label { color: var(--text-muted); }
-    .info-row .value { color: var(--text-main); font-weight: 600; }
+
+    .info-row .label {
+        color: var(--text-muted);
+    }
+
+    .info-row .value {
+        color: var(--text-main);
+        font-weight: 600;
+    }
+
     .info-card-link {
         display: block;
         margin-top: 0.75rem;
@@ -336,22 +389,31 @@
         border: 1px solid #e2e8f0;
         transition: all 0.2s;
     }
+
     .info-card-link:hover {
         background: var(--primary-light);
         color: var(--primary-dark);
         text-decoration: none;
     }
+
     /* Image upload overlay */
     .upload-overlay {
         display: none;
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.5);
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
         z-index: 9999;
         justify-content: center;
         align-items: center;
     }
-    .upload-overlay.active { display: flex; }
+
+    .upload-overlay.active {
+        display: flex;
+    }
+
     .upload-dialog {
         background: white;
         border-radius: 24px;
@@ -359,17 +421,20 @@
         max-width: 420px;
         width: 90%;
         text-align: center;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
     }
+
     .upload-dialog h4 {
         font-weight: 700;
         margin-bottom: 0.5rem;
     }
+
     .upload-dialog p {
         color: var(--text-muted);
         font-size: 0.9rem;
         margin-bottom: 1.5rem;
     }
+
     .upload-drop-zone {
         border: 2px dashed #cbd5e1;
         border-radius: 16px;
@@ -378,14 +443,39 @@
         transition: all 0.2s;
         margin-bottom: 1rem;
     }
-    .upload-drop-zone:hover, .upload-drop-zone.dragover {
+
+    .upload-drop-zone:hover,
+    .upload-drop-zone.dragover {
         border-color: var(--primary-color);
         background: var(--primary-light);
     }
-    .upload-drop-zone i { font-size: 2rem; color: var(--primary-color); margin-bottom: 0.75rem; }
-    .upload-drop-zone p { margin-bottom: 0; font-size: 0.85rem; }
-    .upload-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 1rem; display: none; }
-    .upload-actions { display: flex; gap: 0.75rem; justify-content: center; }
+
+    .upload-drop-zone i {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.75rem;
+    }
+
+    .upload-drop-zone p {
+        margin-bottom: 0;
+        font-size: 0.85rem;
+    }
+
+    .upload-preview {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 1rem;
+        display: none;
+    }
+
+    .upload-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
     .btn-upload-save {
         padding: 10px 24px;
         border-radius: 12px;
@@ -397,7 +487,11 @@
         cursor: pointer;
         transition: all 0.2s;
     }
-    .btn-upload-save:hover { background: var(--primary-dark); }
+
+    .btn-upload-save:hover {
+        background: var(--primary-dark);
+    }
+
     .btn-upload-cancel {
         padding: 10px 24px;
         border-radius: 12px;
@@ -408,6 +502,7 @@
         color: var(--text-muted);
         cursor: pointer;
     }
+
     .btn-remove-photo {
         margin-top: 0.75rem;
         padding: 8px 16px;
@@ -423,13 +518,19 @@
         align-items: center;
         gap: 4px;
     }
-    .btn-remove-photo:hover { background: #fee2e2; }
+
+    .btn-remove-photo:hover {
+        background: #fee2e2;
+    }
 
     @media (max-width: 768px) {
         .profile-layout {
             grid-template-columns: 1fr;
         }
-        .info-grid { grid-template-columns: 1fr; }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
@@ -451,7 +552,7 @@
             </div>
             <div class="sidebar-name">{{ user.get_full_name }}</div>
             <div class="sidebar-role">
-                {% if user.is_superuser %}Administrador{% elif user.is_staff %}Soporte{% else %}Usuario AgroSFT{% endif %}
+                {% if user.is_superuser %}Administrador{% elif user.is_staff %}Soporte{% else %}Usuario AGROSFT{% endif %}
             </div>
             <div class="sidebar-stats">
                 <div class="stat-item"><i class="fas fa-envelope"></i> {{ user.correo }}</div>
@@ -464,10 +565,12 @@
                 <a href="{% url 'usuarios:cambiar_password' %}" class="sidebar-action-btn">
                     <i class="fas fa-key"></i> Cambiar contraseña
                 </a>
-                <a href="{% url 'usuarios:logout' %}" class="sidebar-action-btn danger" onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();">
+                <a href="{% url 'usuarios:logout' %}" class="sidebar-action-btn danger"
+                    onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();">
                     <i class="fas fa-sign-out-alt"></i> Cerrar sesión
                 </a>
-                <form id="logout-form-sidebar" method="post" action="{% url 'usuarios:logout' %}" style="display:none;">{% csrf_token %}</form>
+                <form id="logout-form-sidebar" method="post" action="{% url 'usuarios:logout' %}" style="display:none;">
+                    {% csrf_token %}</form>
             </div>
         </div>
 
@@ -486,12 +589,13 @@
 
                 <form method="post" id="profile-form" enctype="multipart/form-data">
                     {% csrf_token %}
-                    
+
                     {% if form.non_field_errors %}
-                        <div class="alert-modern" style="background:#fef2f2; border:1px solid #fecaca; border-radius:14px; padding:12px 16px; color:#991b1b; margin-bottom:1rem;">
-                            <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i>
-                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-                        </div>
+                    <div class="alert-modern"
+                        style="background:#fef2f2; border:1px solid #fecaca; border-radius:14px; padding:12px 16px; color:#991b1b; margin-bottom:1rem;">
+                        <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i>
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
                     {% endif %}
 
                     <!-- Campo de Correo (no editable) -->
@@ -505,18 +609,20 @@
                         <div class="col-md-6">
                             <div class="form-group-modern">
                                 <label>Nombres</label>
-                                <input type="text" name="nombres" value="{{ user.nombres }}" class="form-input-readonly" id="field-nombres" readonly required>
+                                <input type="text" name="nombres" value="{{ user.nombres }}" class="form-input-readonly"
+                                    id="field-nombres" readonly required>
                                 {% if form.nombres.errors %}
-                                    <small class="text-danger">{% for e in form.nombres.errors %}{{ e }}{% endfor %}</small>
+                                <small class="text-danger">{% for e in form.nombres.errors %}{{ e }}{% endfor %}</small>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group-modern">
                                 <label>Apellidos</label>
-                                <input type="text" name="apellidos" value="{{ user.apellidos }}" class="form-input-readonly" id="field-apellidos" readonly required>
+                                <input type="text" name="apellidos" value="{{ user.apellidos }}"
+                                    class="form-input-readonly" id="field-apellidos" readonly required>
                                 {% if form.apellidos.errors %}
-                                    <small class="text-danger">{% for e in form.apellidos.errors %}{{ e }}{% endfor %}</small>
+                                <small class="text-danger">{% for e in form.apellidos.errors %}{{ e }}{% endfor %}</small>
                                 {% endif %}
                             </div>
                         </div>
@@ -524,9 +630,10 @@
 
                     <div class="form-group-modern">
                         <label>Teléfono</label>
-                        <input type="text" name="telefono" value="{{ user.telefono|default:'' }}" class="form-input-readonly" id="field-telefono" readonly>
+                        <input type="text" name="telefono" value="{{ user.telefono|default:'' }}"
+                            class="form-input-readonly" id="field-telefono" readonly>
                         {% if form.telefono.errors %}
-                            <small class="text-danger">{% for e in form.telefono.errors %}{{ e }}{% endfor %}</small>
+                        <small class="text-danger">{% for e in form.telefono.errors %}{{ e }}{% endfor %}</small>
                         {% endif %}
                     </div>
 
@@ -538,167 +645,170 @@
             </div>
 
 
-<!-- Modal de subida de imagen -->
-<div class="upload-overlay" id="upload-overlay">
-    <div class="upload-dialog">
-        <h4><i class="fas fa-camera me-2" style="color: var(--primary-color)"></i>Cambiar Foto</h4>
-        <p>Selecciona una nueva imagen para tu perfil</p>
-        <img id="upload-preview" class="upload-preview" alt="Vista previa">
-        <div class="upload-drop-zone" id="drop-zone" onclick="document.getElementById('photo-input').click()">
-            <i class="fas fa-cloud-upload-alt d-block"></i>
-            <p class="fw-bold mb-1">Haz clic para seleccionar</p>
-            <p class="text-muted" style="font-size: 0.75rem;">JPG, PNG máx. 5MB</p>
-        </div>
-        <input type="file" name="imagen_perfil" id="photo-input" accept="image/*" style="display:none;" onchange="previewPhoto(this)">
-        <div class="upload-actions">
-            <button type="button" class="btn-upload-save" id="upload-save-btn" onclick="submitPhoto()" style="display:none;">
-                <i class="fas fa-check me-1"></i> Guardar
-            </button>
-            <button type="button" class="btn-upload-cancel" onclick="closeUploadDialog()">Cancelar</button>
-        </div>
-        {% if profile and profile.imagen_perfil %}
-        <button type="button" class="btn-remove-photo" onclick="removePhoto()">
-            <i class="fas fa-trash me-1"></i> Eliminar foto actual
-        </button>
-        {% endif %}
-    </div>
-</div>
+            <!-- Modal de subida de imagen -->
+            <div class="upload-overlay" id="upload-overlay">
+                <div class="upload-dialog">
+                    <h4><i class="fas fa-camera me-2" style="color: var(--primary-color)"></i>Cambiar Foto</h4>
+                    <p>Selecciona una nueva imagen para tu perfil</p>
+                    <img id="upload-preview" class="upload-preview" alt="Vista previa">
+                    <div class="upload-drop-zone" id="drop-zone"
+                        onclick="document.getElementById('photo-input').click()">
+                        <i class="fas fa-cloud-upload-alt d-block"></i>
+                        <p class="fw-bold mb-1">Haz clic para seleccionar</p>
+                        <p class="text-muted" style="font-size: 0.75rem;">JPG, PNG máx. 5MB</p>
+                    </div>
+                    <input type="file" name="imagen_perfil" id="photo-input" accept="image/*" style="display:none;"
+                        onchange="previewPhoto(this)">
+                    <div class="upload-actions">
+                        <button type="button" class="btn-upload-save" id="upload-save-btn" onclick="submitPhoto()"
+                            style="display:none;">
+                            <i class="fas fa-check me-1"></i> Guardar
+                        </button>
+                        <button type="button" class="btn-upload-cancel" onclick="closeUploadDialog()">Cancelar</button>
+                    </div>
+                    {% if profile and profile.imagen_perfil %}
+                    <button type="button" class="btn-remove-photo" onclick="removePhoto()">
+                        <i class="fas fa-trash me-1"></i> Eliminar foto actual
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
 
-<script>
-    let originalValues = {};
-    const editableFields = ['nombres', 'apellidos', 'telefono'];
+            <script>
+                let originalValues = {};
+                const editableFields = ['nombres', 'apellidos', 'telefono'];
 
-    function enableEdit() {
-        editableFields.forEach(name => {
-            const input = document.getElementById('field-' + name);
-            if (input) {
-                originalValues[name] = input.value;
-                input.readOnly = false;
-                input.className = 'form-input-editable';
-            }
-        });
-        document.getElementById('edit-btn').style.display = 'none';
-        document.getElementById('edit-actions').style.display = 'flex';
-    }
+                function enableEdit() {
+                    editableFields.forEach(name => {
+                        const input = document.getElementById('field-' + name);
+                        if (input) {
+                            originalValues[name] = input.value;
+                            input.readOnly = false;
+                            input.className = 'form-input-editable';
+                        }
+                    });
+                    document.getElementById('edit-btn').style.display = 'none';
+                    document.getElementById('edit-actions').style.display = 'flex';
+                }
 
-    function cancelEdit() {
-        editableFields.forEach(name => {
-            const input = document.getElementById('field-' + name);
-            if (input) {
-                input.readOnly = true;
-                input.className = 'form-input-readonly';
-                if (originalValues[name] !== undefined) input.value = originalValues[name];
-            }
-        });
-        document.getElementById('edit-btn').style.display = 'flex';
-        document.getElementById('edit-actions').style.display = 'none';
-    }
+                function cancelEdit() {
+                    editableFields.forEach(name => {
+                        const input = document.getElementById('field-' + name);
+                        if (input) {
+                            input.readOnly = true;
+                            input.className = 'form-input-readonly';
+                            if (originalValues[name] !== undefined) input.value = originalValues[name];
+                        }
+                    });
+                    document.getElementById('edit-btn').style.display = 'flex';
+                    document.getElementById('edit-actions').style.display = 'none';
+                }
 
-    // Upload dialog
-    function openUploadDialog() {
-        document.getElementById('upload-overlay').classList.add('active');
-    }
-    function closeUploadDialog() {
-        document.getElementById('upload-overlay').classList.remove('active');
-        document.getElementById('upload-preview').style.display = 'none';
-        document.getElementById('upload-save-btn').style.display = 'none';
-        document.getElementById('photo-input').value = '';
-    }
+                // Upload dialog
+                function openUploadDialog() {
+                    document.getElementById('upload-overlay').classList.add('active');
+                }
+                function closeUploadDialog() {
+                    document.getElementById('upload-overlay').classList.remove('active');
+                    document.getElementById('upload-preview').style.display = 'none';
+                    document.getElementById('upload-save-btn').style.display = 'none';
+                    document.getElementById('photo-input').value = '';
+                }
 
-    function previewPhoto(input) {
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            if (file.size > 5 * 1024 * 1024) {
-                alert('La imagen no debe superar 5MB');
-                input.value = '';
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('upload-preview');
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                document.getElementById('upload-save-btn').style.display = 'inline-flex';
-            };
-            reader.readAsDataURL(file);
-        }
-    }
+                function previewPhoto(input) {
+                    if (input.files && input.files[0]) {
+                        const file = input.files[0];
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('La imagen no debe superar 5MB');
+                            input.value = '';
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            const preview = document.getElementById('upload-preview');
+                            preview.src = e.target.result;
+                            preview.style.display = 'block';
+                            document.getElementById('upload-save-btn').style.display = 'inline-flex';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
 
-    function submitPhoto() {
-        const input = document.getElementById('photo-input');
-        if (!input.files || !input.files[0]) return;
+                function submitPhoto() {
+                    const input = document.getElementById('photo-input');
+                    if (!input.files || !input.files[0]) return;
 
-        const formData = new FormData(document.getElementById('profile-form'));
-        // Remove regular fields, only send image
-        const imageFormData = new FormData();
-        imageFormData.append('csrfmiddlewaretoken', formData.get('csrfmiddlewaretoken'));
-        imageFormData.append('imagen_perfil', input.files[0]);
-        // Also send the current text fields so they don't get lost
-        imageFormData.append('nombres', document.getElementById('field-nombres').value);
-        imageFormData.append('apellidos', document.getElementById('field-apellidos').value);
-        imageFormData.append('telefono', document.getElementById('field-telefono').value);
-        imageFormData.append('correo', '{{ user.correo }}');
+                    const formData = new FormData(document.getElementById('profile-form'));
+                    // Remove regular fields, only send image
+                    const imageFormData = new FormData();
+                    imageFormData.append('csrfmiddlewaretoken', formData.get('csrfmiddlewaretoken'));
+                    imageFormData.append('imagen_perfil', input.files[0]);
+                    // Also send the current text fields so they don't get lost
+                    imageFormData.append('nombres', document.getElementById('field-nombres').value);
+                    imageFormData.append('apellidos', document.getElementById('field-apellidos').value);
+                    imageFormData.append('telefono', document.getElementById('field-telefono').value);
+                    imageFormData.append('correo', '{{ user.correo }}');
 
-        fetch(window.location.href, {
-            method: 'POST',
-            body: imageFormData,
-            headers: {'X-Requested-With': 'XMLHttpRequest'}
-        }).then(response => {
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                alert('Error al subir la imagen');
-            }
-        }).catch(() => alert('Error de conexión'));
-    }
+                    fetch(window.location.href, {
+                        method: 'POST',
+                        body: imageFormData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Error al subir la imagen');
+                        }
+                    }).catch(() => alert('Error de conexión'));
+                }
 
-    function removePhoto() {
-        if (!confirm('¿Estás seguro de eliminar tu foto de perfil?')) return;
-        
-        const formData = new FormData();
-        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-        formData.append('nombres', document.getElementById('field-nombres').value);
-        formData.append('apellidos', document.getElementById('field-apellidos').value);
-        formData.append('telefono', document.getElementById('field-telefono').value);
-        formData.append('correo', '{{ user.correo }}');
-        formData.append('remove_photo', 'true');
+                function removePhoto() {
+                    if (!confirm('¿Estás seguro de eliminar tu foto de perfil?')) return;
 
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData,
-            headers: {'X-Requested-With': 'XMLHttpRequest'}
-        }).then(response => {
-            if (response.ok) {
-                window.location.reload();
-            }
-        });
-    }
+                    const formData = new FormData();
+                    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                    formData.append('nombres', document.getElementById('field-nombres').value);
+                    formData.append('apellidos', document.getElementById('field-apellidos').value);
+                    formData.append('telefono', document.getElementById('field-telefono').value);
+                    formData.append('correo', '{{ user.correo }}');
+                    formData.append('remove_photo', 'true');
 
-    // Close overlay on outside click
-    document.getElementById('upload-overlay').addEventListener('click', function(e) {
-        if (e.target === this) closeUploadDialog();
-    });
+                    fetch(window.location.href, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    });
+                }
 
-    // Drag & drop support
-    const dropZone = document.getElementById('drop-zone');
-    dropZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.classList.add('dragover');
-    });
-    dropZone.addEventListener('dragleave', function() {
-        this.classList.remove('dragover');
-    });
-    dropZone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            const input = document.getElementById('photo-input');
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            input.files = dt.files;
-            previewPhoto(input);
-        }
-    });
-</script>
-{% endblock %}
+                // Close overlay on outside click
+                document.getElementById('upload-overlay').addEventListener('click', function (e) {
+                    if (e.target === this) closeUploadDialog();
+                });
+
+                // Drag & drop support
+                const dropZone = document.getElementById('drop-zone');
+                dropZone.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+                dropZone.addEventListener('dragleave', function () {
+                    this.classList.remove('dragover');
+                });
+                dropZone.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        const input = document.getElementById('photo-input');
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        input.files = dt.files;
+                        previewPhoto(input);
+                    }
+                });
+            </script>
+            {% endblock %}

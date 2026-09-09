@@ -28,8 +28,7 @@
         <div class="row align-items-center mb-5">
             <div class="col-md-8">
                 <h1 class="display-6 fw-bold mb-2">
-                    <i class="fas fa-boxes me-2" style="color: var(--primary-color)"></i>{{ titulo|default:'Mi
-                    Inventario' }}
+                    <i class="fas fa-boxes me-2" style="color: var(--primary-color)"></i>{{ titulo|default:'Mi Inventario' }}
                 </h1>
                 <p class="text-muted fs-5 mb-0">{{ subtitulo|default:'Gestiona tus productos registrados' }}</p>
             </div>
@@ -59,8 +58,7 @@
                         <select name="categoria" class="form-select bg-light">
                             <option value="">Todas las categorías</option>
                             {% for categoria in categorias %}
-                            <option value="{{ categoria.id }}" {% if
-                                request.GET.categoria==categoria.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ categoria.id }}" {% if request.GET.categoria == categoria.id|stringformat:"s" %}selected{% endif %}>
                                 {{ categoria.nombre }}
                             </option>
                             {% endfor %}
@@ -119,8 +117,7 @@
                         <!-- Contador de fotos -->
                         <div class="carousel-counter-badge position-absolute bottom-0 start-0 m-2 px-2 py-1 rounded-pill bg-dark bg-opacity-75 text-white"
                             style="font-size: 0.7rem; z-index: 4; pointer-events: none;">
-                            <i class="fas fa-camera me-1"></i><span class="curr-slide">1</span>/{{
-                            producto.imagenes|length }}
+                            <i class="fas fa-camera me-1"></i><span class="curr-slide">1</span>/{{ producto.imagenes|length }}
                         </div>
                         {% elif producto.imagen %}
                         <a href="{% url 'inventario:detalle' producto.id %}" class="d-block text-decoration-none"
@@ -181,8 +178,7 @@
                             class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top border-light">
                             <div>
                                 <span class="small text-muted d-block mb-1">Precio</span>
-                                <span class="fs-4 fw-black lh-1" style="color: var(--secondary-color)">{{
-                                    producto.precio|currency_cop }}</span>
+                                <span class="fs-4 fw-black lh-1" style="color: var(--secondary-color)">{{ producto.precio|currency_cop }}</span>
                             </div>
                             <div class="text-end">
                                 <span class="small text-muted d-block mb-1">Disponibles</span>

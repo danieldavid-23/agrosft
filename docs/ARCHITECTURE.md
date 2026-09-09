@@ -247,7 +247,7 @@ graph TB
     FooterVue -->|mount| FooterDOM
 ```
 
-`NavbarApp.vue` recibe como props el objeto completo de datos (`user`, `urls`, `cart_count`, `messages`) y maneja 3 estados (guest/user/staff), notificaciones toast y dropdown de usuario. `FooterApp.vue` recibe solo `urls` y renderiza el logo SVG oficial. Ambos componentes son **no-scoped** y reutilizan las clases CSS de Bootstrap 5 y las variables CSS del proyecto (`frontend/src/style.css`).
+`NavbarApp.vue` recibe como props el objeto completo de datos (`user`, `urls`, `cart_count`, `messages`) y maneja 3 estados (guest/user/staff), notificaciones toast y dropdown de usuario. La rama staff usa las URLs admin expuestas por `layout_data` (`urls.admin_usuarios`, `urls.admin_categorias`, `urls.admin_moderacion`, `urls.admin_estadisticas`). `FooterApp.vue` recibe solo `urls` y renderiza el logo SVG oficial. Ambos componentes son **no-scoped** y reutilizan las clases CSS de Bootstrap 5 y las variables CSS del proyecto (`frontend/src/style.css`).
 
 ### 3.2 Integración Django + Vue (Componentes de Página)
 

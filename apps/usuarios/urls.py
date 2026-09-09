@@ -36,8 +36,6 @@ from apps.usuarios.controllers.admin_usuarios_controller import (
     admin_reporte_usuarios_csv,
     admin_reporte_productos_csv,
     admin_reporte_ventas_csv,
-    # Auditoría
-    admin_audit_logs,
 )
 
 app_name = 'usuarios'
@@ -80,8 +78,6 @@ urlpatterns = [
     path('admin-reporte/productos/', admin_reporte_productos_csv, name='admin_reporte_productos_csv'),
     path('admin-reporte/ventas/', admin_reporte_ventas_csv, name='admin_reporte_ventas_csv'),
 
-    # ── Auditoría ───────────────────────────────────────────────────────────
-    path('admin-auditoria/', admin_audit_logs, name='admin_audit_logs'),
 
     # Recuperación de contraseña
     path('password-reset/', UserPasswordResetView.as_view(), name='password_reset'),

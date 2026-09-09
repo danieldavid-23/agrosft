@@ -41,7 +41,7 @@ graph LR
     C --> D[TblusuariosAuthBackend]
     D --> E[SELECT por correo]
     E --> F[check_password hash]
-    F -->|OK| G[login + redirect marketplace]
+    F -->|OK| G[login + redirect: staff/superuser → admin_usuarios_list, no-staff → marketplace]
     F -->|Fail| H[Error: Credenciales inválidas]
 ```
 
@@ -72,7 +72,7 @@ graph LR
 ### LoginView
 - **GET**: Muestra formulario de login
 - **POST**: Autentica con backend personalizado
-- Redirige a `inventario:marketplace` o URL `next`
+- Redirige según rol: `usuarios:admin_usuarios_list` (staff), `inventario:marketplace` (no-staff) o URL `next`
 - Intenta actualizar `ultima_conexion` (campo que puede no existir)
 
 ### LogoutView

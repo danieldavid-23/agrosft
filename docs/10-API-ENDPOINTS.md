@@ -8,7 +8,7 @@
 
 | URL | Name | Descripción |
 |---|---|---|
-| `/` | `home` | Redirige según estado: staff → `admin_usuarios_list`, autenticado → `marketplace`, invitado → `login` |
+| `/` | `home` | Redirige según estado: staff/superusuario → `admin_usuarios_list`, autenticado → `marketplace`, invitado → `login` |
 | `/admin/` | — | Django Admin (habilitado) |
 | `/oauth/` | `social:begin` | Rutas de Google OAuth2 |
 
@@ -20,7 +20,7 @@
 
 | URL | Name | Auth | Métodos | Descripción |
 |---|---|---|---|---|
-| `login/` | `usuarios:login` | No | GET, POST | Formulario de inicio de sesión |
+| `login/` | `usuarios:login` | No | GET, POST | Formulario de inicio de sesión (redirige staff/superusuario → `admin_usuarios_list`, no-staff → `marketplace`, o `next`) |
 | `registro/` | `usuarios:registro` | No | GET, POST | Formulario de registro |
 | `logout/` | `usuarios:logout` | No | GET, POST | Cerrar sesión |
 | `perfil/` | `usuarios:perfil` | Sí | GET, POST | Ver/editar perfil + imagen |
@@ -33,7 +33,7 @@
 | `password-reset-confirm/<uidb64>/<token>/` | `usuarios:password_reset_confirm` | No | GET, POST | Reset con token |
 | `password-reset-complete/` | `usuarios:password_reset_complete` | No | GET | Reset completado |
 
-### Panel de administración (staff)
+### Panel de administración (staff / superusuario)
 
 | URL | Name | Auth | Métodos | Descripción |
 |---|---|---|---|---|
@@ -52,7 +52,6 @@
 | `admin-reporte/usuarios/` | `usuarios:admin_reporte_usuarios_csv` | Sí (staff) | GET | Exportar CSV usuarios |
 | `admin-reporte/productos/` | `usuarios:admin_reporte_productos_csv` | Sí (staff) | GET | Exportar CSV productos |
 | `admin-reporte/ventas/` | `usuarios:admin_reporte_ventas_csv` | Sí (staff) | GET | Exportar CSV ventas |
-| `admin-auditoria/` | `usuarios:admin_audit_logs` | Sí (staff) | GET | Registro de auditoría |
 
 ---
 

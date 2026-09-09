@@ -13,9 +13,9 @@ from apps.usuarios.services.audit_log import log_admin_action
 #  DECORADOR HELPER: Verifica que el usuario sea staff
 # ───────────────────────────────────────────────────────────────────────────
 def _require_staff(func):
-    """Decorator que redirige si el usuario no es administrador."""
+    """Decorator que redirige si el usuario no es administrador (staff o superusuario)."""
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             messages.error(request, "Acceso denegado. No tienes permisos de administrador.")
             return redirect('inventario:marketplace')
         return func(request, *args, **kwargs)
@@ -476,22 +476,3 @@ def admin_reporte_ventas_csv(request):
     return response
 
 
-# ───────────────────────────────────────────────────────────────────────────
-#  FUNCIONALIDAD 5: REGISTRO DE AUDITORÍA
-# ───────────────────────────────────────────────────────────────────────────
-@_require_staff
-def admin_audit_logs(request):
-    """Muestra el historial de acciones administrativas."""
-    from apps.usuarios.models.admin_audit_log_model import AdminAuditLog
-    try:
-        logs = AdminAuditLog.objects.select_related('admin').order_by('-fecha')[:200]
-        error_tabla = False
-    except Exception:
-        logs = []
-        error_tabla = True
-
-    return render(request, 'usuarios/admin_audit_logs.html', {
-        'titulo': 'Registro de Auditoría',
-        'logs': logs,
-        'error_tabla': error_tabla,
-    })

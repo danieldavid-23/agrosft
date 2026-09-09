@@ -7,6 +7,48 @@
 
 ## [Unreleased]
 
+### Removed (2026-09-08)
+- **Eliminación de la vista y módulo de Auditoría del panel de administración**:
+  - `apps/usuarios/controllers/admin_usuarios_controller.py`: Eliminada la vista `admin_audit_logs`.
+  - `apps/usuarios/urls.py`: Eliminada la ruta `/usuarios/admin-auditoria/` y su import.
+  - `templates/usuarios/admin_audit_logs.html`: Eliminada la plantilla asociada.
+  - `core/context_processors.py`: Eliminada la clave `urls.admin_auditoria` del layout global.
+  - `frontend/src/layout/NavbarApp.vue`: Eliminado el enlace de "Auditoría" del menú superior del administrador (quedan 4 módulos: Usuarios, Categorías, Moderación, Estadísticas).
+  - `templates/base.html`: Versión de assets actualizada a `?_v=20260908_2` tras recompilar el bundle Vue con `npm run build`.
+  - Documentación actualizada en `API.md`, `10-API-ENDPOINTS.md`, `ARCHITECTURE.md` y `08-FRONTEND.md`.
+
+### Fixed (2026-09-08)
+- **Acceso y privilegios del panel de administración para superusuarios (`is_superuser`)** (ADR-020):
+  - Solucionado el problema donde un superusuario (`is_superuser=True`) con `is_staff=False` era tratado como usuario normal y redirigido al marketplace en lugar del panel de administración.
+  - `apps/usuarios/controllers/auth_controller.py`: `LoginView.post` ahora evalúa `user.is_staff or user.is_superuser` para redirigir a `usuarios:admin_usuarios_list`.
+  - `config/urls.py`: `home_redirect` ahora redirige a `usuarios:admin_usuarios_list` para `request.user.is_staff or request.user.is_superuser`.
+  - `apps/usuarios/controllers/admin_usuarios_controller.py`: Decorador `_require_staff` permite acceso a usuarios con `is_staff` o `is_superuser`.
+  - `apps/usuarios/models/profile_model.py`: Métodos `has_perm` y `has_module_perms` reconocen `self.is_superuser`.
+  - `apps/inventario/controllers/producto_controller.py`: Permisos de moderación y gestión de productos extienden soporte a `is_superuser`.
+  - `frontend/src/layout/NavbarApp.vue`: Muestra opciones administrativas cuando `user.is_staff || user.is_superuser` y bundle recompilado con `npm run build`.
+  - `templates/base.html`: Parámetros de versión actualizados a `?_v=20260908_1` para invalidar la caché persistente del navegador sobre `layout.js` y `style.css`.
+  - BD: Actualizadas banderas `is_staff=True` e `is_superuser=True` en la cuenta de desarrollo `samupe2903@gmail.com` y verificado `agrosft84@gmail.com`.
+  - Plantillas actualizadas (`listar_productos.html`, `Productosdetalles.html`, `producto_detail.html`) para permitir acciones de moderación y edición a superusuarios.
+
+### Changed (2026-09-08)
+- **Navbar específico para administradores (`is_staff`)** (ADR-019):
+  - El navbar único (`frontend/src/layout/NavbarApp.vue`) ahora muestra una rama propia para staff con **solo los 5 módulos del panel de administración**: Usuarios, Categorías, Moderación, Estadísticas y Auditoría (además del dropdown de usuario). Los usuarios no-staff conservan su navegación normal (Inicio, Mi Inventario, Clientes, Ventas, Solicitudes, Mis Compras, carrito).
+  - `core/context_processors.py`: `layout_data` ahora expone las URLs admin en el JSON (`urls.admin_usuarios`, `urls.admin_categorias`, `urls.admin_moderacion`, `urls.admin_estadisticas`, `urls.admin_auditoria`) a través del helper `_url()`.
+  - Frontend recompilado (`npm run build` → `static/dist/layout.js`).
+  - Verificación: test client con el admin (`agrosft84@gmail.com`) → `is_staff=true` + las 5 URLs admin presentes en `#layout-data`; usuario no-staff simulado → `is_staff=false`, mantiene las URLs de usuario.
+
+### Changed (2026-09-08)
+- **Redirección post-login por rol** (ADR-018):
+  - `apps/usuarios/controllers/auth_controller.py`: `LoginView.post` ahora redirige a los usuarios `is_staff` a `usuarios:admin_usuarios_list`, mantiene la precedencia de `?next=` y deja el fallback en `inventario:marketplace` para el resto de usuarios.
+  - Documentación actualizada: `API.md`, `10-API-ENDPOINTS.md`, `04-MODULO-USUARIOS.md` y `DECISIONS.md` (ADR-018).
+
+### Fixed (2026-09-08)
+- **Corregidas etiquetas de plantilla Django rotas por saltos de línea** (TemplateSyntaxError en varias vistas):
+  - Un auto-formateador partió etiquetas `{% if %}`, `{% endif %}`, `{% endfor %}` y variables `{{ }}` en varias líneas; Django no admite etiquetas multi-línea, lo que producía `TemplateSyntaxError` (`Invalid block tag`) o fuga de sintaxis cruda a la interfaz.
+  - Archivos corregidos (etiqueta unida a una sola línea): `apps/usuarios/templates/usuarios/login.html`, `registro.html`, `perfil.html`, `password_reset_form.html`, `password_reset_confirm.html`, `aceptar_terminos.html`, `historial_terminos.html`, `terminos.html` e `apps/inventario/templates/inventario/producto_list.html` y `marketplace.html`.
+  - Verificación: las 46 plantillas del proyecto compilan correctamente vía `loader.get_template(...)` (0 errores) y el escaneo de etiquetas multi-línea reporta 0 coincidencias.
+  - Prevención: creado `.vscode/settings.json` que desactiva `formatOnSave`/formateo para HTML y `django-html`, de modo que el formateador del IDE no vuelva a partir etiquetas de plantillas Django.
+
 ### Changed (2026-09-07)
 - **Imágenes aún más ligeras y pequeñas (máx. 400×400 px)**:
   - `core/utils/helpers.py`: `MAX_IMAGE_DIMENSION` 600 → **400** (mantiene nitidez en cards de 220 px y detalle ≤460 px). Compresión reforzada en `resize_uploaded_image()`: PNG → paleta de 256 colores con `quantize()` + `optimize=True`; JPEG → `quality=72, progressive, optimize`; WEBP → `quality=72, method=6`. Resultado: pesos ≈ 5–87 KB (antes 0,3–2 MB).

@@ -580,6 +580,103 @@ Eliminar `apps/inventario/app.py` por completo. El inventario del sistema real v
 
 ---
 
+## ADR-018: Redirección Post-Login por Rol (`is_staff`)
+
+**Fecha**: 2026-09-08
+**Estado**: Aceptada
+
+### Contexto
+
+`LoginView.post` (`apps/usuarios/controllers/auth_controller.py`) redirigía a todos los usuarios autenticados a `inventario:marketplace`, sin distinguir usuarios administrativos. Un administrador que iniciaba sesión por la pantalla normal no aterrizaba en su panel, y el navbar no exponía acceso directo al panel de administración.
+
+### Decisión
+
+Tras un login exitoso, respetar la URL `?next=` cuando se proporciona; en caso contrario, redirigir a `usuarios:admin_usuarios_list` si `user.is_staff` es `True`, y a `inventario:marketplace` en el resto de casos.
+
+### Consecuencias
+
+- ✅ Los administradores aterrizan directamente en el panel de gestión de usuarios tras iniciar sesión.
+- ✅ `?next=` mantiene su precedencia (usado por Django Admin y decoradores `@login_required`).
+- ✅ Sin impacto en el flujo de usuarios no-staff.
+- ❌ La detección de staff se basa únicamente en `is_staff` (sin granularidad de permisos por módulo).
+
+### Archivos Afectados
+
+- `apps/usuarios/controllers/auth_controller.py` (bloque de redirección de `LoginView.post`)
+
+---
+
+## ADR-019: Navbar Específico para Staff (`is_staff`)
+
+**Fecha**: 2026-09-08
+**Estado**: Aceptada
+
+### Contexto
+
+La redirección post-login (ADR-018) llevaba a los administradores a su panel, pero la barra de navegación seguía mostrando los mismos enlaces que un usuario común (Inicio, Mi Inventario, Clientes, Ventas, Solicitudes, Mis Compras, carrito), sin acceso organizado a los módulos de administración. `NavbarApp.vue` es un único componente compartido por todas las páginas vía `base.html`.
+
+### Decisión
+
+`NavbarApp.vue` ramifica su contenido autenticado según `user.is_staff`:
+- **staff**: solo los 5 módulos del panel de administración (Usuarios, Categorías, Moderación, Estadísticas, Auditoría) + dropdown de usuario compartido.
+- **no-staff**: navegación de usuario actual (Inicio, Mi Inventario, Clientes, Ventas, Solicitudes, Mis Compras, carrito) + dropdown de usuario compartido.
+
+`core.context_processors.layout_data` expone las URLs admin en el JSON `urls` (via `_url()`): `admin_usuarios`, `admin_categorias`, `admin_moderacion`, `admin_estadisticas`, `admin_auditoria`.
+
+### Consecuencias
+
+- ✅ El navbar refleja el rol del usuario: los administradores solo ven los 5 módulos admin, sin enlaces de usuario ni carrito.
+- ✅ Un único componente se mantiene (Sin duplicación de navbar); el estado staff se expone desde `layout_data.user.is_staff`.
+- ✅ Sin cambios en BD (los roles siguen siendo flags de aplicación, sin validación a nivel de base de datos).
+- ❌ La detección sigue siendo binaria (`is_staff`); no hay granularidad por módulo (todos los staff ven los mismos 5 enlaces).
+
+### Archivos Afectados
+
+- `frontend/src/layout/NavbarApp.vue` (rama `v-if="user.is_staff"` / `v-else`)
+- `core/context_processors.py` (URLs admin en `layout_data.urls`)
+- `static/dist/layout.js` (bundle recompilado)
+
+---
+
+## ADR-020: Acceso al Panel de Administración y Privilegios para Superusuarios (`is_superuser`)
+
+**Fecha**: 2026-09-08
+**Estado**: Aceptada
+
+### Contexto
+
+Aunque un usuario tuviera la bandera `is_superuser = True`, si su campo `is_staff` estaba en `False` (o si no contaba con dicha bandera explícita), el sistema lo redirigía post-login al marketplace de usuario común (`inventario:marketplace`), el decorador `_require_staff` denegaba su acceso a las vistas de administración, el método `has_perm` no lo habilitaba, el navbar no mostraba las rutas de administración y `home_redirect` en `/` lo devolvía al marketplace.
+
+### Decisión
+
+Unificar la condición de privilegios administrativos para que tanto `is_staff` como `is_superuser` confieran acceso pleno al panel de administración y sus operaciones asociadas:
+1. **Redirección post-login y home**: `auth_controller.py` y `config/urls.py` redirigen a `usuarios:admin_usuarios_list` si `user.is_staff or user.is_superuser`.
+2. **Control de acceso**: El decorador `_require_staff` en `admin_usuarios_controller.py` permite la ejecución si `request.user.is_staff or request.user.is_superuser`.
+3. **Permisos de modelo**: `Tblusuarios.has_perm` y `has_module_perms` devuelven `True` para usuarios activos con `self.is_staff or self.is_superuser`.
+4. **Moderación y gestión de inventario**: `producto_controller.py` y las plantillas (`listar_productos.html`, `Productosdetalles.html`, `producto_detail.html`) admiten superusuarios en aprobación/rechazo y edición global.
+5. **Navegación**: `NavbarApp.vue` evalúa `user.is_staff || user.is_superuser` para renderizar la rama con los 5 módulos administrativos.
+
+### Consecuencias
+
+- ✅ Los superusuarios pueden iniciar sesión y acceder inmediatamente al panel de administración sin requerir `is_staff=True` manual.
+- ✅ Coherencia total entre backend, decorators, modelos, templates y frontend Vue.
+- ✅ Mantiene compatibilidad regresiva con administradores que solo tienen `is_staff=True`.
+- ❌ No implementa RBAC granular por permisos específicos; ambos roles comparten acceso a todos los módulos admin.
+
+### Archivos Afectados
+
+- `apps/usuarios/controllers/auth_controller.py`
+- `apps/usuarios/controllers/admin_usuarios_controller.py`
+- `apps/usuarios/models/profile_model.py`
+- `apps/inventario/controllers/producto_controller.py`
+- `config/urls.py`
+- `frontend/src/layout/NavbarApp.vue`
+- `apps/inventario/templates/inventario/listar_productos.html`
+- `apps/inventario/templates/inventario/Productosdetalles.html`
+- `apps/inventario/templates/inventario/producto_detail.html`
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -601,6 +698,9 @@ Eliminar `apps/inventario/app.py` por completo. El inventario del sistema real v
 | ADR-015 | Eliminación de vulnerabilidades y limpieza de código muerto | Aceptada | Seguridad / Arquitectura |
 | ADR-016 | App de facturación con migraciones Django (managed=True) | Aceptada | Arquitectura / BD |
 | ADR-017 | Eliminación del residuo Flask en apps/inventario | Aceptada | Limpieza código |
+| ADR-018 | Redirección post-login por rol (is_staff) | Aceptada | Auth / Usuarios |
+| ADR-019 | Navbar específico para staff (is_staff) | Aceptada | Frontend / Auth |
+| ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Aceptada | Auth / Admin / Frontend |
 
 ---
 

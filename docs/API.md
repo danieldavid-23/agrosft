@@ -53,7 +53,7 @@ POST /usuarios/login/
 | `username` | string | Sí | Correo electrónico |
 | `password` | string | Sí | Contraseña |
 
-**Response (POST success)**: `Redirect → /inventario/marketplace/` o `?next=` param
+**Response (POST success)**: `Redirect → /usuarios/admin-usuarios/` (staff), `→ /inventario/marketplace/` (no-staff) o `?next=` param
 
 ---
 
@@ -135,9 +135,9 @@ GET  /usuarios/password-reset-complete/
 
 ---
 
-### 1.7 Panel de Administración de Usuarios (Staff)
+### 1.7 Panel de Administración de Usuarios (Staff / Superusuario)
 
-> Requieren `request.user.is_staff == True`. Implementados en `apps/usuarios/controllers/admin_usuarios_controller.py`.
+> Requieren `request.user.is_staff == True` o `request.user.is_superuser == True`. Implementados en `apps/usuarios/controllers/admin_usuarios_controller.py`.
 
 **Gestión de usuarios**:
 ```
@@ -176,11 +176,6 @@ POST /usuarios/admin-categorias/toggle/<pk>/          → Activar/desactivar cat
 GET /usuarios/admin-reporte/usuarios/                 → CSV de usuarios
 GET /usuarios/admin-reporte/productos/                → CSV de productos
 GET /usuarios/admin-reporte/ventas/                   → CSV de ventas
-```
-
-**Auditoría**:
-```
-GET /usuarios/admin-auditoria/                        → Registro de auditoría
 ```
 
 ---
@@ -326,7 +321,7 @@ POST /inventario/producto/<id>/aprobar/
 POST /inventario/producto/<id>/rechazar/
 ```
 
-**Requiere**: `request.user.is_staff == True`
+**Requiere**: `request.user.is_staff == True` o `request.user.is_superuser == True`
 
 ---
 
