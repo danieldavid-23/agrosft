@@ -103,21 +103,6 @@ def resize_uploaded_image(file_obj, field_name='imagen', max_dimension=MAX_IMAGE
     )
 
 
-class EstadoProducto:
-    """Constants for product states matching database values exactly."""
-    PENDIENTE = 'Pendiente'
-    APROBADO = 'Aprobado'
-    RECHAZADO = 'Rechazado'
-
-    @classmethod
-    def choices(cls):
-        return [cls.PENDIENTE, cls.APROBADO, cls.RECHAZADO]
-
-    @classmethod
-    def is_valid(cls, value):
-        """Check if a value is a valid estado (case-insensitive)."""
-        return value.capitalize() in cls.choices() if value else False
-
 
 class EstadoSolicitud:
     """Constants for purchase request states."""

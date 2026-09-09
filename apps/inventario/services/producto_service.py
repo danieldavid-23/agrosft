@@ -46,10 +46,9 @@ class ProductoService:
             'descripcion': dto.descripcion,
             'categoria_id': dto.categoria_id,
             'precio': dto.precio,
-            'cantidad': dto.cantidad,  # Cambiado de stock a cantidad
+            'cantidad': dto.cantidad,
             'stock_minimo': dto.stock_minimo,
             'agricultor': usuario,
-            'estado': 'pendiente'  # RF-11b
         }
         
         # Crear producto
@@ -116,15 +115,3 @@ class ProductoService:
             raise
         logger.info(f"Product {producto_id} deleted via service by user {getattr(usuario, 'id', usuario)}")
         return result
-    
-    def aprobar_producto(self, producto_id, usuario, aprobado=True):
-        """Aprueba o rechaza un producto"""
-        estado = 'aprobado' if aprobado else 'rechazado'
-        
-        producto = self.repository.update(
-            producto_id, 
-            {'estado': estado},
-            usuario.id
-        )
-        
-        return ProductoDTO.from_model(producto)

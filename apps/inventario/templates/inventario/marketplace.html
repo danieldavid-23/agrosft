@@ -109,16 +109,13 @@
 
                         <div class="mp-img-overlay"></div>
 
-                        <div class="mp-badges">
-                            {% if producto.esta_agotado %}
-                            <span class="mp-badge-status danger"><i class="fas fa-times-circle me-1"></i>Agotado</span>
-                            {% elif producto.stock < producto.stock_minimo %} <span class="mp-badge-status warning"><i
-                                    class="fas fa-fire me-1"></i>Últimas unid.</span>
-                                {% endif %}
-                                {% if producto.estado == 'pendiente' %}
-                                <span class="mp-badge-status secondary">Pendiente</span>
-                                {% endif %}
-                        </div>
+<div class="mp-badges">
+                             {% if producto.esta_agotado %}
+                             <span class="mp-badge-status danger"><i class="fas fa-times-circle me-1"></i>Agotado</span>
+                             {% elif producto.stock < producto.stock_minimo %} <span class="mp-badge-status warning"><i
+                                     class="fas fa-fire me-1"></i>Últimas unid.</span>
+                                 {% endif %}
+                         </div>
                     </div>
 
                     <!-- Cuerpo -->

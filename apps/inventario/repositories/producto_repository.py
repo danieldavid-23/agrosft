@@ -1,32 +1,25 @@
 from django.db.models import Q
 from django.utils import timezone
-from apps.inventario.models import Producto, ProductoUsuario, Estado, Categoria
-from core.utils.helpers import safe_int, EstadoProducto
+from apps.inventario.models import Producto, ProductoUsuario, Categoria
+from core.utils.helpers import safe_int
 
 class ProductoRepository:
 
     @staticmethod
-    def get_by_filters(estado='', categoria_id='', nombre=''):
+    def get_by_filters(categoria_id='', nombre=''):
         """
         Obtiene productos con posibles filtros
         """
         queryset = ProductoUsuario.objects.select_related(
             'id_producto',
             'id_producto__id_categoria',
-            'id_estado',
             'id_usuario'
         ).filter(
             id_producto_usuario__gt=0,
             id_producto__eliminado=False,
             id_producto__isnull=False,
-            id_estado__isnull=False,
             id_usuario__isnull=False,
         )
-        
-        if estado:
-            estado_obj = Estado.objects.filter(estado=estado).first()
-            if estado_obj:
-                queryset = queryset.filter(id_estado=estado_obj)
         
         if categoria_id:
             queryset = queryset.filter(id_producto__id_categoria=categoria_id)
@@ -40,27 +33,20 @@ class ProductoRepository:
         return queryset
     
     @staticmethod
-    def get_all_with_filters(estado='', categoria_id='', nombre=''):
+    def get_all_with_filters(categoria_id='', nombre=''):
         """
         Obtiene todos los productos con posibles filtros
         """
         queryset = ProductoUsuario.objects.select_related(
             'id_producto',
             'id_producto__id_categoria',
-            'id_estado',
             'id_usuario'
         ).filter(
             id_producto_usuario__gt=0,
             id_producto__eliminado=False,
             id_producto__isnull=False,
-            id_estado__isnull=False,
             id_usuario__isnull=False,
         )
-        
-        if estado:
-            estado_obj = Estado.objects.filter(estado=estado).first()
-            if estado_obj:
-                queryset = queryset.filter(id_estado=estado_obj)
         
         if categoria_id:
             queryset = queryset.filter(id_producto__id_categoria=categoria_id)
@@ -75,35 +61,21 @@ class ProductoRepository:
     
     @staticmethod
     def log_action(producto_id, user_id, action, field_changed=None, old_value=None, new_value=None):
-        """
-        Registra una acción en el historial de productos
-        """
-        # Este método podría necesitar actualizaciones según la estructura real de la base de datos
         pass
-    
-    @staticmethod
-    def get_productos_by_estado(estado):
-        """
-        Obtiene productos por estado
-        """
-        estado_obj = Estado.objects.filter(estado=estado).first()
-        if estado_obj:
-            return ProductoUsuario.objects.filter(id_estado=estado_obj, id_producto__eliminado=False).select_related('id_producto', 'id_estado', 'id_usuario')
-        return ProductoUsuario.objects.none()
     
     @staticmethod
     def get_productos_by_agricultor(usuario):
         """
         Obtiene productos por agricultor
         """
-        return ProductoUsuario.objects.filter(id_usuario=usuario, id_producto__eliminado=False).select_related('id_producto', 'id_estado')
+        return ProductoUsuario.objects.filter(id_usuario=usuario, id_producto__eliminado=False).select_related('id_producto', 'id_usuario')
     
     @staticmethod
     def get_producto_detalle(producto_id):
         """
         Obtiene el detalle de un producto específico
         """
-        return ProductoUsuario.objects.select_related('id_producto', 'id_estado', 'id_usuario').get(id_producto_usuario=producto_id)
+        return ProductoUsuario.objects.select_related('id_producto', 'id_usuario').get(id_producto_usuario=producto_id)
 
     @staticmethod
     def get_paginated(page, per_page, filters=None):
@@ -112,11 +84,10 @@ class ProductoRepository:
         """
         if filters is None:
             filters = {}
-        estado = filters.get('estado', '')
         categoria_id = filters.get('categoria_id', '')
         nombre = filters.get('nombre', '')
         
-        queryset = ProductoRepository.get_all_with_filters(estado, categoria_id, nombre)
+        queryset = ProductoRepository.get_all_with_filters(categoria_id, nombre)
         
         from django.core.paginator import Paginator
         paginator = Paginator(queryset, per_page)
@@ -129,7 +100,7 @@ class ProductoRepository:
         """
         try:
             return ProductoUsuario.objects.select_related(
-                'id_producto', 'id_estado', 'id_usuario'
+                'id_producto', 'id_usuario'
             ).get(id_producto_usuario=producto_id)
         except ProductoUsuario.DoesNotExist:
             return None
@@ -139,11 +110,9 @@ class ProductoRepository:
         """
         Crea un nuevo producto
         """
-        from apps.inventario.models import ProductoUsuario
         producto_usuario = ProductoUsuario()
-        producto_usuario.id_producto_id = producto_data['producto_id']  # Ajustar según sea necesario
+        producto_usuario.id_producto_id = producto_data['producto_id']
         producto_usuario.id_usuario_id = user_id
-        producto_usuario.id_estado_id = producto_data.get('estado_id', 1)  # Asignar estado predeterminado
         producto_usuario.cantidad = str(producto_data.get('cantidad', 0))
         producto_usuario.precio = producto_data.get('precio', 0)
         producto_usuario.save()

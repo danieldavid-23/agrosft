@@ -3,7 +3,8 @@ from .views.producto_views import (
     producto_list, producto_detail, producto_create, producto_update, producto_delete, venta_directa
 )
 from .controllers.producto_controller import (
-    api_verificar_stock, aprobar_producto, rechazar_producto, marketplace, eliminar_imagen_producto
+    api_verificar_stock, marketplace, eliminar_imagen_producto,
+    api_crear_categoria, api_nombres_producto
 )
 
 app_name = 'inventario'
@@ -18,9 +19,9 @@ urlpatterns = [
     path('producto/<int:pk>/editar/', producto_update, name='editar'),
     path('producto/<int:pk>/eliminar/', producto_delete, name='eliminar'),
     path('producto/<int:pk>/eliminar-imagen/<str:img_id>/', eliminar_imagen_producto, name='eliminar_imagen'),
-    path('producto/<int:producto_id>/aprobar/', aprobar_producto, name='aprobar'),
-    path('producto/<int:producto_id>/rechazar/', rechazar_producto, name='rechazar'),
     
     # API endpoints
     path('api/producto/<int:producto_id>/stock/', api_verificar_stock, name='api_stock'),
+    path('api/categorias/crear/', api_crear_categoria, name='api_crear_categoria'),
+    path('api/productos/nombres/', api_nombres_producto, name='api_nombres_producto'),
 ]

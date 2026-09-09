@@ -744,6 +744,42 @@ El sistema contaba con un panel de administración web personalizado (`admin_usu
 
 ---
 
+## ADR-022: Selectores Dinámicos para Categoría y Nombre de Producto en Formulario de Registro
+
+**Fecha**: 2026-09-08  
+**Estado**: Aceptada  
+
+### Contexto
+
+En el formulario de registro y edición de productos (`producto_form.html`), la selección de **Categoría** usaba un `<select>` estático derivado del campo `ModelChoiceField` de Django que no permitía agregar nuevas categorías al instante. Por otro lado, el **Nombre del Producto** usaba un campo de texto libre `<input text>` que impedía reutilizar nombres de productos ya registrados en el catálogo.
+
+### Decisión
+
+1. **Selector Dinámico de Categoría**:
+   - Se mantiene el modelo y la persistencia de MariaDB (`tblcategoria`).
+   - Se agrega el endpoint AJAX `api_crear_categoria` (POST JSON) para la creación de categorías en tiempo real.
+   - El selector muestra una opción visual `+ Agregar categoría` que despliega un formulario inline con validación sin recargar la página.
+2. **Selector Dinámico de Nombre de Producto**:
+   - Se agrega el endpoint AJAX `api_nombres_producto` (GET) que devuelve la lista deduplicada de nombres de productos de la base de datos.
+   - El input de texto original se transforma en un `<select>` interactivo que ofrece sugerencias de productos existentes o la opción `+ Agregar nuevo producto` mediante un formulario inline.
+3. **Compatibilidad Transparente con Django Form**:
+   - No se modificó la clase `ProductoForm` de Django.
+   - La selección del usuario se sincroniza mediante JS en campos ocultos que alimentan los nombres de input esperados por Django (`nombre` e `id_categoria`), garantizando que la validación y el guardado del controlador continúen operando exactamente igual.
+
+### Consecuencias
+
+- ✅ Agiliza el registro de productos eliminando la necesidad de navegar a otras pantallas para crear categorías.
+- ✅ Favorece la estandarización de nombres en el catálogo de inventario.
+- ✅ Cero breaking changes en la persistencia existente o en `ProductoForm`.
+
+### Archivos Afectados
+
+- `apps/inventario/controllers/producto_controller.py`
+- `apps/inventario/urls.py`
+- `apps/inventario/templates/inventario/producto_form.html`
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -766,6 +802,7 @@ El sistema contaba con un panel de administración web personalizado (`admin_usu
 | ADR-019 | Navbar específico para staff (is_staff) | Reemplazada (ADR-021) | Frontend / Auth |
 | ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Reemplazada (ADR-021) | Auth / Admin / Frontend |
 | ADR-021 | Eliminación de panel web admin y unificación de experiencia | Aceptada | Arquitectura / UI / Usuarios |
+| ADR-022 | Selectores dinámicos para Categoría y Nombre de Producto | Aceptada | Inventario / UI / UX |
 
 ---
 

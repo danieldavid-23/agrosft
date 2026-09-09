@@ -113,14 +113,6 @@ class ProductoUsuarioMovimiento(models.Model):
         db_column='cantidad',
         help_text='Cantidad movida (positiva=entrada/abastecimiento, negativa=salida/venta)'
     )
-    calificacion = models.DecimalField(
-        max_digits=3, 
-        decimal_places=1, 
-        null=True, 
-        blank=True,
-        db_column='calificacion',
-        help_text='Calificación de 1.0 a 5.0 en pasos de 0.5'
-    )
     fecha_movimiento = models.DateTimeField(
         auto_now_add=True,
         db_column='fecha_movimiento',

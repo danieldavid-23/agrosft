@@ -5,24 +5,6 @@ from core.utils.helpers import validate_image_size, image_cache_bust
 from apps.usuarios.models.profile_model import Tblusuarios
 
 
-class Estado(models.Model):
-    """
-    Modelo que representa la tabla estado en la base de datos
-    Define los estados de publicación: Aprobado, Pendiente, Rechazado
-    """
-    id_estado = models.AutoField(primary_key=True, db_column='id_estado')
-    estado = models.CharField(max_length=45, db_column='estado')
-
-    class Meta:
-        db_table = 'estado'
-        managed = False
-        verbose_name = 'Estado'
-        verbose_name_plural = 'Estados'
-
-    def __str__(self):
-        return self.estado
-
-
 class Categoria(models.Model):
     """
     Modelo que representa la tabla tblcategoria en la base de datos
@@ -71,7 +53,6 @@ class Producto(models.Model):
         db_column='tblcategoria_idt_categoria'
     )
     stock_minimo = models.IntegerField(default=5, db_column='stock_minimo')
-    estado = models.CharField(max_length=20, default='pendiente', db_column='estado')
     eliminado = models.BooleanField(default=False, db_column='eliminado')
     fecha_eliminacion = models.DateTimeField(null=True, blank=True, db_column='fecha_eliminacion')
     eliminado_por_id = models.IntegerField(null=True, blank=True, db_column='eliminado_por_id')
@@ -144,8 +125,6 @@ class ProductoUsuario(models.Model):
     Relación muchos-a-muchos entre productos y usuarios con datos específicos de cada publicación:
     - Precio por vendedor
     - Stock disponible (cantidad)
-    - Estado de la publicación
-    - Calificación promedio (actualizada automáticamente por triggers)
     """
     id_producto_usuario = models.AutoField(primary_key=True, db_column='id_pd_us')
     id_producto = models.ForeignKey(
@@ -157,11 +136,6 @@ class ProductoUsuario(models.Model):
         Tblusuarios, 
         on_delete=models.CASCADE, 
         db_column='tblusuarios_id_users'
-    )
-    id_estado = models.ForeignKey(
-        Estado, 
-        on_delete=models.CASCADE, 
-        db_column='Estado_id_estado'
     )
     cantidad = models.DecimalField(
         max_digits=10, 
@@ -176,14 +150,6 @@ class ProductoUsuario(models.Model):
         decimal_places=2, 
         default=0.00,
         db_column='precio'
-    )
-    calificacion_promedio = models.DecimalField(
-        max_digits=3, 
-        decimal_places=1, 
-        null=True, 
-        blank=True,
-        db_column='calificacion_promedio',
-        help_text='Promedio de calificaciones (actualizado por triggers de BD)'
     )
 
     class Meta:

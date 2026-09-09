@@ -9,17 +9,6 @@
                                 </span>
                             </td>
                             <td>{{ producto.precio|currency_cop }}</td>
-                            <td>
-                                {% if producto.id_estado.estado == 'pendiente' %}
-                                    <span class="badge bg-secondary">Pendiente</span>
-                                {% elif producto.id_estado.estado == 'aprobado' %}
-                                    <span class="badge bg-success">Aprobado</span>
-                                {% elif producto.id_estado.estado == 'rechazado' %}
-                                    <span class="badge bg-danger">Rechazado</span>
-                                {% elif producto.id_estado.estado == 'eliminado' %}
-                                    <span class="badge bg-dark">Eliminado</span>
-                                {% endif %}
-                            </td>
                             <td>{{ producto.fecha_creacion|date:"d/m/Y H:i" }}</td>
                             <td>
                                 {% if producto.id_producto_usuario %}

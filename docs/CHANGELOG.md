@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+### Added (2026-09-08)
+- **Selectores Dinámicos para Categoría y Nombre de Producto en Formulario de Registro** (ADR-022):
+  - `apps/inventario/controllers/producto_controller.py`: Creados dos endpoints AJAX:
+    - `api_crear_categoria`: Permite la creación inmediata de categorías vía POST JSON con validaciones (duplicados, vacíos, longitud) e invalidación de caché.
+    - `api_nombres_producto`: Retorna lista JSON deduplicada de nombres de productos existentes.
+  - `apps/inventario/urls.py`: Registradas las rutas `/inventario/api/crear-categoria/` y `/inventario/api/nombres-producto/`.
+  - `apps/inventario/templates/inventario/producto_form.html`:
+    - Reemplazado input de texto libre por selector dinámico con opción "+ Agregar nuevo producto" y formulario inline.
+    - Reemplazado select estático de categoría por selector dinámico con opción "+ Agregar categoría" y formulario inline.
+    - Sincronización transparente con campos ocultos `form.nombre` e `form.id_categoria` de Django.
+
 ### Removed (2026-09-08)
 - **Eliminación total del panel web de administración y unificación de navegación (ADR-021)**:
   - Eliminado el controlador `apps/usuarios/controllers/admin_usuarios_controller.py`.
