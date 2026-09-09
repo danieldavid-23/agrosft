@@ -7,6 +7,23 @@
 
 ## [Unreleased]
 
+### Added (2026-09-08)
+- **Botón y acceso bidireccional para generación de facturas en el módulo "Ventas"** (ver [[DECISIONS#ADR-015]], [[REQUIREMENTS#RF-V20]], [[USER_STORIES#US-16]]):
+  - `apps/ventas/templates/ventas/venta_list.html`: Incorporado botón "Factura" con diseño uniforme a "Mis Compras" (`btn-sm btn-success rounded-pill` con ícono `fas fa-file-invoice-dollar` y enlace a `facturacion:generar_factura_pedido`).
+  - `apps/ventas/templates/ventas/venta_detail.html`: Incorporado botón "Generar Factura" en el encabezado de detalle de la venta.
+  - `apps/ventas/templates/ventas/solicitudes/solicitud_list.html` y `solicitud_detail.html`: Removido botón preliminar de facturación en solicitudes para concentrar la emisión en transacciones concretadas en Ventas.
+  - `apps/facturacion/controllers/factura_controller.py`: Modificada la lógica de autorización en `generar_factura_pedido`, `generar_pdf_factura` y `detalle_factura` para habilitar el acceso tanto al comprador como al vendedor del movimiento (o staff), evitando error 404 al vendedor.
+  - `apps/facturacion/services/factura_service.py`: `obtener_o_crear_factura_desde_movimiento` optimizado para buscar la factura por `movimiento` (garantizando una única factura por transacción) y fijar al comprador como titular del comprobante.
+
+### Fixed (2026-09-08)
+- **Corrección de renderizado de iconos FontAwesome en la vista de inicio de sesión (`login.html`)**:
+  - Eliminada la regla universal `.auth-page * { font-family: 'Inter' }` que sobreescribía la familia tipográfica de Font Awesome convirtiendo los iconos (checks del hero, sobre de email, candado de contraseña, ojo del toggle y flecha de inicio de sesión) en cuadros vacíos (`□`).
+  - Añadida regla de aislamiento y especificidad reforzada para selectores `.fa, .fas, .far, .fab` asegurando el mapeo correcto de glifos sin alterar la lógica de formularios, botones ni eventos de contraseña.
+
+### Changed (2026-09-08)
+- **Ajuste de diseño del banner principal en Marketplace (`marketplace.html`)**:
+  - Eliminado el margen/padding superior y lateral (`main.container-fluid`) para que el recuadro verde del hero (`.mp-hero`) quede perfectamente continuo y al ras del borde inferior del navbar (`border-radius: 0; padding-top: 0;`), cubriendo de borde a borde sin separación.
+
 ### Improved (2026-09-06)
 - **Manejo robusto de Promesas y ciclo de vida de peticiones asíncronas en el Frontend**:
   - `frontend/src/inventario/InventarioApp.vue`:

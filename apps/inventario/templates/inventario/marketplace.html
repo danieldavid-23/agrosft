@@ -233,6 +233,13 @@
 }
 body { font-family: 'Inter', sans-serif; }
 
+/* Eliminar el espacio superior y lateral del contenedor principal para que el hero quede al ras con el navbar */
+main.container-fluid {
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 /* ------------------------------------------------------------------
    HERO (Banner principal del inicio)
    ------------------------------------------------------------------ */
@@ -241,6 +248,7 @@ body { font-family: 'Inter', sans-serif; }
     background: linear-gradient(128deg, #0f2417 0%, #1d4d2b 42%, #3C8D3C 100%);
     overflow: hidden;
     isolation: isolate;
+    border-radius: 0;
 }
 /* textura de puntos sutiles sobre el gradiente */
 .mp-hero-pattern {
@@ -261,7 +269,7 @@ body { font-family: 'Inter', sans-serif; }
 }
 .mp-hero-glow-1 { width: 520px; height: 520px; background: #62A96B; top: -210px; right: -120px; }
 .mp-hero-glow-2 { width: 380px; height: 380px; background: #E8853B; bottom: -160px; left: 12%; opacity: 0.18; }
-.mp-hero-row { min-height: 340px; }
+.mp-hero-row { min-height: 220px; }
 .mp-hero > .container { position: relative; z-index: 1; }
 
 /* Chip superior */

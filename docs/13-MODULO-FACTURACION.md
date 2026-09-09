@@ -79,7 +79,7 @@ La clase `FacturaService` encapsula las transacciones atómicas de facturación:
   4. Crea los registros `ItemFactura` con los nombres limpios y montos calculados.
   5. Ejecuta todo el proceso bajo `@transaction.atomic`.
 - **`obtener_o_crear_factura_desde_movimiento(usuario, movimiento)`**:
-  - Recupera la factura existente para un movimiento o la genera automáticamente a partir de los detalles registrados en `ProductoUsuarioMovimiento`.
+  - Recupera la factura existente para el `movimiento` o la genera automáticamente a partir de los detalles registrados en `ProductoUsuarioMovimiento`. Si ya existe una factura vinculada a ese movimiento, la reutiliza previniendo duplicados contables. Asigna como titular del comprobante al comprador (`movimiento.id_usuario`).
 - **`cancelar_factura(factura)`**:
   - Actualiza el estado a `'cancelada'` y limpia la relación con el movimiento si corresponde.
 - **`historial_usuario(usuario)`**:
@@ -91,10 +91,10 @@ La clase `FacturaService` encapsula las transacciones atómicas de facturación:
 
 | Vista | Método | Decoradores | Descripción |
 |---|---|---|---|
-| `detalle_factura` | GET | `@login_required` | Renderiza `detalle_factura.html` con select_related optimizado. |
+| `detalle_factura` | GET | `@login_required` | Renderiza `detalle_factura.html` con select_related optimizado. Autoriza acceso al comprador, vendedor o admin. |
 | `historial_facturas` | GET | `@login_required` | Renderiza `historial_facturas.html` con todas las facturas del usuario. |
-| `generar_pdf_factura`| GET | `@login_required` | Renderiza `factura_pdf.html` y compila el PDF mediante `xhtml2pdf`. Soporta parámetro `?descargar=1` para forzar descarga. |
-| `generar_factura_pedido` | GET | `@login_required`| Genera el PDF a partir del identificador de un movimiento. |
+| `generar_pdf_factura`| GET | `@login_required` | Renderiza `factura_pdf.html` y compila el PDF mediante `xhtml2pdf`. Valida permisos de comprador/vendedor/admin. Soporta parámetro `?descargar=1` para forzar descarga. |
+| `generar_factura_pedido` | GET | `@login_required`| Genera o recupera la factura y redirige a la generación del PDF. Autorizado tanto para el comprador como para el vendedor de la solicitud. |
 
 ---
 

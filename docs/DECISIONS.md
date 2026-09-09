@@ -480,6 +480,36 @@ Las imágenes cargadas por los usuarios contaban con proporciones dispares y fon
 
 ---
 
+## ADR-015: Acceso Bidireccional y Generación de Facturas en Módulo Ventas
+
+### Contexto
+
+El sistema permitía a los compradores generar y descargar facturas PDF desde la vista de "Mis Compras" (`compra_list.html`), pero los vendedores no disponían del botón de generación de factura en su historial de ventas (`venta_list.html` y `venta_detail.html`). Adicionalmente, el controlador `generar_factura_pedido` restringía la consulta a `movimiento.id_usuario == request.user`, lo cual provocaba error 404 al intentar ser consultado por el vendedor, dado que en un movimiento comercial `id_usuario` es el comprador.
+
+### Decisión
+
+1. **Control de Acceso Bidireccional**: Se amplía la validación en `generar_factura_pedido`, `generar_pdf_factura` y `detalle_factura` para permitir el acceso tanto al comprador (`movimiento.id_usuario == request.user`) como al vendedor propietario de los productos asociados a dicho movimiento (`ProductoUsuarioMovimiento` donde `id_producto_usuario.id_usuario == request.user`), además de usuarios administradores (`is_staff`).
+2. **Reutilización y Unicidad de Factura**: `FacturaService.obtener_o_crear_factura_desde_movimiento` busca la factura existente asociada al `movimiento` (`Factura.objects.filter(movimiento=movimiento).first()`). Si existe, la reutiliza; si no, la crea asignando al comprador como titular del comprobante contable (`usuario=movimiento.id_usuario`), evitando duplicidad contable entre comprador y vendedor.
+3. **Consistencia Visual en Módulo Ventas**: Se incorpora el botón de "Factura" con ícono `fas fa-file-invoice-dollar` y clase `btn-sm btn-success rounded-pill` en el listado de ventas (`venta_list.html`) y en la vista de detalle (`venta_detail.html`), homologando la experiencia visual de "Mis Compras" y manteniéndolo fuera de la fase preliminar de solicitudes.
+
+### Consecuencias
+
+- **Positivas**:
+  - El vendedor tiene acceso inmediato al comprobante legal una vez la transacción forma parte de sus ventas registradas.
+  - Se mantiene la integridad contable con una sola entidad `Factura` por `Movimiento`.
+  - Experiencia de usuario uniforme e intuitiva entre compras y ventas.
+- **Negativas / Consideraciones**:
+  - Se requiere verificar las relaciones de productos para asegurar que únicamente los participantes autorizados de la transacción tengan acceso.
+
+### Archivos Afectados
+
+- `apps/facturacion/services/factura_service.py`
+- `apps/facturacion/controllers/factura_controller.py`
+- `apps/ventas/templates/ventas/venta_list.html`
+- `apps/ventas/templates/ventas/venta_detail.html`
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -498,6 +528,7 @@ Las imágenes cargadas por los usuarios contaban con proporciones dispares y fon
 | ADR-012 | Solicitudes server-side (reversión) | Aceptada | Módulo ventas |
 | ADR-013 | Soporte de imágenes (producto + perfil) | Aceptada | Inventario / Usuarios |
 | ADR-014 | Carrusel de imágenes y tamaño uniforme | Aceptada | Inventario / Marketplace |
+| ADR-015 | Acceso Bidireccional a Facturas en Solicitudes | Aceptada | Ventas / Facturación |
 
 ---
 

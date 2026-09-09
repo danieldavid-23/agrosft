@@ -65,6 +65,7 @@
 | RF-V13 | El sistema debe permitir calificar una transacción (1.0–5.0, pasos de 0.5) | Media | ✅ Implementado |
 | RF-V14 | El sistema debe mostrar historial de movimientos del usuario | Media | ✅ Implementado |
 | RF-V15 | El frontend de solicitudes debe funcionar sin conexión a base de datos | Alta | ❌ Eliminado — Se revirtió a renderizado Django server-side |
+| RF-V20 | El sistema debe permitir al vendedor generar y descargar la factura en PDF directamente desde el listado y detalle de ventas registradas | Alta | ✅ Implementado |
 
 ### 1.4 Módulo de Clientes
 
@@ -73,6 +74,14 @@
 | RF-C01 | El sistema debe listar usuarios que han realizado movimientos | Media | ✅ Implementado |
 | RF-C02 | El sistema debe mostrar el historial de compras de un cliente | Media | ✅ Implementado |
 | RF-C03 | El sistema debe mostrar estadísticas de compras/ventas por usuario | Baja | ✅ Implementado |
+
+### 1.5 Módulo de Facturación
+
+| ID | Requisito | Prioridad | Estado |
+|---|---|---|---|
+| RF-F01 | El sistema debe emitir facturas y comprobantes en PDF con formato oficial (xhtml2pdf) | Alta | ✅ Implementado |
+| RF-F02 | El sistema debe permitir la descarga y visualización de la factura tanto al comprador como al vendedor(es) involucrados en la transacción | Alta | ✅ Implementado |
+| RF-F03 | El sistema debe garantizar una única factura por movimiento comercial para evitar duplicidad contable | Alta | ✅ Implementado |
 
 ---
 

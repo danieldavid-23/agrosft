@@ -51,6 +51,11 @@
                 {% endif %}
             </div>
         </div>
+        <div>
+            <a href="{% url 'facturacion:generar_factura_pedido' venta.id %}" target="_blank" class="btn btn-success rounded-pill px-4 shadow-sm" title="Generar Factura en PDF">
+                <i class="fas fa-file-invoice-dollar me-2"></i> Generar Factura
+            </a>
+        </div>
     </div>
 
     <div class="row g-4">

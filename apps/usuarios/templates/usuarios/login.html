@@ -16,9 +16,11 @@
         padding: 2rem 1rem;
         font-family: 'Inter', sans-serif;
     }
-    .auth-page * {
+    .auth-page,
+    .auth-page *,
+    .auth-page *::before,
+    .auth-page *::after {
         box-sizing: border-box;
-        font-family: 'Inter', sans-serif;
     }
     .auth-page a {
         text-decoration: none;
@@ -31,6 +33,33 @@
     .auth-page input {
         appearance: none;
         -webkit-appearance: none;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ── Corrección y protección de iconos FontAwesome (evita tofu/cuadros vacíos) ── */
+    .auth-page i[class*="fa-"],
+    .auth-page .fa,
+    .auth-page .fas,
+    .auth-page .far,
+    .auth-page .fab {
+        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", FontAwesome !important;
+        font-style: normal;
+        font-variant: normal;
+        text-rendering: auto;
+        line-height: 1;
+    }
+    .auth-page i.fas,
+    .auth-page .fas,
+    .auth-page i.fa-solid,
+    .auth-page .fa-solid {
+        font-weight: 900 !important;
+    }
+    .auth-page i.fab,
+    .auth-page .fab,
+    .auth-page i.fa-brands,
+    .auth-page .fa-brands {
+        font-family: "Font Awesome 6 Brands", "Font Awesome 5 Brands", FontAwesome !important;
+        font-weight: 400 !important;
     }
 
     /* ── Card contenedor ── */

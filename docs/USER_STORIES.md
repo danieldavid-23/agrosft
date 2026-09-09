@@ -333,11 +333,31 @@ graph TD
 
 ---
 
+### US-16: Comprobante y Factura en Módulo de Ventas
+
+**Como** vendedor,  
+**quiero** generar la factura en PDF de una venta registrada sobre mis productos,  
+**para** disponer de un comprobante comercial formal de la venta con los datos del comprador y el detalle pactado.
+
+**Requisitos relacionados**: [[REQUIREMENTS#RF-V20]], [[REQUIREMENTS#RF-F01]], [[REQUIREMENTS#RF-F02]]
+
+**Criterios de Aceptación**:
+- [x] Botón "Factura" con ícono y estilo uniforme accesible desde "Historial de Ventas" (`venta_list.html`)
+- [x] Botón "Generar Factura" accesible en el encabezado del detalle de la venta (`venta_detail.html`)
+- [x] Abre en pestaña nueva (`target="_blank"`) el PDF generado con `xhtml2pdf`
+- [x] El controlador valida que el usuario sea el vendedor participante del movimiento o el comprador antes de autorizar
+- [x] Reutiliza la factura existente del movimiento sin duplicar registros contables
+
+**Implementación**: `apps/facturacion/controllers/factura_controller.py` → `generar_factura_pedido()`, `apps/facturacion/services/factura_service.py`  
+**Frontend**: `apps/ventas/templates/ventas/venta_list.html`, `apps/ventas/templates/ventas/venta_detail.html`
+
+---
+
 ## Resumen de Historias por Estado
 
 | Estado | Cantidad | Historias |
 |---|---|---|
-| ✅ Completadas | 14 | US-01 a US-14 |
+| ✅ Completadas | 16 | US-01 a US-16 |
 | 🔶 Parciales | 2 | RF-U08 (password reset), RF-I13 (stock alerts) |
 | ❌ No iniciadas | 8 | GAP-01 a GAP-08 (ver [[REQUIREMENTS#3. Requisitos Pendientes]]) |
 
