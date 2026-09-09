@@ -146,7 +146,7 @@ class Tblusuarios(models.Model):
 
     def has_perm(self, perm, obj=None):
         """Verifica si el usuario tiene un permiso específico"""
-        return self.is_active and self.is_staff
+        return self.is_active and (self.is_staff or self.is_superuser)
 
     def has_perms(self, perm_list, obj=None):
         """Verifica si el usuario tiene múltiples permisos"""
@@ -154,7 +154,7 @@ class Tblusuarios(models.Model):
 
     def has_module_perms(self, app_label):
         """Verifica si el usuario tiene permisos para una aplicación específica"""
-        return self.is_active and self.is_staff
+        return self.is_active and (self.is_staff or self.is_superuser)
 
 
 class UserDevice(models.Model):

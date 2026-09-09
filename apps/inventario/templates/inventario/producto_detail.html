@@ -88,7 +88,7 @@
                 </div>
                 
                 <!-- Botón de Acción Principal (Comprar / Gestionar) -->
-                {% if user.id == producto.agricultor_id or user.is_staff %}
+                {% if user.id == producto.agricultor_id %}
                 <div class="card-footer bg-light border-0 p-3 pt-0 rounded-bottom-4">
                     <div class="d-flex flex-column flex-sm-row gap-2 pt-3">
                         <a href="{% url 'inventario:editar' producto.id %}" class="btn btn-primary btn-lg flex-grow-1 rounded-pill fw-bold shadow-sm">

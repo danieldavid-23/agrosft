@@ -3,13 +3,31 @@ import io
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.template.loader import render_to_string
 from apps.facturacion.models import Factura
 from apps.facturacion.services.factura_service import FacturaService
 from apps.ventas.services.carrito_service import Carrito
+from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento
 
 logger = logging.getLogger(__name__)
+
+
+def _tiene_permiso_movimiento(usuario, movimiento):
+    if usuario.is_staff or movimiento.id_usuario == usuario:
+        return True
+    return ProductoUsuarioMovimiento.objects.filter(
+        id_movimiento=movimiento,
+        id_producto_usuario__id_usuario=usuario
+    ).exists()
+
+
+def _tiene_permiso_factura(usuario, factura):
+    if usuario.is_staff or factura.usuario == usuario:
+        return True
+    if factura.movimiento:
+        return _tiene_permiso_movimiento(usuario, factura.movimiento)
+    return False
 
 
 @login_required
@@ -35,7 +53,9 @@ def crear_factura(request):
 
 @login_required
 def detalle_factura(request, factura_id):
-    factura = get_object_or_404(Factura, id_factura=factura_id, usuario=request.user)
+    factura = get_object_or_404(Factura, id_factura=factura_id)
+    if not _tiene_permiso_factura(request.user, factura):
+        raise Http404("Factura no encontrada o no tienes permisos para verla.")
     items = factura.items.select_related('producto', 'producto__id_categoria').all()
     return render(request, 'facturacion/detalle_factura.html', {
         'factura': factura,
@@ -53,7 +73,9 @@ def historial_facturas(request):
 
 @login_required
 def generar_pdf_factura(request, factura_id):
-    factura = get_object_or_404(Factura, id_factura=factura_id, usuario=request.user)
+    factura = get_object_or_404(Factura, id_factura=factura_id)
+    if not _tiene_permiso_factura(request.user, factura):
+        raise Http404("Factura no encontrada o no tienes permisos para verla.")
     items = factura.items.select_related('producto', 'producto__id_categoria').all()
 
     html = render_to_string('facturacion/factura_pdf.html', {
@@ -82,8 +104,9 @@ def generar_pdf_factura(request, factura_id):
 
 @login_required
 def generar_factura_pedido(request, movimiento_id):
-    from apps.ventas.models.movimiento import Movimiento
-    movimiento = get_object_or_404(Movimiento, id_movimiento=movimiento_id, id_usuario=request.user)
+    movimiento = get_object_or_404(Movimiento, id_movimiento=movimiento_id)
+    if not _tiene_permiso_movimiento(request.user, movimiento):
+        raise Http404("Movimiento no encontrado o no tienes permisos para acceder.")
     factura = FacturaService.obtener_o_crear_factura_desde_movimiento(request.user, movimiento)
     return redirect('facturacion:generar_pdf', factura_id=factura.id_factura)
 

@@ -144,7 +144,7 @@ class LoginView(View):
                     
                     messages.success(request, f'Bienvenido, {user.get_full_name()}!')
                     
-                    # Redirigir al marketplace (página principal)
+                    # Redirigir al marketplace
                     next_url = request.GET.get('next', None)
                     if next_url:
                         return redirect(next_url)

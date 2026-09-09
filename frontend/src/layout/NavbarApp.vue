@@ -103,33 +103,33 @@ function getToastTitle(tags) {
       <div class="collapse navbar-collapse" :class="{ show: showMobileMenu }" id="navbarNav">
         <ul class="navbar-nav ms-auto align-items-center">
           <template v-if="is_authenticated && user">
-              <li class="nav-item">
-                <a class="nav-link" :class="{ active: isActive(urls.marketplace) }" :href="urls.marketplace"><i class="fas fa-store me-1 d-lg-none"></i> Inicio</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" :class="{ active: isActive(urls.mi_inventario) }" :href="urls.mi_inventario"><i class="fas fa-box-open me-1 d-lg-none"></i> Mi Inventario</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" :class="{ active: isActive(urls.clientes) }" :href="urls.clientes"><i class="fas fa-users me-1 d-lg-none"></i> Clientes</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" :class="{ active: isActive(urls.ventas) }" :href="urls.ventas"><i class="fas fa-chart-line me-1 d-lg-none"></i> Ventas</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" :class="{ active: isActive(urls.solicitudes) }" :href="urls.solicitudes"><i class="fas fa-clipboard-list me-1 d-lg-none"></i> Solicitudes</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" :class="{ active: isActive(urls.mis_compras) }" :href="urls.mis_compras"><i class="fas fa-shopping-bag me-1 d-lg-none"></i> Mis Compras</a>
-              </li>
+            <li class="nav-item">
+              <a class="nav-link" :class="{ active: isActive(urls.marketplace) }" :href="urls.marketplace"><i class="fas fa-store me-1 d-lg-none"></i> Inicio</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" :class="{ active: isActive(urls.mi_inventario) }" :href="urls.mi_inventario"><i class="fas fa-box-open me-1 d-lg-none"></i> Mi Inventario</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" :class="{ active: isActive(urls.clientes) }" :href="urls.clientes"><i class="fas fa-users me-1 d-lg-none"></i> Clientes</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" :class="{ active: isActive(urls.ventas) }" :href="urls.ventas"><i class="fas fa-chart-line me-1 d-lg-none"></i> Ventas</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" :class="{ active: isActive(urls.solicitudes) }" :href="urls.solicitudes"><i class="fas fa-clipboard-list me-1 d-lg-none"></i> Solicitudes</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" :class="{ active: isActive(urls.mis_compras) }" :href="urls.mis_compras"><i class="fas fa-shopping-bag me-1 d-lg-none"></i> Mis Compras</a>
+            </li>
 
             <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center">
-                <a class="btn btn-outline-secondary border-0 rounded-circle position-relative p-2" :href="urls.carrito" title="Carrito de Compras">
-                  <i class="fas fa-shopping-cart fs-5"></i>
-                  <span v-if="cart_count > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
-                    {{ cart_count }}
-                  </span>
-                </a>
-              </li>
+              <a class="btn btn-outline-secondary border-0 rounded-circle position-relative p-2" :href="urls.carrito" title="Carrito de Compras">
+                <i class="fas fa-shopping-cart fs-5"></i>
+                <span v-if="cart_count > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                  {{ cart_count }}
+                </span>
+              </a>
+            </li>
 
             <li class="nav-item dropdown ms-lg-2 mt-2 mt-lg-0" :class="{ show: showDropdown }">
               <a class="nav-link dropdown-toggle btn btn-light px-3 fw-bold rounded-pill" style="color: var(--text-main)" href="#" @click.prevent="toggleDropdown" role="button">

@@ -71,7 +71,7 @@ class FacturaService:
     @staticmethod
     @transaction.atomic
     def obtener_o_crear_factura_desde_movimiento(usuario, movimiento: Movimiento) -> Factura:
-        factura = Factura.objects.filter(movimiento=movimiento, usuario=usuario).first()
+        factura = Factura.objects.filter(movimiento=movimiento).first()
         if factura:
             return factura
 
@@ -98,12 +98,13 @@ class FacturaService:
                 'subtotal': subtotal,
             })
 
+        titular = movimiento.id_usuario if (movimiento and movimiento.id_usuario) else usuario
         factura = Factura.objects.create(
-            usuario=usuario,
+            usuario=titular,
             movimiento=movimiento,
             total=total,
             estado='emitida',
-            payer_email=usuario.correo,
+            payer_email=getattr(titular, 'correo', ''),
         )
         for it in items_data:
             ItemFactura.objects.create(
