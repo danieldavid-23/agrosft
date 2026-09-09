@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import FileExtensionValidator
-from core.utils.helpers import validate_image_size
+from core.models.resizable_image import ResizableImageField
+from core.utils.helpers import validate_image_size, image_cache_bust
 from apps.usuarios.models.profile_model import Tblusuarios
 
 
@@ -20,24 +21,6 @@ class Estado(models.Model):
 
     def __str__(self):
         return self.estado
-
-
-class TipoMovimiento(models.Model):
-    """
-    Modelo que representa la tabla tipo_movimiento en la base de datos
-    Define los tipos de movimiento: 'compra' (abastecimiento) y 'venta' (producto vendido)
-    """
-    id_tipo_movimiento = models.AutoField(primary_key=True, db_column='id_tipo_movimiento')
-    tipo = models.CharField(max_length=45, db_column='tipo_movimiento')
-
-    class Meta:
-        db_table = 'tipo_movimiento'
-        managed = False
-        verbose_name = 'Tipo de Movimiento'
-        verbose_name_plural = 'Tipos de Movimiento'
-
-    def __str__(self):
-        return self.tipo
 
 
 class Categoria(models.Model):
@@ -70,7 +53,7 @@ class Producto(models.Model):
     id_producto = models.AutoField(primary_key=True, db_column='id_productos')
     nombre = models.CharField(max_length=45, db_column='nombre')
     descripcion = models.TextField(blank=True, null=True, db_column='descripcion')
-    imagen = models.ImageField(
+    imagen = ResizableImageField(
         upload_to='productos/', 
         null=True, 
         blank=True, 
@@ -108,13 +91,15 @@ class Producto(models.Model):
         urls = []
         if self.imagen:
             try:
-                urls.append(self.imagen.url)
+                urls.append(image_cache_bust(self.imagen.url))
             except Exception:
                 pass
         for img in self.imagenes_secundarias.all():
             try:
-                if img.imagen and img.imagen.url not in urls:
-                    urls.append(img.imagen.url)
+                if img.imagen:
+                    url_bust = image_cache_bust(img.imagen.url)
+                    if url_bust not in urls:
+                        urls.append(url_bust)
             except Exception:
                 pass
         return urls
@@ -131,7 +116,7 @@ class ProductoImagen(models.Model):
         related_name='imagenes_secundarias',
         db_column='id_producto'
     )
-    imagen = models.ImageField(
+    imagen = ResizableImageField(
         upload_to='productos/',
         db_column='imagen',
         validators=[

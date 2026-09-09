@@ -1,13 +1,9 @@
-# NOTA: Estos modelos apuntan a tablas que NO existen en la BD actual
-# from .solicitud import SolicitudCompra, DetalleSolicitudCompra
-# from .venta import Venta, DetalleVenta
-from .movimiento import Movimiento, ProductoUsuarioMovimiento
+from .movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
+from .resena import Resena
 
 __all__ = [
-    # 'SolicitudCompra', 
-    # 'DetalleSolicitudCompra', 
-    # 'Venta', 
-    # 'DetalleVenta',
     'Movimiento',
-    'ProductoUsuarioMovimiento'
+    'ProductoUsuarioMovimiento',
+    'TipoMovimiento',
+    'Resena'
 ]

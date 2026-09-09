@@ -4,6 +4,7 @@ from django.contrib.auth.models import BaseUserManager
 import uuid
 from datetime import datetime
 from django.core.validators import FileExtensionValidator
+from core.models.resizable_image import ResizableImageField
 from core.utils.helpers import validate_image_size
 
 
@@ -236,7 +237,7 @@ class UserProfile(models.Model):
     """
     id_perfil = models.AutoField(primary_key=True, db_column='id_perfil')
     id_usuario = models.IntegerField(db_column='id_usuario')  # Referencia directa como ID
-    imagen_perfil = models.ImageField(
+    imagen_perfil = ResizableImageField(
         db_column='imagen_perfil', 
         blank=True, 
         null=True, 
@@ -293,30 +294,3 @@ class UserProfile(models.Model):
             except ValueError:
                 return None
         return None
-
-
-# Crear una clase temporal para simular un usuario si no existe la tabla
-class TemporalUsuario:
-    """
-    Clase temporal para simular un usuario cuando no existe la tabla en la base de datos
-    """
-    def __init__(self, id_users=1, nombres='Temporal', apellidos='User', correo='temp@example.com', estado='activo'):
-        self.id_users = id_users
-        self.nombres = nombres
-        self.apellidos = apellidos
-        self.correo = correo
-        self.estado = estado
-        self.is_active = True
-        self.is_staff = False
-        self.is_superuser = False
-        
-    def check_password(self, raw_password):
-        # Simular verificación de contraseña
-        return True  # En producción, esto debería verificar la contraseña real
-    
-    def get_full_name(self):
-        return f"{self.nombres} {self.apellidos}"
-    
-    @property
-    def password(self):
-        return "temp_password"

@@ -21,9 +21,15 @@ from apps.usuarios.models.profile_model import Tblusuarios
 
 
 def get_table_columns(table_name):
-    """Obtiene las columnas reales de una tabla en la BD"""
+    """Obtiene las columnas reales de una tabla en la BD (query parametrizada vía information_schema)"""
     with connection.cursor() as cursor:
-        cursor.execute(f"DESCRIBE {table_name}")
+        cursor.execute(
+            "SELECT column_name, column_type, is_nullable, column_key, column_default, extra "
+            "FROM information_schema.columns "
+            "WHERE table_schema = DATABASE() AND table_name = %s "
+            "ORDER BY ordinal_position",
+            [table_name]
+        )
         columns = {}
         for row in cursor.fetchall():
             columns[row[0]] = {

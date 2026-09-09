@@ -11,15 +11,18 @@
 ```
 apps/usuarios/
 ├── controllers/
-│   ├── auth_controller.py      → Registro, login, logout, perfil, contraseña
+│   ├── auth_controller.py      → Registro, login, logout, perfil, contraseña, password reset
 │   └── terminos_controller.py  → Términos y condiciones
 ├── forms/
-│   └── auth_forms.py           → RegistroForm, LoginForm, PerfilForm, etc.
+│   └── auth_forms.py           → RegistroForm, LoginForm, PerfilForm, PasswordResetRequestForm, NuevaPasswordForm, etc.
 ├── models/
 │   ├── profile_model.py        → Tblusuarios, UserProfile, UserDevice, UserAddress
 │   └── terminos_model.py       → Termino, AceptacionTermino (simulados)
 ├── services/
-│   └── terminos_service.py     → Lógica de aceptación de términos
+│   ├── terminos_service.py     → Lógica de aceptación de términos
+│   └── email_service.py        → Envío de emails vía Brevo REST API
+├── utils/
+│   └── password_reset_tokens.py → Generador de tokens personalizado (Tblusuarios)
 ├── backends.py                 → TblusuariosAuthBackend
 ├── pipeline.py                 → Custom pipeline para Google OAuth
 └── urls.py                     → Rutas del módulo
@@ -83,12 +86,13 @@ graph LR
 
 ### CambiarPasswordView
 - Verifica contraseña actual, valida que nueva y confirmación coincidan
-- Usa `set_password()` + `save()`
+- Validaciones de negocio: mínimo 8 caracteres, no solo números, y nueva ≠ contraseña actual
+- Usa `set_password()` + `save()` y `update_session_auth_hash()` para no cerrar la sesión
 
-### Password Reset (parcial)
-- `UserPasswordResetView` → Muestra formulario de email (sin envío real)
-- `UserPasswordResetConfirmView` → Formulario de nueva contraseña (sin lógica de token)
-- **No implementado**: envío real de email, verificación de token
+### Recuperación de Contraseña (implementado)
+- `UserPasswordResetView` → Formulario `PasswordResetRequestForm`; genera token (uidb64 + `agrosft_token_generator`) y envía email HTML con enlace vía **Brevo REST API** (`apps/usuarios/services/email_service.py`)
+- `UserPasswordResetConfirmView` → Valida token, actualiza contraseña con `password1`/`password2` (form `NuevaPasswordForm`)
+- Flujo de 4 pasos: `/password-reset/` → done → confirm → complete
 
 ---
 
@@ -127,9 +131,8 @@ Implementación simulada sin tabla de BD:
 - Método `get_or_create_for_user(user)` → crea perfil si no existe
 - Manejo de imagen con `ImageField` → `profile_pictures/`
 
-### TemporalUsuario
-> [!danger] Clase de respaldo
-> Simula un usuario si la tabla no existe. `check_password()` siempre retorna `True`. **No usar en producción.**
+> [!note] Eliminado 2026-09-07 (ADR-015)
+> La clase `TemporalUsuario` (con `check_password()` siempre `True`) fue eliminada por código muerto peligroso.
 
 ---
 
@@ -156,8 +159,11 @@ Pipeline personalizado en `apps/usuarios/pipeline.py` → `create_user_custom` m
 | `/usuarios/cambiar-password/` | `usuarios:cambiar_password` | GET/POST | Cambiar contraseña |
 | `/usuarios/terminos/` | `usuarios:terminos` | GET | Ver términos |
 | `/usuarios/aceptar-terminos/` | `usuarios:aceptar-terminos` | POST | Aceptar términos |
-| `/usuarios/historial/` | `usuarios:historial` | GET | Historial de términos |
-| `/usuarios/password-reset/` | `usuarios:password_reset` | GET/POST | Reset contraseña |
+| `/usuarios/historial/` | `usuarios:historial` | GET | Historial de términos (endpoint activo; enlaces eliminados del UI 2026-09-02) |
+| `/usuarios/password-reset/` | `usuarios:password_reset` | GET/POST | Solicitar recuperación de contraseña (Brevo) |
+| `/usuarios/password-reset/done/` | `usuarios:password_reset_done` | GET | Confirmación de envío |
+| `/usuarios/password-reset-confirm/<uidb64>/<token>/` | `usuarios:password_reset_confirm` | GET/POST | Verificar token y fijar nueva contraseña |
+| `/usuarios/password-reset-complete/` | `usuarios:password_reset_complete` | GET | Recuperación completada |
 
 ---
 

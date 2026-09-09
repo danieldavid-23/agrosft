@@ -11,6 +11,7 @@ class Cliente(models.Model):
 
     class Meta:
         db_table = 'clientes'
+        managed = False
         verbose_name = 'Cliente'
         verbose_name_plural = 'Clientes'
 

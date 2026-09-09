@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from apps.inventario.models import Producto, ProductoUsuario, Categoria
 from apps.inventario.repositories.producto_repository import ProductoRepository
+from core.utils.helpers import image_cache_bust
 from apps.inventario.controllers.producto_controller import (
     listar_productos as controller_listar_productos,
     crear_producto as controller_crear_producto,
@@ -104,7 +105,7 @@ def listar_productos_api(request):
             'precio': float(producto.precio) if hasattr(producto, 'precio') else float(producto.precio if hasattr(producto, 'precio') else 0),
             'stock': int(producto.cantidad) if hasattr(producto, 'cantidad') else producto.cantidad,
             'estado': producto.id_estado.estado if hasattr(producto, 'id_estado') else producto.estado,
-            'imagen': producto.id_producto.imagen.url if hasattr(producto, 'id_producto') and producto.id_producto.imagen else None,
+            'imagen': image_cache_bust(producto.id_producto.imagen.url) if hasattr(producto, 'id_producto') and producto.id_producto.imagen else None,
             'fecha_creacion': producto.fecha_creacion.strftime('%d/%m/%Y %H:%M') if hasattr(producto, 'fecha_creacion') else ''
         })
     

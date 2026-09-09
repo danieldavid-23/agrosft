@@ -427,7 +427,10 @@ El proyecto requería soportar dos tipos de imágenes: foto de perfil de usuario
 - ✅ Validación consistente (extensión + 5MB) en servidor (modelo y formulario) y cliente (`accept` + JS)
 - ✅ Sin riesgo para triggers de stock/calificación ni FKs existentes
 - ❌ `editar_producto` no permite eliminar la imagen (solo reemplazar); pendiente de mejora
-- ❌ Compresión/redimensionado con Pillow pendiente (roadmap GAP-02)
+- ✅ Compresión/redimensionado con Pillow implementado (2026-09-07): `save()` de `Producto`, `ProductoImagen` y `UserProfile` aplican `img.thumbnail()` a máx. 600×600 px preservando la relación de aspecto (`core/utils/helpers.resize_uploaded_image`); solo se procesan uploads recién asignados (`_committed = False`)
+- ✅ Refinado (2026-09-07): el redimensionado se aplica **antes** de persistir mediante `ResizableImageField` / `ResizableImageFieldFile` (`attr_class`), interceptando `FieldFile.save()` que invoca `FileField.pre_save` (`core/models/resizable_image.py`); se eliminan así los `save()` sobrescritos en los modelos
+- ✅ Backfill (2026-09-07): management command `manage.py redimensionar_imagenes` reprocesa en su lugar (`storage.delete` + `storage.save`, sin cambiar rutas en BD) las imágenes ya almacenadas en `MEDIA_ROOT` que superen 600 px; ejecutado y verificado idempotente
+- ✅ Límite reducido de 600 → **400 px** y compresión reforzada (2026-09-07): PNG a paleta 256 colores (`quantize`), JPEG `quality=72` + progressive, WEBP `method=6` → pesos de ~5–87 KB; cache-busting `?v=20260907` vía `image_cache_bust()` en `get_imagenes()` y la API; galería de detalle compacta (máx. 460 px de ancho)
 
 ### Archivos Afectados
 
@@ -437,7 +440,9 @@ El proyecto requería soportar dos tipos de imágenes: foto de perfil de usuario
 - `apps/usuarios/forms/auth_forms.py` — validators en `imagen_perfil`
 - `apps/inventario/controllers/producto_controller.py` — `request.FILES` y exposición de URL
 - `apps/usuarios/controllers/auth_controller.py` — guardado de imagen de perfil
-- `core/utils/helpers.py` — `validate_image_size`
+- `core/utils/helpers.py` — `validate_image_size`, `resize_uploaded_image` y `MAX_IMAGE_DIMENSION`
+- `core/models/resizable_image.py` — `ResizableImageField` / `ResizableImageFieldFile` (nuevo)
+- `apps/inventario/management/commands/redimensionar_imagenes.py` — backfill in-place (nuevo)
 - Templates de inventario (`marketplace`, `producto_list`, `producto_detail`) — renderizado de imagen
 - `scripts/agregar_imagen_producto.sql` — script de referencia (nuevo)
 
@@ -469,7 +474,7 @@ Las imágenes cargadas por los usuarios contaban con proporciones dispares y fon
 
 ### Archivos Afectados
 
-- `scripts/crear_tabla_producto_imagenes.sql` [NEW]
+- `scripts/crear_tabla_producto_imagenes.sql` [NEW] *(archivo eliminado 2026-09-07; el schema se gestiona directamente en MariaDB)*
 - `apps/inventario/models/producto.py` — modelo `ProductoImagen` y método `get_imagenes()`
 - `apps/inventario/forms/producto_form.py` — soporte `multiple` en campo `imagen`
 - `apps/inventario/controllers/producto_controller.py` — procesamiento de múltiples archivos y array `imagenes`
@@ -510,6 +515,101 @@ El sistema permitía a los compradores generar y descargar facturas PDF desde la
 
 ---
 
+## ADR-015: Eliminación de Vulnerabilidades y Limpieza de Código Muerto (Fase 1)
+
+**Fecha**: 2026-09-07
+**Estado**: Aceptada
+
+### Contexto
+
+La Fase 1 del ROADMAP identificó seis tareas de estabilización y seguridad pendientes que comprometían la integridad del sistema y violaban requisitos no funcionales (RNF-S02, RNF-S09).
+
+### Decisiones
+
+1. **Corrección de SQL injection (RNF-S09)**: Se reemplazaron las f-queries inseguras (`SELECT 1 FROM {table}`, `DESCRIBE {table}`) en `tabla_existe()`, `columna_existe()` y `get_table_columns()` por consultas parametrizadas contra `information_schema` (`WHERE table_name = %s`). MySQL/MariaDB no permite parametrizar identificadores (tablas/columnas), por lo que la consulta al catálogo del motor con `%s` es la única forma de lograrlo sin interpolar nombres.
+2. **`@login_required` en carrito (RNF-S02)**: Se protegieron las 4 vistas de carrito que carecían de autenticación (`detalle_carrito`, `agregar_al_carrito`, `actualizar_carrito`, `eliminar_del_carrito`).
+3. **Eliminación de `TemporalUsuario`**: clase muerta con `check_password()` que siempre retornaba `True` — se eliminó por riesgo de seguridad y ausencia total de uso.
+4. **Consolidación de `TipoMovimiento`**: eliminada la definición duplicada en `apps.inventario.models.producto`; se re-exporta el canónico desde `apps.ventas.models.movimiento` (ya documentado como autoridad en [[DATABASE#2.8]]).
+5. **Eliminación de modelos obsoletos**: `SolicitudCompra`, `DetalleSolicitudCompra`, `Venta`, `DetalleVenta` y sus forms huérfanos fueron eliminados (tablas inexistentes, sin uso en código).
+6. **`managed = False` en `Cliente`**: agregado para alinear el modelo con la política de schema gestionado externamente.
+
+### Consecuencias
+
+- ✅ RNF-S09 y RNF-S02 ahora cumplidos.
+- ✅ Menos código (eliminados ~6 archivos obsoletos y una clase peligrosa).
+- ✅ Modelo `TipoMovimiento` único y consistente.
+- ✅ `Cliente` alineado con la regla de oro `managed = False`.
+- ❌ `information_schema` queries son ligeramente más costosas que `DESCRIBE`, pero solo se ejecutan durante login/registro/perfil (no en hot paths).
+
+### Archivos Afectados
+
+- `apps/usuarios/controllers/auth_controller.py`
+- `apps/usuarios/backends.py`
+- `scripts/validate_schema.py`
+- `apps/ventas/controllers/carrito_controller.py`
+- `apps/usuarios/models/profile_model.py`
+- `apps/inventario/models/producto.py`, `apps/inventario/models/__init__.py`, `apps/inventario/admin.py`
+- `apps/ventas/models/__init__.py`, `apps/ventas/forms/__init__.py`, `scripts/asegurar_tipos_movimiento.py`
+- `apps/ventas/models/solicitud.py`, `apps/ventas/models/venta.py`, `apps/ventas/forms/solicitud_form.py`, `apps/ventas/forms/venta_form.py` (eliminados)
+- `apps/clientes/models/cliente.py`
+
+---
+
+## ADR-016: App de Facturación con Migraciones Django (`managed = True`)
+
+**Fecha**: 2026-09-07
+**Estado**: Aceptada
+
+### Contexto
+
+La política del proyecto (ADR-001/ADR-002) establece que todo el schema se gestiona externamente en MariaDB y que los modelos usan `managed = False`. Sin embargo, existe `apps.facturacion` (módulo "Documentos comerciales") cuyas tablas `factura` e `item_factura` **sí** son generadas y gestionadas por migraciones Django (`python manage.py migrate facturacion`), rompiendo esa regla.
+
+Esto es intencional: la app `facturacion` es la única que no depende del schema legacy y sus tablas se crean vía `0001_initial` / `0002_...` en `apps/facturacion/migrations/`. Debe documentarse como excepción explícita para no ser "corregida" por error en futuras limpiezas.
+
+### Decisión
+
+1. **`facturacion` usa migraciones Django (modelos `managed = True`)** en lugar de la regla global `managed = False`. Sus modelos (`Factura`, `ItemFactura`) definen el schema real.
+2. **La expulsión de `MIGRATION_MODULES` no aplica a esta app**: es la única app personalizada con migraciones activas.
+3. **Regla de oro #1 matizada**: `managed = False` aplica a `usuarios`, `inventario`, `ventas` y `clientes`; `facturacion` es la excepción documentada en [[PROJECT_CONTEXT]], [[ARCHITECTURE#2.6]] y [[DATABASE#2.12]].
+
+### Consecuencias
+
+- ✅ Las tablas `factura` e `item_factura` tienen schema declarativo en Python (versionable y reproducible).
+- ✅ El flujo de facturación (crear desde carrito, PDF, historial) queda autocontenido.
+- ❌ Conviven dos paradigmas de gestión de schema (externo vs. migraciones), aumentando la complejidad cognitiva; mitigado por esta ADR y los avisos en los docs.
+
+### Archivos Afectados
+
+- `apps/facturacion/models.py`, `apps/facturacion/migrations/0001_initial.py`, `apps/facturacion/migrations/0002_*.py`
+- `config/settings.py` (`INSTALLED_APPS` incluye `apps.facturacion`)
+- Documentación: [[ARCHITECTURE#2.6]], [[DATABASE#2.12]], [[DATABASE#2.13]], [[PROJECT_CONTEXT]]
+
+---
+
+## ADR-017: Eliminación del Residuo Flask en `apps/inventario`
+
+**Fecha**: 2026-09-07
+**Estado**: Aceptada
+
+### Contexto
+
+`apps/inventario/app.py` contenía una app Flask + SQLite aislada al proyecto AgroSFT (marcadores propios, CSS interno, esquema SQLite con `productos`, `usuarios`, `categorias`). Se detectó como **código muerto**: no se importa desde ningún módulo Python del proyecto ni desde los settings de Django; no existe ningún `if __name__ == "__main__"` para ejecutarla como script utilizable.
+
+### Decisión
+
+Eliminar `apps/inventario/app.py` por completo. El inventario del sistema real vive exclusivamente en `apps/inventario` (vistas Django + MariaDB); el archivo FLask era un vestigio de una prueba anterior ajena a la arquitectura.
+
+### Consecuencias
+
+- ✅ Menos código muerto y confusión (la existencia de una app Flask en un proyecto Django podía inducir a error).
+- ✅ Sin impacto funcional: nada importa ni ejecuta ese archivo (verificado por búsqueda de imports antes de eliminar).
+
+### Archivos Afectados
+
+- `apps/inventario/app.py` (eliminado)
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -528,7 +628,6 @@ El sistema permitía a los compradores generar y descargar facturas PDF desde la
 | ADR-012 | Solicitudes server-side (reversión) | Aceptada | Módulo ventas |
 | ADR-013 | Soporte de imágenes (producto + perfil) | Aceptada | Inventario / Usuarios |
 | ADR-014 | Carrusel de imágenes y tamaño uniforme | Aceptada | Inventario / Marketplace |
-| ADR-015 | Acceso Bidireccional a Facturas en Solicitudes | Aceptada | Ventas / Facturación |
 
 ---
 

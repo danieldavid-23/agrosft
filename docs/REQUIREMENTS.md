@@ -19,7 +19,7 @@
 | RF-U05 | El sistema debe permitir cambiar la contraseña del usuario autenticado | Media | ✅ Implementado |
 | RF-U06 | El sistema debe permitir la autenticación mediante Google OAuth2 | Baja | ⚙️ Configurado (no activo) |
 | RF-U07 | El sistema debe gestionar la aceptación de términos y condiciones | Media | ✅ Implementado |
-| RF-U08 | El sistema debe permitir recuperar contraseña por correo electrónico | Media | 🔶 Parcial (UI presente, backend no conectado) |
+| RF-U08 | El sistema debe permitir recuperar contraseña por correo electrónico | Media | ✅ Implementado |
 | RF-U09 | El sistema debe permitir subir y eliminar foto de perfil | Baja | ✅ Implementado |
 
 ### 1.2 Módulo de Inventario
@@ -41,6 +41,7 @@
 | RF-I13 | El sistema debe alertar cuando el stock esté por debajo del mínimo | Media | 🔶 Parcial (badge visual) |
 | RF-I14 | El sistema debe permitir verificar stock vía API endpoint | Baja | ✅ Implementado |
 | RF-I15 | El sistema debe permitir subir una fotografía por producto (JPG, JPEG, PNG, WEBP; máx. 5MB) | Alta | ✅ Implementado |
+| RF-I16 | El sistema debe permitir asociar múltiples imágenes por producto (galería/carrusel) con la primera como portada | Media | ✅ Implementado |
 
 ### 1.3 Módulo de Ventas
 
@@ -92,14 +93,14 @@
 | ID | Requisito | Prioridad | Estado |
 |---|---|---|---|
 | RNF-S01 | Las contraseñas deben almacenarse cifradas con Django hashers | Alta | ✅ Implementado |
-| RNF-S02 | Todas las vistas sensibles requieren autenticación (`@login_required`) | Alta | ⚠️ Parcial (carrito sin @login_required) |
+| RNF-S02 | Todas las vistas sensibles requieren autenticación (`@login_required`) | Alta | ✅ Implementado |
 | RNF-S03 | Protección contra CSRF en todos los formularios | Alta | ✅ Implementado |
 | RNF-S04 | Headers de seguridad (XSS, clickjacking, content-type) | Alta | ✅ Implementado |
 | RNF-S05 | SSL/HTTPS en producción (HSTS, secure cookies) | Alta | ✅ Implementado (condicional a DEBUG=False) |
 | RNF-S06 | Prevención de caché del navegador tras logout | Media | ✅ Implementado (NoCacheMiddleware) |
 | RNF-S07 | Sesiones expiran al cerrar navegador (30 min max) | Media | ✅ Implementado |
 | RNF-S08 | Validación de contraseña mínima (8 caracteres) | Alta | ✅ Implementado |
-| RNF-S09 | Protección contra SQL injection en queries auxiliares | Alta | ❌ Vulnerabilidad en `tabla_existe()` y `columna_existe()` |
+| RNF-S09 | Protección contra SQL injection en queries auxiliares | Alta | ✅ Implementado (queries parametrizadas vía information_schema) |
 
 ### 2.2 Rendimiento
 
@@ -157,7 +158,7 @@ Requisitos identificados en la ficha del proyecto SENA que **no están implement
 | GAP-08 | Reportes y estadísticas avanzadas | Baja | Media |
 
 > [!note] GAP-02 resuelto
-> **Fotografías de productos** fue implementado (2026-08-20). Ver [[REQUIREMENTS#RF-I15]] y [[USER_STORIES#US-15]]. Detalles técnicos en [[DECISIONS#ADR-012]].
+> **Fotografías de productos** fue implementado (2026-08-20) y ampliado con **galería/carrusel de múltiples imágenes** (2026-09-04, [[REQUIREMENTS#RF-I16]] y [[USER_STORIES#US-15]] / [[USER_STORIES#US-16]]). Detalles técnicos en [[DECISIONS#ADR-013]] y [[DECISIONS#ADR-014]].
 
 > Ver [[ROADMAP]] para el plan de implementación de estas brechas.
 

@@ -31,6 +31,7 @@ Definidos en `vite.config.js`:
 
 | Entry | Archivo | Componente |
 |---|---|---|
+| `layout` | `frontend/src/layout/main.js` | `LayoutApp.vue` |
 | `marketplace` | `frontend/src/marketplace/main.js` | `MarketApp.vue` |
 | `carrito` | `frontend/src/carrito/main.js` | `CarritoApp.vue` |
 | `inventario` | `frontend/src/inventario/main.js` | `InventarioApp.vue` |
@@ -39,6 +40,18 @@ Definidos en `vite.config.js`:
 ---
 
 ## Componentes
+
+### LayoutApp.vue — Layout Global (Navbar + Footer + Toast)
+
+**Props**: `user`, `urls`, `cart_count`, `messages` (JSON inyectado por `core.context_processors.layout_data`)
+
+**Funcionalidades**:
+- Navbar con 3 estados: no autenticado, autenticado, staff (roles, carrito, dropdown de usuario)
+- Footer con logo SVG oficial de AGROSFT
+- Notificaciones toast con auto-dismiss (animación escalonada)
+- Componente **no-scoped**: reutiliza clases Bootstrap 5 y variables CSS del proyecto
+
+---
 
 ### MarketApp.vue — Marketplace
 
@@ -53,6 +66,7 @@ Definidos en `vite.config.js`:
 - Formato de precio COP (`Intl.NumberFormat`)
 - Badges: Agotado, Últimas unidades
 - Hover cards con animación CSS
+- Carrusel de imágenes en tarjetas (flechas `<`/`>`, dots, contador de fotos) con contenedor de 220px (`object-fit: cover`) y `@click.stop`
 
 **Fetch pattern**:
 ```javascript
@@ -86,7 +100,7 @@ async function fetchProducts() {
 - Controles +/- para cambiar cantidad (fetch AJAX)
 - Eliminar item (fetch AJAX + confirm)
 - Total calculado (computed)
-- Botones: "Seguir Comprando", "Crear Solicitud", "Venta Directa"
+- Botones: "Seguir Comprando", "Crear Solicitud"
 
 **Acciones AJAX**:
 - `actualizarCantidad(item, delta)` → POST a `item.urls.actualizar`
@@ -104,6 +118,7 @@ async function fetchProducts() {
 - Eliminar producto (fetch + confirm)
 - Botones: "Nuevo Producto", "Editar", "Eliminar"
 - Badges: Agotado, Últimas unidades, Pendiente
+- Carrusel de imágenes en tarjetas (flechas `<`/`>`, dots, contador de fotos) con contenedor de 220px (`object-fit: cover`) y `@click.stop`
 
 ---
 
@@ -180,6 +195,7 @@ npm run build # vite build → static/dist/
 ### Output
 ```
 static/dist/
+├── layout.js
 ├── marketplace.js
 ├── carrito.js
 ├── inventario.js

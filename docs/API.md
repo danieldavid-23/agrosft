@@ -10,7 +10,7 @@
 - Las respuestas AJAX usan `JsonResponse` con header `X-Requested-With: XMLHttpRequest`
 - Formularios estándar envían `application/x-www-form-urlencoded` con CSRF token
 - Los endpoints de subida de archivos (`imagen`, `imagen_perfil`) requieren `Content-Type: multipart/form-data`
-- Todas las rutas protegidas requieren `@login_required` (excepto auth y carrito)
+- Todas las rutas protegidas requieren `@login_required` (excepto auth y los endpoints de verificación de stock/recuperación). Desde ADR-015, **todas las vistas del carrito requieren autenticación**.
 - Formato de fechas: `YYYY-MM-DD HH:MM` | Zona horaria: `America/Bogota`
 
 ---
@@ -107,6 +107,82 @@ POST /usuarios/cambiar-password/
 | `new_password` | string | Sí |
 | `confirm_password` | string | Sí |
 
+### 1.6 Recuperación de Contraseña
+
+```
+GET  /usuarios/password-reset/
+POST /usuarios/password-reset/                 → Solicitar enlace (Brevo email)
+GET  /usuarios/password-reset/done/            → Confirmación de envío
+GET  /usuarios/password-reset-confirm/<uidb64>/<token>/
+POST /usuarios/password-reset-confirm/<uidb64>/<token>/
+GET  /usuarios/password-reset-complete/
+```
+
+**Request Body (POST `password-reset/`)**:
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `correo` | string | Sí | Correo del usuario a recuperar |
+
+**Request Body (POST `password-reset-confirm/.../`)**:
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `password1` | string | Sí | Nueva contraseña (min 8 caracteres) |
+| `password2` | string | Sí | Confirmación de la contraseña |
+
+**Implementación**: `apps/usuarios/controllers/auth_controller.py` → `UserPasswordResetView`, `UserPasswordResetConfirmView`; envío vía `apps/usuarios/services/email_service.py` (Brevo REST API). Tokens personalizados en `apps/usuarios/utils/password_reset_tokens.py`.
+
+---
+
+### 1.7 Panel de Administración de Usuarios (Staff)
+
+> Requieren `request.user.is_staff == True`. Implementados en `apps/usuarios/controllers/admin_usuarios_controller.py`.
+
+**Gestión de usuarios**:
+```
+GET  /usuarios/admin-usuarios/                        → Listar usuarios
+GET  /usuarios/admin-usuarios/crear/                  → Formulario crear
+POST /usuarios/admin-usuarios/crear/                  → Crear usuario
+GET  /usuarios/admin-usuarios/editar/<pk>/            → Formulario editar
+POST /usuarios/admin-usuarios/editar/<pk>/            → Editar usuario
+POST /usuarios/admin-usuarios/toggle-activo/<pk>/     → Activar/desactivar cuenta
+```
+
+**Estadísticas**:
+```
+GET /usuarios/admin-estadisticas/                     → Panel de estadísticas
+```
+
+**Moderación de productos**:
+```
+GET  /usuarios/admin-moderacion/                      → Lista de productos pendientes
+POST /usuarios/admin-moderacion/aprobar/<pk>/         → Aprobar producto
+POST /usuarios/admin-moderacion/rechazar/<pk>/        → Rechazar producto
+```
+
+**Gestión de categorías**:
+```
+GET  /usuarios/admin-categorias/                      → Listar categorías
+GET  /usuarios/admin-categorias/crear/                → Formulario crear
+POST /usuarios/admin-categorias/crear/                → Crear categoría
+GET  /usuarios/admin-categorias/editar/<pk>/          → Formulario editar
+POST /usuarios/admin-categorias/editar/<pk>/          → Editar categoría
+POST /usuarios/admin-categorias/toggle/<pk>/          → Activar/desactivar categoría
+```
+
+**Reportes CSV**:
+```
+GET /usuarios/admin-reporte/usuarios/                 → CSV de usuarios
+GET /usuarios/admin-reporte/productos/                → CSV de productos
+GET /usuarios/admin-reporte/ventas/                   → CSV de ventas
+```
+
+**Auditoría**:
+```
+GET /usuarios/admin-auditoria/                        → Registro de auditoría
+```
+
 ---
 
 ## 2. Inventario (`/inventario/`)
@@ -137,6 +213,10 @@ GET /inventario/
       "stock": 50,
       "estado": "Aprobado",
       "imagen": "/media/productos/tomate_cherry.jpg",
+      "imagenes": [
+        "/media/productos/tomate_cherry.jpg",
+        "/media/productos/tomate_cherry_2.jpg"
+      ],
       "editUrl": "/inventario/producto/1/editar/",
       "deleteUrl": "/inventario/producto/1/eliminar/"
     }
@@ -167,6 +247,9 @@ GET /inventario/marketplace/
       "precio": 3000.0,
       "stock": 100,
       "imagen": "/media/productos/papa_pastusa.jpg",
+      "imagenes": [
+        "/media/productos/papa_pastusa.jpg"
+      ],
       "agricultor_nombre": "Juan Pérez",
       "detailUrl": "/inventario/producto/5/"
     }
@@ -179,7 +262,17 @@ GET /inventario/marketplace/
 
 ---
 
-### 2.3 Crear Producto
+### 2.3 Venta Directa
+
+```
+GET /inventario/venta-directa/
+```
+
+**Descripción**: Ruta de venta directa (carrito de compra rápida). Requiere autenticación.
+
+---
+
+### 2.4 Crear Producto
 
 ```
 GET  /inventario/producto/nuevo/
@@ -192,7 +285,7 @@ POST /inventario/producto/nuevo/
 |---|---|---|---|
 | `nombre` | string | Sí | Nombre del producto |
 | `descripcion` | string | No | Descripción |
-| `imagen` | file | No | Fotografía JPG/JPEG/PNG/WEBP (máx. 5MB) |
+| `imagen` | file (múltiple) | No | Fotografías JPG/JPEG/PNG/WEBP (máx. 5MB c/u). La primera se guarda como portada en `tblproducto.imagen`; las siguientes como registros de `tblproducto_imagenes` |
 | `id_categoria` | int | Sí | ID de categoría |
 | `precio` | decimal | Sí | Precio unitario |
 | `cantidad` | int | Sí | Stock inicial |
@@ -202,18 +295,18 @@ POST /inventario/producto/nuevo/
 
 ---
 
-### 2.4 Editar Producto
+### 2.5 Editar Producto
 
 ```
 GET  /inventario/producto/<pk>/editar/
 POST /inventario/producto/<pk>/editar/
 ```
 
-**Request Body**: Igual que Crear Producto (`multipart/form-data`). Si se envía un nuevo `imagen`, reemplaza la actual; si no se envía, se conserva la existente.
+**Request Body**: Igual que Crear Producto (`multipart/form-data`). El campo `imagen` acepta múltiples archivos: si se envía una nueva primera imagen, reemplaza la portada; los archivos adicionales se agregan a la galería de `tblproducto_imagenes`; si no se envía, se conserva la galería existente.
 
 ---
 
-### 2.5 Eliminar Producto
+### 2.6 Eliminar Producto
 
 ```
 POST /inventario/producto/<pk>/eliminar/
@@ -226,7 +319,7 @@ POST /inventario/producto/<pk>/eliminar/
 
 ---
 
-### 2.6 Aprobar/Rechazar Producto (Admin)
+### 2.7 Aprobar/Rechazar Producto (Admin)
 
 ```
 POST /inventario/producto/<id>/aprobar/
@@ -237,7 +330,7 @@ POST /inventario/producto/<id>/rechazar/
 
 ---
 
-### 2.7 API Verificar Stock
+### 2.8 API Verificar Stock
 
 ```
 GET /inventario/api/producto/<producto_id>/stock/
@@ -403,7 +496,27 @@ GET /clientes/<cliente_id>/historial-compras/      → Historial de compras
 
 ---
 
-## 5. OAuth (`/oauth/`)
+## 5. Facturación (`/facturacion/`)
+
+> Todos requieren `@login_required`. Generación de PDF con `xhtml2pdf`. Ver [[ARCHITECTURE#2.6]] y [[DECISIONS#ADR-016]].
+
+```
+POST /facturacion/crear/                                   → Crear factura desde el carrito actual
+GET  /facturacion/detalle/<factura_id>/                    → Detalle de factura
+GET  /facturacion/historial/                               → Historial de facturas del usuario
+GET  /facturacion/pdf/<factura_id>/                        → Generar PDF (inline; ?descargar=1 → attachment)
+GET  /facturacion/generar_pedido/<movimiento_id>/          → Crear/obtener factura desde un movimiento y redirigir a PDF
+```
+
+**Response (crear_factura)**:
+- Success: `Redirect → /facturacion/detalle/<id>/` + mensaje de confirmación
+- Error (carrito vacío): `Redirect → /ventas/carrito/` + mensaje de error
+
+> **Nota**: `crear_factura` crea un `Movimiento` tipo `compra` + `ProductoUsuarioMovimiento` desde el carrito, luego genera la `Factura` con sus items y limpia el carrito.
+
+---
+
+## 6. OAuth (`/oauth/`)
 
 ```
 GET /oauth/login/google-oauth2/                    → Inicio Google OAuth
@@ -414,10 +527,10 @@ GET /oauth/complete/google-oauth2/                 → Callback OAuth
 
 ---
 
-## 6. Sistema
+## 7. Sistema
 
 ```
-GET /                                              → Redirect a /usuarios/login/
+GET /                                              → Redirect según estado (ver home_redirect en config/urls.py)
 GET /admin/                                        → Django Admin (si habilitado)
 ```
 
@@ -425,13 +538,17 @@ GET /admin/                                        → Django Admin (si habilita
 
 ## Resumen de Endpoints
 
-| Módulo | Endpoints | Protegidos | AJAX |
+| Módulo | Endpoints documentados | Protegidos | AJAX |
 |---|---|---|---|
-| Usuarios | 12 | 5 | 1 |
-| Inventario | 8 | 7 | 4 |
-| Ventas | 17 | 13 | 8 |
+| Usuarios (auth + admin) | 28 | 14 | 1 |
+| Inventario | 10 | 9 | 4 |
+| Ventas | 22 | 18 | 8 |
+| Compras (sub-módulo ventas) | 2 | 2 | 0 |
 | Clientes | 3 | 3 | 0 |
-| **Total** | **40** | **28** | **13** |
+| Facturación | 5 | 5 | 0 |
+| **Total apps** | **68** | — | — |
+
+> **Rutas registradas en `urlpatterns`**: **68** en las 5 apps (`usuarios` 28, `inventario` 10, `ventas` 22, `clientes` 3, `facturacion` 5) + rutas raíz (`home`), OAuth (`social_django`) y `/admin/`. Los totales de "AJAX" se refieren a endpoints que responden `JsonResponse` ante `X-Requested-With: XMLHttpRequest`.
 
 ---
 

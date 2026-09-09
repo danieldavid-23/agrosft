@@ -111,11 +111,14 @@ apps/usuarios/
 ```
 apps/inventario/
 ├── controllers/producto_controller.py  → CRUD productos, marketplace, aprobar/rechazar, API stock
-├── forms/producto_form.py             → ProductoForm (nombre, descripción, categoría, precio, cantidad)
-├── models/producto.py                 → Estado, TipoMovimiento, Categoria, Producto, ProductoUsuario, Calificacion
+├── forms/producto_form.py             → ProductoForm (nombre, descripción, categoría, precio, cantidad, imagen múltiple)
+├── models/producto.py                 → Estado, Categoria, Producto, ProductoImagen, ProductoUsuario, Calificacion
 ├── repositories/producto_repository.py → ProductoRepository (queries complejos, soft delete)
 └── services/producto_service.py       → Validación de datos de producto
 ```
+
+> [!note] `TipoMovimiento` consolidado (2026-09-07)
+> El duplicado de `TipoMovimiento` en `apps.inventario` fue eliminado ([[DECISIONS#ADR-015]]). `apps.inventario.models` re-exporta ahora el canónico desde `apps.ventas.models.movimiento`.
 
 **Arquitectura Dual de Productos**:
 
@@ -128,6 +131,7 @@ graph LR
 ```
 
 - **tblproducto**: Catálogo unificado (nombre, descripción, categoría, stock_minimo)
+- **tblproducto_imagenes**: Galería de imágenes por producto (carrusel). La primera imagen se conserva en `tblproducto.imagen` como portada (compatibilidad legacy)
 - **tblproductos_has_tblusuarios**: Publicación individual (precio, cantidad, estado, calificación promedio)
 - Un mismo producto genérico puede tener múltiples publicaciones de distintos vendedores
 
@@ -136,17 +140,19 @@ graph LR
 ```
 apps/ventas/
 ├── controllers/
-│   ├── carrito_controller.py       → CRUD carrito + checkout
+│   ├── carrito_controller.py       → CRUD carrito + checkout (todo @login_required)
 │   ├── solicitud_controller.py     → Inbox vendedor (aceptar/rechazar/vender)
 │   ├── venta_controller.py         → Listado y detalle de ventas
+│   ├── compra_controller.py        → Mis Compras: listado y detalle del comprador
 │   └── calificacion_controller.py  → Calificar transacción + historial
 ├── forms/calificacion_form.py      → Rating 1.0-5.0 pasos de 0.5
-├── models/
-│   ├── movimiento.py               → TipoMovimiento, Movimiento, ProductoUsuarioMovimiento
-│   ├── solicitud.py                → OBSOLETO (SolicitudCompra, DetalleSolicitudCompra)
-│   └── venta.py                    → OBSOLETO (Venta, DetalleVenta)
-└── services/carrito_service.py     → Carrito basado en sesión
+├── models/movimiento.py            → TipoMovimiento (canónico), Movimiento, ProductoUsuarioMovimiento
+├── services/carrito_service.py     → Carrito basado en sesión
+└── templatetags/ventas_extras.py   → Filtros de template `multiply`, `abs_value`
 ```
+
+> [!note] Limpieza de modelos obsoletos (2026-09-07)
+> `SolicitudCompra`, `DetalleSolicitudCompra`, `Venta`, `DetalleVenta` y sus forms fueron eliminados ([[DECISIONS#ADR-015]]). `TipoMovimiento` canónico reside aquí.
 
 **Arquitectura de Movimientos**:
 
@@ -178,8 +184,34 @@ graph LR
 apps/clientes/
 ├── controllers/cliente_controller.py  → Listar clientes, detalle, historial de compras
 ├── forms/cliente_form.py             → (No utilizado activamente)
-└── models/cliente.py                 → Cliente (modelo sin managed=False, no usado)
+└── models/cliente.py                 → Cliente (managed=False, no usado en lógica de negocio)
 ```
+
+### 2.6 `apps.facturacion` — Facturación
+
+> [!warning] Excepción a la regla `managed = False`
+> Es la **única app** que gestiona su schema con migraciones Django (`python manage.py migrate facturacion`), creando las tablas `factura` e `item_factura`. Ver [[DECISIONS#ADR-016]].
+
+```
+apps/facturacion/
+├── controllers/factura_controller.py  → Crear/detalle/historial/PDF/generar desde pedido
+├── models.py                          → Factura, ItemFactura (db_table='factura'/'item_factura')
+├── services/factura_service.py        → FacturaService (creación desde carrito/movimiento, cancelación, historial)
+├── migrations/                        → 0001_initial, 0002_... (gestionadas por Django)
+└── templates/facturacion/             → detalle_factura, factura_pdf, historial_facturas
+```
+
+**Modelo de facturación**:
+
+```mermaid
+graph LR
+    M[movimiento<br>Transacción] -->|opcional| F[factura<br>Cabecera]
+    F -->|1:N| I[item_factura<br>Detalle]
+    I -->|N:1| P[tblproducto]
+    U[tblusuarios] -->|1:N| F
+```
+
+**Flujo**: El `FacturaService` crea un `Movimiento` (tipo `compra`) más los `ProductoUsuarioMovimiento` desde el carrito, y genera una `Factura` con sus `ItemFactura`. La generación de PDF usa `xhtml2pdf` (plantilla `factura_pdf.html`).
 
 ---
 
@@ -189,7 +221,7 @@ apps/clientes/
 
 > Layout estructural migrado a Vue.js. Ver [[DECISIONS#ADR-011]].
 
-El navbar, footer y notificaciones toast se renderizan desde un **único componente Vue** (`LayoutApp.vue`) que recibe datos mediante el context processor `core.context_processors.layout_data`. Este inyecta un JSON con datos del usuario, URLs de navegación, contador del carrito y mensajes flash.
+El navbar y el footer se renderizan desde **dos componentes Vue** (`NavbarApp.vue` y `FooterApp.vue`), ambos montados desde el mismo entry point `layout/main.js`. Reciben datos mediante el context processor `core.context_processors.layout_data`, que inyecta un JSON (`#layout-data`) con datos del usuario, URLs de navegación, contador del carrito y mensajes flash.
 
 ```mermaid
 graph TB
@@ -199,19 +231,23 @@ graph TB
     end
     subgraph Vite
         LayoutJS[layout/main.js]
-        LayoutVue[LayoutApp.vue]
+        NavbarVue[NavbarApp.vue]
+        FooterVue[FooterApp.vue]
     end
     subgraph Browser
-        DOM[div#vue-layout]
+        NavbarDOM[div#vue-navbar]
+        FooterDOM[div#vue-footer]
     end
 
     CP -->|layout_data_json| Template
-    Template -->|json_script| DOM
-    LayoutJS -->|createApp| LayoutVue
-    LayoutVue -->|mount| DOM
+    Template -->|json_script layout-data| LayoutJS
+    LayoutJS -->|createApp| NavbarVue
+    LayoutJS -->|createApp| FooterVue
+    NavbarVue -->|mount| NavbarDOM
+    FooterVue -->|mount| FooterDOM
 ```
 
-El `LayoutApp.vue` es un componente **no-scoped** que reutiliza las clases CSS de Bootstrap 5 y las variables CSS del proyecto (`frontend/src/style.css`). Los estados se manejan con Vue reactivo (`ref`, `v-if`, `v-for`).
+`NavbarApp.vue` recibe como props el objeto completo de datos (`user`, `urls`, `cart_count`, `messages`) y maneja 3 estados (guest/user/staff), notificaciones toast y dropdown de usuario. `FooterApp.vue` recibe solo `urls` y renderiza el logo SVG oficial. Ambos componentes son **no-scoped** y reutilizan las clases CSS de Bootstrap 5 y las variables CSS del proyecto (`frontend/src/style.css`).
 
 ### 3.2 Integración Django + Vue (Componentes de Página)
 
@@ -235,7 +271,7 @@ sequenceDiagram
 
 | Entry | Archivo | Componente | Props |
 |---|---|---|---|
-| `layout` | `frontend/src/layout/main.js` | `LayoutApp.vue` | `user`, `urls`, `cart_count`, `messages` |
+| `layout` | `frontend/src/layout/main.js` | `NavbarApp.vue` + `FooterApp.vue` | `user`, `urls`, `cart_count`, `messages` |
 | `marketplace` | `frontend/src/marketplace/main.js` | `MarketApp.vue` | `initialProducts`, `categories`, `urls` |
 | `carrito` | `frontend/src/carrito/main.js` | `CarritoApp.vue` | `items`, `urls` |
 | `inventario` | `frontend/src/inventario/main.js` | `InventarioApp.vue` | `initialProducts`, `categories`, `estados`, `urls` |
@@ -280,8 +316,8 @@ Configurado vía `social-auth-app-django`:
 
 | Configuración | Valor | Razón |
 |---|---|---|
-| `SESSION_ENGINE` | `django.contrib.sessions.backends.cache` | Sin tabla de sesiones en BD |
-| `SESSION_CACHE_ALIAS` | `default` (LocMemCache) | Caché en memoria |
+| `SESSION_ENGINE` | `django.contrib.sessions.backends.signed_cookies` | Evita dependencia de tabla `django_session` (cookie firmada, ver [[DECISIONS#ADR-011]]) |
+| `CACHES.default` | `LocMemCache` | Caché en memoria (categorías, estados) |
 | `SESSION_EXPIRE_AT_BROWSER_CLOSE` | `True` | Seguridad |
 | `SESSION_COOKIE_AGE` | `1800` (30 min) | Timeout de inactividad |
 
@@ -291,12 +327,14 @@ Configurado vía `social-auth-app-django`:
 
 ### Principio Fundamental
 
-> [!danger] Regla Absoluta
-> **Django NO gestiona el schema de base de datos.**
-> - Todos los modelos: `managed = False`
-> - `MIGRATION_MODULES = {app: None}` para todas las apps personalizadas
+> [!danger] Regla Absoluta (con excepción)
+> **Django NO gestiona el schema de base de datos** para las apps `usuarios`, `inventario`, `ventas` y `clientes`.
+> - Todos los modelos de esas apps: `managed = False`
+> - `MIGRATION_MODULES = {app: None}` para todas esas apps
 > - El schema se mantiene directamente en MariaDB
 > - Los triggers de BD gestionan stock y calificaciones automáticamente
+>
+> **Excepción**: la app `apps.facturacion` **sí gestiona su schema con migraciones Django** (tablas `factura` e `item_factura`). Ver [[DECISIONS#ADR-016]].
 
 ### Trigger Crítico
 

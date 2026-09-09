@@ -8,13 +8,15 @@
 
 | URL | Name | Descripción |
 |---|---|---|
-| `/` | `home` | Redirige a `usuarios:login` |
+| `/` | `home` | Redirige según estado: staff → `admin_usuarios_list`, autenticado → `marketplace`, invitado → `login` |
 | `/admin/` | — | Django Admin (habilitado) |
 | `/oauth/` | `social:begin` | Rutas de Google OAuth2 |
 
 ---
 
 ## `/usuarios/` — Módulo Usuarios
+
+### Autenticación y perfil
 
 | URL | Name | Auth | Métodos | Descripción |
 |---|---|---|---|---|
@@ -31,6 +33,27 @@
 | `password-reset-confirm/<uidb64>/<token>/` | `usuarios:password_reset_confirm` | No | GET, POST | Reset con token |
 | `password-reset-complete/` | `usuarios:password_reset_complete` | No | GET | Reset completado |
 
+### Panel de administración (staff)
+
+| URL | Name | Auth | Métodos | Descripción |
+|---|---|---|---|---|
+| `admin-usuarios/` | `usuarios:admin_usuarios_list` | Sí (staff) | GET | Listar usuarios |
+| `admin-usuarios/crear/` | `usuarios:admin_usuario_crear` | Sí (staff) | GET, POST | Crear usuario |
+| `admin-usuarios/editar/<pk>/` | `usuarios:admin_usuario_editar` | Sí (staff) | GET, POST | Editar usuario |
+| `admin-usuarios/toggle-activo/<pk>/` | `usuarios:admin_usuario_toggle_activo` | Sí (staff) | POST | Activar/desactivar |
+| `admin-estadisticas/` | `usuarios:admin_estadisticas` | Sí (staff) | GET | Estadísticas del sistema |
+| `admin-moderacion/` | `usuarios:admin_moderacion` | Sí (staff) | GET | Productos pendientes |
+| `admin-moderacion/aprobar/<pk>/` | `usuarios:admin_aprobar_producto` | Sí (staff) | POST | Aprobar producto |
+| `admin-moderacion/rechazar/<pk>/` | `usuarios:admin_rechazar_producto` | Sí (staff) | POST | Rechazar producto |
+| `admin-categorias/` | `usuarios:admin_categorias_list` | Sí (staff) | GET | Listar categorías |
+| `admin-categorias/crear/` | `usuarios:admin_categoria_crear` | Sí (staff) | GET, POST | Crear categoría |
+| `admin-categorias/editar/<pk>/` | `usuarios:admin_categoria_editar` | Sí (staff) | GET, POST | Editar categoría |
+| `admin-categorias/toggle/<pk>/` | `usuarios:admin_categoria_toggle` | Sí (staff) | POST | Activar/desactivar categoría |
+| `admin-reporte/usuarios/` | `usuarios:admin_reporte_usuarios_csv` | Sí (staff) | GET | Exportar CSV usuarios |
+| `admin-reporte/productos/` | `usuarios:admin_reporte_productos_csv` | Sí (staff) | GET | Exportar CSV productos |
+| `admin-reporte/ventas/` | `usuarios:admin_reporte_ventas_csv` | Sí (staff) | GET | Exportar CSV ventas |
+| `admin-auditoria/` | `usuarios:admin_audit_logs` | Sí (staff) | GET | Registro de auditoría |
+
 ---
 
 ## `/inventario/` — Módulo Inventario
@@ -41,6 +64,7 @@
 | `marketplace/` | `inventario:marketplace` | Sí | GET | Marketplace (productos de otros) |
 | `producto/<pk>/` | `inventario:detalle` | Sí | GET | Detalle de producto |
 | `producto/nuevo/` | `inventario:crear` | Sí | GET, POST | Crear producto |
+| `venta-directa/` | `inventario:venta_directa` | Sí | GET | Venta directa (carrito rápido) |
 | `producto/<pk>/editar/` | `inventario:editar` | Sí | GET, POST | Editar producto |
 | `producto/<pk>/eliminar/` | `inventario:eliminar` | Sí | GET, POST | Eliminar producto |
 | `producto/<id>/aprobar/` | `inventario:aprobar` | Sí (staff) | POST | Aprobar producto |
@@ -67,6 +91,7 @@ Las vistas `listar` y `marketplace` retornan JSON cuando reciben header `X-Reque
       "agricultor_nombre": "Juan Pérez",
       "esta_agotado": false,
       "imagen": null,
+      "imagenes": [],
       "es_mi_producto": false,
       "detailUrl": "/inventario/producto/1/"
     }
@@ -85,12 +110,15 @@ Las vistas `listar` y `marketplace` retornan JSON cuando reciben header `X-Reque
 
 | URL | Name | Auth | Métodos | Descripción |
 |---|---|---|---|---|
-| `carrito/` | `ventas:carrito_detalle` | No | GET | Ver carrito |
-| `carrito/agregar/<id>/` | `ventas:carrito_agregar` | No | GET, POST | Añadir producto |
-| `carrito/actualizar/<id>/` | `ventas:carrito_actualizar` | No | POST | Cambiar cantidad |
-| `carrito/eliminar/<id>/` | `ventas:carrito_eliminar` | No | POST | Remover producto |
+| `carrito/` | `ventas:carrito_detalle` | Sí | GET | Ver carrito |
+| `carrito/agregar/<id>/` | `ventas:carrito_agregar` | Sí | GET, POST | Añadir producto |
+| `carrito/actualizar/<id>/` | `ventas:carrito_actualizar` | Sí | POST | Cambiar cantidad |
+| `carrito/eliminar/<id>/` | `ventas:carrito_eliminar` | Sí | POST | Remover producto |
 | `carrito/checkout/` | `ventas:carrito_checkout` | Sí | POST | Crear solicitud de compra |
 | `carrito/checkout-venta/` | `ventas:carrito_checkout_venta` | Sí | POST | Venta directa (deshabilitado) |
+
+> [!note] Auth en el carrito
+> Todas las vistas del carrito requieren `@login_required` desde ADR-015 (2026-09-07).
 
 ### Solicitudes de Compra
 
@@ -111,6 +139,15 @@ Las vistas `listar` y `marketplace` retornan JSON cuando reciben header `X-Reque
 | `/` | `ventas:venta_list` | Sí | GET | Listar ventas del vendedor |
 | `<pk>/` | `ventas:venta_detail` | Sí | GET | Detalle de venta |
 | `crear/` | `ventas:venta_create` | Sí | GET | Crear venta (redirect solicitudes) |
+| `<pk>/marcar-vendida/` | `ventas:venta_marcar_vendida` | Sí | POST | Marcar venta como vendida |
+| `<pk>/cancelar/` | `ventas:venta_cancelar` | Sí | POST | Cancelar venta en proceso |
+
+### Compras (vista del comprador)
+
+| URL | Name | Auth | Métodos | Descripción |
+|---|---|---|---|---|
+| `compras/` | `ventas:compra_list` | Sí | GET | Listar mis compras |
+| `compras/<pk>/` | `ventas:compra_detail` | Sí | GET | Detalle de compra |
 
 ### Calificaciones
 
@@ -128,6 +165,18 @@ Las vistas `listar` y `marketplace` retornan JSON cuando reciben header `X-Reque
 | `/` | `clientes:cliente_list` | Sí | GET | Listar usuarios con actividad |
 | `<pk>/` | `clientes:cliente_detail` | Sí | GET | Detalle de usuario |
 | `<id>/historial-compras/` | `clientes:historial_compras` | Sí | GET | Historial de compras |
+
+---
+
+## `/facturacion/` — Módulo Facturación
+
+| URL | Name | Auth | Métodos | Descripción |
+|---|---|---|---|---|
+| `crear/` | `facturacion:crear_factura` | Sí | POST | Crear factura desde el carrito |
+| `detalle/<id>/` | `facturacion:detalle_factura` | Sí | GET | Detalle de factura |
+| `historial/` | `facturacion:historial_facturas` | Sí | GET | Historial de facturas |
+| `pdf/<id>/` | `facturacion:generar_pdf` | Sí | GET | Generar PDF (`?descargar=1` → attachment) |
+| `generar_pedido/<movimiento_id>/` | `facturacion:generar_factura_pedido` | Sí | GET | Factura desde movimiento → PDF |
 
 ---
 
@@ -158,3 +207,4 @@ Las vistas `listar` y `marketplace` retornan JSON cuando reciben header `X-Reque
 - [[04-MODULO-USUARIOS#Rutas]] — Rutas de usuarios
 - [[05-MODULO-INVENTARIO#Rutas]] — Rutas de inventario
 - [[06-MODULO-VENTAS#Rutas]] — Rutas de ventas
+- [[DATABASE#2.12]], [[DATABASE#2.13]] — Tablas `factura` e `item_factura`

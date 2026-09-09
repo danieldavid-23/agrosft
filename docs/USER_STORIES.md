@@ -353,11 +353,33 @@ graph TD
 
 ---
 
+### US-16: Galería de Múltiples Imágenes con Carrusel
+
+**Como** agricultor,
+**quiero** subir varias fotografías de un producto y explorarlas en un carrusel,
+**para** que los compradores vean mi producto desde varios ángulos.
+
+**Requisitos relacionados**: [[REQUIREMENTS#RF-I16]]
+
+**Criterios de Aceptación**:
+- [x] El formulario de crear/editar producto permite seleccionar múltiples archivos en el campo `imagen` (`MultipleFileField`, `multiple=True`)
+- [x] La primera imagen enviada se guarda como portada en `tblproducto.imagen`
+- [x] Las imágenes adicionales se registran en la tabla `tblproducto_imagenes` con orden secuencial
+- [x] El carrusel se muestra en las tarjetas de `InventarioApp.vue` y `MarketApp.vue` como imágenes a 220px (`object-fit: cover`) con flechas, dots y contador de fotos
+- [x] La vista de detalle (`Productosdetalles.html`) muestra un carrusel principal (380px) con tira de miniaturas interactivas
+- [x] Se descartan las URLs duplicadas de la portada al construir el carrusel
+- [x] Al editar, permite agregar nuevos archivos preservando la galería existente
+
+**Implementación**: `apps.inventario/forms/producto_form.py` (`MultipleFileInput`/`MultipleFileField`), `apps.inventario/controllers/producto_controller.py` → `crear_producto()` / `editar_producto()`, `Producto.get_imagenes()`
+**Modelo**: `apps.inventario.models.producto.ProductoImagen` (tabla `tblproducto_imagenes`)
+
+---
+
 ## Resumen de Historias por Estado
 
 | Estado | Cantidad | Historias |
 |---|---|---|
-| ✅ Completadas | 16 | US-01 a US-16 |
+| ✅ Completadas | 14 | US-01 a US-14 |
 | 🔶 Parciales | 2 | RF-U08 (password reset), RF-I13 (stock alerts) |
 | ❌ No iniciadas | 8 | GAP-01 a GAP-08 (ver [[REQUIREMENTS#3. Requisitos Pendientes]]) |
 

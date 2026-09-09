@@ -23,22 +23,29 @@ import os
 
 
 def tabla_existe(table_name):
-    """Verifica si una tabla existe en la base de datos"""
+    """Verifica si una tabla existe en la base de datos (query parametrizada vía information_schema)"""
     try:
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT 1 FROM {table_name} LIMIT 1")
-        return True
-    except:
+            cursor.execute(
+                "SELECT 1 FROM information_schema.tables "
+                "WHERE table_schema = DATABASE() AND table_name = %s",
+                [table_name]
+            )
+            return cursor.fetchone() is not None
+    except Exception:
         return False
 
 def columna_existe(table_name, column_name):
-    """Verifica si una columna existe en una tabla"""
+    """Verifica si una columna existe en una tabla (query parametrizada vía information_schema)"""
     try:
         with connection.cursor() as cursor:
-            cursor.execute(f"DESCRIBE {table_name}")
-            columns = [row[0] for row in cursor.fetchall()]
-            return column_name in columns
-    except:
+            cursor.execute(
+                "SELECT 1 FROM information_schema.columns "
+                "WHERE table_schema = DATABASE() AND table_name = %s AND column_name = %s",
+                [table_name, column_name]
+            )
+            return cursor.fetchone() is not None
+    except Exception:
         return False
 
 
@@ -264,82 +271,55 @@ class PerfilView(View):
 
 
 class CambiarPasswordView(View):
-    """Vista para cambiar la contraseña del usuario"""
-    
+    """
+    Vista para cambiar la contraseña del usuario.
+
+    En lugar de pedir la contraseña actual en un formulario, envía un
+    correo electrónico (vía Brevo) con un enlace seguro para elegir la
+    nueva contraseña. Así el cambio se verifica por correo.
+    """
+
     def get(self, request):
         if not request.user.is_authenticated:
             return redirect('usuarios:login')
-        
+
         # Verificar si la tabla existe antes de intentar cambiar contraseña
         if not tabla_existe('tblusuarios'):
             messages.error(request, "La tabla de usuarios no existe en la base de datos.")
             return redirect('usuarios:login')
-        
+
         # Verificar si las columnas necesarias existen
         if not columna_existe('tblusuarios', 'contraseña'):
             messages.error(request, "La columna de contraseña no existe en la base de datos.")
             return redirect('usuarios:login')
-        
-        context = {
-            'titulo': 'Cambiar Contraseña'
-        }
-        return render(request, 'usuarios/cambiar_password.html', context)
-    
+
+        user = request.user
+
+        # Generar token y uid para el enlace seguro
+        token = agrosft_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        protocol = 'https' if request.is_secure() else 'http'
+        domain = request.get_host()
+        confirm_url = reverse('usuarios:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+        reset_link = f"{protocol}://{domain}{confirm_url}"
+
+        # Enviar el correo con el enlace
+        try:
+            send_password_reset_email(user.correo, user.get_full_name(), reset_link)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger('apps.usuarios.controllers.auth_controller')
+            logger.error(f"Error al enviar correo de cambio de contraseña: {str(e)}")
+
+        # Siempre mostrar la pantalla de confirmación para no revelar si el correo existe
+        return render(request, 'usuarios/cambiar_password.html', {
+            'titulo': 'Revisa tu correo',
+            'correo_enviado': True,
+        })
+
     def post(self, request):
-        if not request.user.is_authenticated:
-            return redirect('usuarios:login')
-        
-        # Verificar si la tabla existe antes de intentar cambiar contraseña
-        if not tabla_existe('tblusuarios'):
-            messages.error(request, "La tabla de usuarios no existe en la base de datos.")
-            return redirect('usuarios:login')
-        
-        # Verificar si las columnas necesarias existen
-        if not columna_existe('tblusuarios', 'contraseña'):
-            messages.error(request, "La columna de contraseña no existe en la base de datos.")
-            return redirect('usuarios:login')
-        
-        current_password = request.POST.get('current_password', '').strip()
-        new_password = request.POST.get('new_password', '').strip()
-        confirm_password = request.POST.get('confirm_password', '').strip()
-        
-        # Validar campos vacíos
-        if not current_password or not new_password or not confirm_password:
-            messages.error(request, 'Por favor, completa todos los campos del formulario.')
-            return self.get(request)
-        
-        # Verificar contraseña actual
-        if not request.user.check_password(current_password):
-            messages.error(request, 'La contraseña actual es incorrecta.')
-            return self.get(request)
-        
-        # Verificar longitud mínima
-        if len(new_password) < 8:
-            messages.error(request, 'La nueva contraseña debe tener al menos 8 caracteres.')
-            return self.get(request)
-        
-        # Verificar que no sea solo números
-        if new_password.isdigit():
-            messages.error(request, 'La nueva contraseña no puede consistir únicamente de números.')
-            return self.get(request)
-        
-        # Verificar que sea diferente a la contraseña actual
-        if current_password == new_password:
-            messages.error(request, 'La nueva contraseña debe ser diferente a la contraseña actual.')
-            return self.get(request)
-        
-        # Verificar que las nuevas contraseñas coincidan
-        if new_password != confirm_password:
-            messages.error(request, 'Las nuevas contraseñas no coinciden.')
-            return self.get(request)
-        
-        # Cambiar la contraseña y actualizar el hash de sesión para evitar cierre de sesión
-        request.user.set_password(new_password)
-        request.user.save()
-        update_session_auth_hash(request, request.user)
-        
-        messages.success(request, 'Contraseña cambiada exitosamente.')
-        return redirect('usuarios:perfil')
+        # Mantener compatibilidad: el enlace del correo usa la vista de confirmación
+        return self.get(request)
 
 
 class UserPasswordResetView(View):

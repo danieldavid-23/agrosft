@@ -59,12 +59,15 @@ URL (urls.py)
 |---|---|---|---|
 | `apps.usuarios` | `usuarios` | Auth, perfil, términos | `False` |
 | `apps.inventario` | `inventario` | Productos, categorías, estados | `False` |
-| `apps.ventas` | `ventas` | Carrito, solicitudes, movimientos, calificaciones | `False` |
+| `apps.ventas` | `ventas` | Carrito, solicitudes, movimientos, compras, calificaciones | `False` |
 | `apps.clientes` | `clientes` | Historial de compradores | `False` |
+| `apps.facturacion` | `facturacion` | Facturación (factura/item_factura) y generación de PDF | `True` (migraciones) |
 | `core` | — | Clases base, middleware, helpers | — |
 
-> [!warning] Regla fundamental
-> **Todos los modelos son `managed = False`**. Django NO crea, modifica ni elimina tablas. La BD se gestiona externamente (scripts SQL, phpMyAdmin, triggers).
+> [!warning] Regla fundamental (con excepción)
+> Los modelos de `usuarios`, `inventario`, `ventas` y `clientes` son `managed = False` — Django NO crea, modifica ni elimina tablas; la BD se gestiona externamente (scripts SQL, phpMyAdmin, triggers).
+>
+> **Excepción**: la app `apps.facturacion` **sí gestiona su schema con migraciones Django** (`python manage.py migrate facturacion`), creando las tablas `factura` e `item_factura`. Ver [[DECISIONS#ADR-016]].
 
 ---
 
@@ -111,7 +114,8 @@ graph LR
 - **Modelo de usuario**: `usuarios.Tblusuarios` (`AUTH_USER_MODEL`)
 - **Backend personalizado**: `TblusuariosAuthBackend` — busca por correo, verifica con `check_password`
 - **Google OAuth2**: `social_core.backends.google.GoogleOAuth2` (configurado, claves comentadas)
-- **Sesión**: Cache-backed (`django.contrib.sessions.backends.cache`)
+- **Sesión**: Cookie firmada (`django.contrib.sessions.backends.signed_cookies`) — evita depender de la tabla `django_session` (ver [[DECISIONS#ADR-011]])
+- **Caché**: `LocMemCache` (categorías, estados)
 - **Expiración**: 30 minutos, expira al cerrar navegador
 
 ---
@@ -129,13 +133,14 @@ Cada módulo frontend tiene su propio entry point compilado por Vite:
 
 ```
 frontend/src/
-├── marketplace/  → MarketApp.vue    (catálogo, filtros, carrito)
-├── carrito/      → CarritoApp.vue   (tabla de items, total)
-├── inventario/   → InventarioApp.vue (CRUD personal)
+├── layout/        → NavbarApp.vue + FooterApp.vue (layout global, 2 componentes)
+├── marketplace/   → MarketApp.vue    (catálogo, filtros, carrito)
+├── carrito/       → CarritoApp.vue   (tabla de items, total)
+├── inventario/    → InventarioApp.vue (CRUD personal)
 ├── calificaciones/ → CalificacionApp.vue (estrellas interactivas)
 └── shared/
-    ├── api.js    → Wrapper fetch con CSRF
-    └── csrf.js   → Extractor de token CSRF
+    ├── api.js     → Wrapper fetch con CSRF
+    └── csrf.js    → Extractor de token CSRF
 ```
 
 ### Patrón de Integración Django ↔ Vue
@@ -156,12 +161,13 @@ frontend/src/
 
 | Decisión | Razón |
 |---|---|
-| `managed = False` en todos los modelos | BD legacy existente con triggers y procedimientos almacenados |
-| Sin migraciones Django | `MIGRATION_MODULES = {app: None}` — Schema gestionado externamente |
+| `managed = False` en la mayoría de modelos | BD legacy existente con triggers y procedimientos almacenados |
+| Sin migraciones Django (apps `usuarios`, `inventario`, `ventas`, `clientes`) | `MIGRATION_MODULES = {app: None}` — Schema gestionado externamente |
+| Migraciones Django en `facturacion` | Única excepción; crea sus tablas propias `factura`/`item_factura` |
 | Carrito en sesión | Simplicidad, sin tabla adicional necesaria |
 | Solicitudes = Movimientos | Reutilizar tablas `movimiento` + `detalle` con `tipo_movimiento` como discriminador |
 | Vue como capa SPA parcial | Solo para componentes interactivos, no SPA completa |
-| Cache-backed sessions | Evita tabla `django_session` en BD legacy |
+| Sesiones por cookie firmada | Evita tabla `django_session` en BD legacy |
 
 ---
 

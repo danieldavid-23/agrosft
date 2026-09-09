@@ -139,7 +139,7 @@
 |---|---|---|
 | Alertas de mercado | Precios locales y tendencias | Baja |
 | Asesoría técnica | FAQ / guías digitales | Baja |
-| Documentos comerciales | Plantillas de facturas descargables | Baja |
+| ~~Documentos comerciales~~ | ~~Plantillas de facturas descargables~~ — ✅ Implementado (2026-09-07, `apps.facturacion` + PDF xhtml2pdf, ver [[ARCHITECTURE#2.6]]) | ~~Baja~~ → ✅ |
 | Calendario de cosechas | Alertas por ciclos de siembra | Baja |
 | Recomendaciones IA | Sugerencias de precios según mercado | Futuro |
 | App móvil | Versión nativa PWA | Futuro |
@@ -148,35 +148,39 @@
 
 ## Problemas Técnicos Detectados
 
-| # | Problema | Severidad | Archivo |
-|---|---|---|---|
-| 1 | SQL Injection en `tabla_existe()` y `columna_existe()` | 🔴 Alta | `auth_controller.py`, `backends.py` |
-| 2 | `TemporalUsuario.check_password()` siempre retorna True | 🔴 Alta | `profile_model.py` |
-| 3 | `has_perm()` siempre True en backend | 🟡 Media | `backends.py` |
-| 4 | Carrito sin `@login_required` | 🟡 Media | `carrito_controller.py` |
-| 5 | Modelo `Cliente` sin `managed = False` | 🟡 Media | `cliente.py` |
-| 6 | `TipoMovimiento` duplicado en inventario y ventas | 🟢 Baja | `producto.py`, `movimiento.py` |
-| 7 | Modelos obsoletos activos | 🟢 Baja | `solicitud.py`, `venta.py` |
-| 8 | Bare `except:` en múltiples sitios | 🟢 Baja | Varios |
-| 9 | Password reset sin implementación real | 🟡 Media | `auth_controller.py` |
-| 10 | `Termino` duplicado en core y usuarios | 🟢 Baja | Ambos archivos |
+| # | Problema | Severidad | Archivo | Estado |
+|---|---|---|---|---|
+| 1 | ~~SQL Injection en `tabla_existe()` y `columna_existe()`~~ | 🔴 Alta | `auth_controller.py`, `backends.py` | ✅ Resuelto (2026-09-07, information_schema parametrizado) |
+| 2 | ~~`TemporalUsuario.check_password()` siempre retorna True~~ | 🔴 Alta | `profile_model.py` | ✅ Eliminado (2026-09-07) |
+| 3 | `has_perm()` siempre True en backend | 🟡 Media | `backends.py` | 🔶 Abierto |
+| 4 | ~~Carrito sin `@login_required`~~ | 🟡 Media | `carrito_controller.py` | ✅ Resuelto (2026-09-07) |
+| 5 | ~~Modelo `Cliente` sin `managed = False`~~ | 🟡 Media | `cliente.py` | ✅ Resuelto (2026-09-07) |
+| 6 | ~~`TipoMovimiento` duplicado~~ | 🟢 Baja | `producto.py`, `movimiento.py` | ✅ Consolidado (2026-09-07) |
+| 7 | ~~Modelos obsoletos activos~~ | 🟢 Baja | `solicitud.py`, `venta.py` | ✅ Eliminados (2026-09-07) |
+| 8 | `except:` vacío en múltiples sitios | 🟢 Baja | Varios | 🔶 Parcial (corregido en helpers de auth) |
+| 9 | ~~Password reset sin implementación real~~ | ✅ Resuelto (2026-06-30) | `auth_controller.py`, `email_service.py` | ✅ |
+| 10 | `Termino` duplicado en core y usuarios | 🟢 Baja | Ambos archivos | 🔶 Abierto |
 
 ---
 
 ## Roadmap Sugerido
 
-### Fase 1 — Estabilización (Sprint actual)
+### Fase 1 — Estabilización (Completada)
 - [x] Documentación completa del proyecto
 - [x] Refactor módulo solicitudes a JS puro (revertido — se restauró renderizado Django server-side)
-- [ ] Corregir SQL Injection en helpers
-- [ ] Eliminar `TemporalUsuario` o marcar como dev-only
-- [ ] Agregar `managed = False` a modelo `Cliente`
+- [x] Corregir SQL Injection en helpers (2026-09-07)
+- [x] Eliminar `TemporalUsuario` (2026-09-07)
+- [x] Agregar `managed = False` a modelo `Cliente` (2026-09-07)
+- [x] Agregar `@login_required` a vistas de carrito (2026-09-07)
+- [x] Consolidar `TipoMovimiento` duplicado (2026-09-07)
+- [x] Eliminar modelos obsoletos (2026-09-07)
 
 ### Fase 2 — Funcionalidades Core
 - [ ] Implementar chat/mensajería entre usuarios
 - [x] Agregar campo de imagen a productos
+- [x] Galería de múltiples imágenes con carrusel (`tblproducto_imagenes`)
 - [ ] Implementar notificaciones in-app
-- [ ] Completar password reset con email real
+- [x] Completar password reset con email real (Brevo)
 
 ### Fase 3 — Enriquecimiento
 - [ ] Agregar ubicación a productos
@@ -186,7 +190,7 @@
 
 ### Fase 4 — Escalabilidad
 - [ ] Alertas de mercado
-- [ ] Documentos comerciales
+- [x] Documentos comerciales / facturación (2026-09-07, `apps.facturacion` + PDF)
 - [ ] PWA / app móvil
 - [ ] Integración con APIs externas (clima, precios)
 
