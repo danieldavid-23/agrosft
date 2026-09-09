@@ -6,6 +6,7 @@ from django.db.models import Q, Count
 from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 from apps.inventario.models import ProductoUsuario
 from apps.usuarios.models.profile_model import Tblusuarios
+from apps.facturacion.services.factura_service import FacturaService
 from core.utils.helpers import generar_whatsapp_link
 import json
 
@@ -172,7 +173,7 @@ def detalle_solicitud(request, pk):
         )
         whatsapp_link = generar_whatsapp_link(telefono_comprador, mensaje_whatsapp)
     
-    # Verificar si venimos de una aceptación reciente (para mostrar modal)
+# Verificar si venimos de una aceptación reciente (para mostrar modal)
     show_whatsapp_modal = False
     whatsapp_modal_link = ''
     whatsapp_modal_comprador = ''
@@ -181,7 +182,9 @@ def detalle_solicitud(request, pk):
         show_whatsapp_modal = True
         whatsapp_modal_link = session_data.get('whatsapp_link', whatsapp_link)
         whatsapp_modal_comprador = session_data.get('comprador_nombre', '')
-    
+
+    factura_propia = FacturaService.factura_vendedor_en_movimiento(solicitud, request.user)
+
     return render(request, 'ventas/solicitudes/solicitud_detail.html', {
         'solicitud': {
             'id': solicitud.id_movimiento,
@@ -199,6 +202,7 @@ def detalle_solicitud(request, pk):
         'show_whatsapp_modal': show_whatsapp_modal,
         'whatsapp_modal_link': whatsapp_modal_link,
         'whatsapp_modal_comprador': whatsapp_modal_comprador,
+        'factura': factura_propia,
     })
 
 

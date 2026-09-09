@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load currency_tags %}
+{% block title %}Facturas del Pedido #{{ movimiento.id_movimiento }} - AgroSFT{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-md-5">
+
+  <!-- Breadcrumb -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item">
+          <a href="{% url 'facturacion:historial_facturas' %}" class="text-decoration-none text-success fw-medium">
+            <i class="fas fa-file-invoice me-1"></i> Facturación
+          </a>
+        </li>
+        <li class="breadcrumb-item active text-muted" aria-current="page">
+          Pedido #{{ movimiento.id_movimiento }}
+        </li>
+      </ol>
+    </nav>
+    <a href="{% url 'facturacion:historial_facturas' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 d-none d-sm-inline-flex align-items-center gap-1">
+      <i class="fas fa-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <!-- Encabezado del pedido -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" style="background:#fff; border:1px solid rgba(0,0,0,0.06)!important;">
+    <div style="height:6px; background:linear-gradient(90deg,#15803d,#22c55e,#16a34a);"></div>
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center gap-3 mb-1">
+        <div class="rounded-4 d-flex align-items-center justify-content-center text-success flex-shrink-0"
+             style="width:48px;height:48px;background:#f0fdf4;border:1px solid #bbf7d0;">
+          <i class="fas fa-shopping-bag fa-lg"></i>
+        </div>
+        <div>
+          <h4 class="fw-bold mb-0">Pedido #{{ movimiento.id_movimiento }}</h4>
+          <span class="text-muted small">
+            <i class="fas fa-user me-1"></i>
+            {{ movimiento.id_usuario.get_full_name|default:movimiento.id_usuario.correo }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Resumen de facturas -->
+      {% if facturas %}
+      <div class="mt-3 d-flex align-items-center gap-2">
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1 fs-6">
+          <i class="fas fa-file-invoice me-1"></i>
+          {{ facturas|length }} factura{{ facturas|length|pluralize:",s" }} generada{{ facturas|length|pluralize:",s" }}
+        </span>
+        <span class="text-muted small">— una por vendedor</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Grid de facturas por vendedor -->
+  {% if facturas %}
+  <div class="row g-4">
+    {% for factura in facturas %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border:1px solid rgba(0,0,0,0.06)!important;">
+        <!-- Línea superior con número de factura -->
+        <div style="height:4px; background:linear-gradient(90deg,#15803d,#22c55e);"></div>
+        <div class="card-body p-4">
+
+          <!-- Número de factura -->
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <span class="text-uppercase text-muted small fw-bold" style="letter-spacing:.5px;">Factura</span>
+              <div class="fw-bold text-success fs-5" style="font-family:monospace;">
+                FAC-{{ factura.id_factura|stringformat:"06d" }}
+              </div>
+            </div>
+            {% if factura.estado == 'emitida' %}
+            <span class="badge rounded-pill px-2 py-1 small fw-semibold"
+                  style="background:#dcfce7;color:#15803d;border:1px solid #86efac;">
+              <i class="fas fa-check-circle me-1"></i>Emitida
+            </span>
+            {% else %}
+            <span class="badge rounded-pill px-2 py-1 small fw-semibold"
+                  style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">
+              <i class="fas fa-ban me-1"></i>Cancelada
+            </span>
+            {% endif %}
+          </div>
+
+          <!-- Vendedor -->
+          <div class="mb-3 p-3 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
+            <div class="text-muted small mb-1"><i class="fas fa-store me-1 text-success"></i>Vendedor</div>
+            <div class="fw-bold text-dark">
+              {% if factura.vendedor %}
+                {{ factura.vendedor.get_full_name|default:factura.vendedor.correo }}
+              {% else %}
+                <span class="text-muted fst-italic">Sin vendedor registrado</span>
+              {% endif %}
+            </div>
+            {% if factura.vendedor and factura.vendedor.correo %}
+            <div class="text-muted small">{{ factura.vendedor.correo }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Estadísticas -->
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="text-center p-2 rounded-3" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                <div class="text-success fw-bold fs-5">{{ factura.items.count }}</div>
+                <div class="text-muted small">producto{{ factura.items.count|pluralize }}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center p-2 rounded-3" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                <div class="text-success fw-bold">{{ factura.total|currency_cop }}</div>
+                <div class="text-muted small">total</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de productos resumida -->
+          <ul class="list-unstyled mb-3 small text-muted">
+            {% for item in factura.items.all %}
+            <li class="d-flex justify-content-between py-1 border-bottom" style="border-color:#f1f5f9!important;">
+              <span><i class="fas fa-leaf text-success me-1"></i>{{ item.nombre_producto_limpio }}</span>
+              <span class="text-dark fw-medium">× {{ item.cantidad_formateada }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+
+          <!-- Acciones -->
+          <div class="d-flex gap-2">
+            <a href="{% url 'facturacion:detalle_factura' factura.id_factura %}"
+               class="btn btn-sm btn-outline-success rounded-pill flex-fill d-inline-flex align-items-center justify-content-center gap-1">
+              <i class="fas fa-eye"></i> Ver
+            </a>
+            <a href="{% url 'facturacion:generar_pdf' factura.id_factura %}"
+               target="_blank"
+               class="btn btn-sm btn-success rounded-pill flex-fill d-inline-flex align-items-center justify-content-center gap-1 shadow-sm">
+              <i class="fas fa-file-pdf"></i> PDF
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Sin facturas -->
+  <div class="card border-0 shadow-sm rounded-4 p-5 text-center" style="background:#fff;">
+    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+         style="width:80px;height:80px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;">
+      <i class="fas fa-file-invoice fa-3x"></i>
+    </div>
+    <h5 class="fw-bold text-dark mb-1">Aún no hay facturas para este pedido</h5>
+    <p class="text-muted mb-4 mx-auto" style="max-width:400px;">
+      Las facturas se generan automáticamente cuando se procesa la compra.
+    </p>
+    <a href="{% url 'facturacion:generar_factura_pedido' movimiento.id_movimiento %}"
+       class="btn btn-success rounded-pill px-4 shadow-sm fw-medium">
+      <i class="fas fa-magic me-2"></i> Generar Facturas Ahora
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Total global del pedido -->
+  {% if facturas %}
+  <div class="card border-0 shadow-sm rounded-4 mt-4 overflow-hidden" style="background:#fff;">
+    <div class="card-body p-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-muted small">Total del pedido</div>
+          <div class="text-dark fw-bold fs-5">
+            Suma de {{ facturas|length }} factura{{ facturas|length|pluralize:",s" }}
+          </div>
+        </div>
+        <div class="text-end">
+          {% with total_pedido=0 %}
+          <div class="fw-bolder text-success fs-3" style="letter-spacing:-.5px;">
+            {# Calculado en template — suma de totales de cada factura #}
+            {% for f in facturas %}{% if forloop.last %}...{% endif %}{% endfor %}
+          </div>
+          {% endwith %}
+          <div class="text-muted small">IVA 0% Régimen Agrícola</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

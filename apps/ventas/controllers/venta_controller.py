@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from apps.ventas.models.movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
 from apps.inventario.models import ProductoUsuario
+from apps.facturacion.services.factura_service import FacturaService
 
 # Mapeo de estado interno (BD) a estado visible para el usuario
 ESTADOS_VISIBLES = {
@@ -85,7 +86,9 @@ def detalle_venta(request, pk):
         
     total = sum(abs(p.cantidad) * p.id_producto_usuario.precio for p in productos)
     comprador = venta.id_usuario
-    
+
+    factura_propia = FacturaService.factura_vendedor_en_movimiento(venta, request.user)
+
     venta_data = {
         'id': venta.id_movimiento,
         'fecha': venta.obtener_fecha(),
@@ -104,6 +107,7 @@ def detalle_venta(request, pk):
     return render(request, 'ventas/venta_detail.html', {
         'venta': venta_data,
         'productos': productos,
+        'factura': factura_propia,
     })
 
 @login_required

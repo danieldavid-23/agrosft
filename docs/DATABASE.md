@@ -270,6 +270,7 @@ erDiagram
 |---|---|---|---|---|
 | `id_factura` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
 | `id_usuario` | INT (FK) | No | — | FK a tblusuarios (comprador) |
+| `id_vendedor` | INT (FK) | Yes | NULL | FK a tblusuarios (vendedor dueño de esta factura) |
 | `id_movimiento` | INT (FK) | Yes | NULL | FK a movimiento (nullable, SET_NULL) |
 | `total` | DECIMAL(12,2) | No | — | Total de la factura |
 | `metodo_pago_nombre` | VARCHAR(60) | Yes | — | Nombre del método de pago |

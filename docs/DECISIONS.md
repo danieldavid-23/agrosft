@@ -707,6 +707,59 @@ Unificar la condición de privilegios administrativos para que tanto `is_staff` 
 
 ---
 
+## ADR-021: Facturación Separada por Vendedor — 1 Pedido = 1 Factura por Vendedor
+
+**Fecha**: 2026-09-09
+**Estado**: Aceptada
+
+### Contexto
+
+La función `crear_factura_desde_carrito` generaba una sola factura con todos los productos del carrito, sin importar cuántos vendedores participaran. La regla de negocio correcta es: **1 Pedido (Movimiento) = 1 Factura por vendedor**. El campo `vendedor` no existía en la tabla `factura`, y no había forma de atribuir una factura a un vendedor específico.
+
+### Decisión
+
+1. **Campo `vendedor` en `factura`**: Añadir `ForeignKey` nullable a `tblusuarios` (`db_column='id_vendedor'`, `related_name='facturas_vendedor'`). Nullable para compatibilidad con facturas históricas sin vendedor. Se gestiona mediante migración Django (`0003_factura_vendedor`). La unicidad (movimiento, vendedor) se controla en `FacturaService` (MariaDB 10.4 no soporta `UniqueConstraint` parcial).
+
+2. **Servicio multi-vendedor**:
+   - `crear_facturas_desde_carrito(usuario, carrito)` → Crea Movimiento + N Facturas (una por vendedor) bajo `@transaction.atomic`. Agrupa por `pu.id_usuario` (origen seguro de BD, nunca del frontend).
+   - `crear_facturas_desde_movimiento(usuario, movimiento)` → Genera o reutiliza facturas desde un movimiento existente. Verifica unicidad antes de crear.
+   - `obtener_o_crear_factura_desde_movimiento(usuario, movimiento)` → Wrapper legacy que retorna la primera factura para compatibilidad.
+
+3. **Seguridad**: `vendedor_id` se obtiene exclusivamente de `ProductoUsuario.id_usuario` en BD (nunca del frontend). `precio_unitario` se obtiene de `ProductoUsuario.precio` en BD. `comprador_id` se obtiene de `Movimiento.id_usuario`.
+
+4. **Control de acceso**: `_tiene_permiso_factura` verifica: admin (`is_staff`), comprador (`factura.usuario`), o vendedor (`factura.vendedor`). Para facturas legacy sin `vendedor`, valida contra `ProductoUsuarioMovimiento`.
+
+5. **Vistas nuevas**: `facturas_pedido` lista todas las facturas de un pedido (comprador ve todas, vendedor ve la suya). Templates: `facturas_pedido.html`, columnas actualizadas en `historial_facturas.html`, secciones de facturas en `venta_detail.html` y `solicitud_detail.html`.
+
+### Consecuencias
+
+- ✅ Cada factura pertenece a un único vendedor, alineada con la regla de negocio.
+- ✅ Compatibilidad total con facturas históricas (`vendedor=NULL`).
+- ✅ Atomicidad: si falla una factura, se hace rollback de todas.
+- ✅ Sin duplicados: reutiliza facturas existentes para el par (movimiento, vendedor).
+- ✅ Seguridad: precio y vendedor siempre vienen de BD, nunca del frontend.
+- ❌ MariaDB 10.4 no permite `UniqueConstraint` parcial → la unicidad se garantiza en la capa de servicio.
+
+### Archivos Afectados
+
+- `apps/facturacion/models.py` (+campo `vendedor`, `__str__`)
+- `apps/facturacion/migrations/0003_factura_vendedor.py` (nueva migración)
+- `apps/facturacion/services/factura_service.py` (multi-vendedor, idempotencia)
+- `apps/facturacion/controllers/factura_controller.py` (`facturas_pedido`, permisos)
+- `apps/facturacion/urls.py` (+ruta `pedido/<movimiento_id>/`)
+- `apps/facturacion/templates/facturacion/facturas_pedido.html` (nueva)
+- `apps/facturacion/templates/facturacion/detalle_factura.html` (vendedor)
+- `apps/facturacion/templates/facturacion/factura_pdf.html` (vendedor)
+- `apps/facturacion/templates/facturacion/historial_facturas.html` (columna vendedor)
+- `apps/ventas/controllers/venta_controller.py` (+factura en contexto)
+- `apps/ventas/controllers/solicitud_controller.py` (+factura en contexto)
+- `apps/ventas/templates/ventas/venta_detail.html` (sección factura)
+- `apps/ventas/templates/ventas/solicitudes/solicitud_detail.html` (sección factura)
+- `apps/facturacion/tests/test_factura_por_vendedor.py` (10 casos de prueba)
+- Docs SDD: `DATABASE.md`, `ARCHITECTURE.md`, `CHANGELOG.md`
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -728,6 +781,7 @@ Unificar la condición de privilegios administrativos para que tanto `is_staff` 
 | ADR-018 | Redirección post-login por rol (is_staff) | Aceptada | Auth / Usuarios |
 | ADR-019 | Navbar específico para staff (is_staff) | Aceptada | Frontend / Auth |
 | ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Aceptada | Auth / Admin / Frontend |
+| ADR-021 | Facturación separada por vendedor (1 Pedido = 1 Factura por vendedor) | Aceptada | Facturación / Seguridad |
 
 ---
 

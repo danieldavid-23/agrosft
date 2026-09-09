@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+### Changed (2026-09-09)
+- **Facturación separada por vendedor** — 1 Pedido = 1 Factura por vendedor (ADR-021):
+  - **Modelo**: campo `vendedor` (FK nullable a `tblusuarios`) añadido a `Factura` (`apps/facturacion/models.py`), con migración `0003_factura_vendedor`.
+  - **Servicio**: `FacturaService.crear_facturas_desde_carrito` ahora agrupa por `pu.id_usuario` (vendedor) y genera N facturas en una sola transacción atómica. Nuevo método `crear_facturas_desde_movimiento` genera o reutiliza facturas desde un movimiento existente. `obtener_o_crear_factura_desde_movimiento` mantiene compatibilidad legacy.
+  - **Controlador**: `facturas_pedido` lista todas las facturas de un pedido (comprador ve todas, vendedor ve la suya). `_tiene_permiso_factura` verifica el campo `vendedor`. `crear_factura` redirige al resumen de facturas del pedido.
+  - **Templates**: nueva plantilla `facturas_pedido.html` (grid de facturas por vendedor). `historial_facturas.html` incluye columna "Vendedor". `detalle_factura.html` y `factura_pdf.html` muestran datos del vendedor.
+  - **Ventas**: `venta_detail.html` y `solicitud_detail.html` muestran la factura del vendedor con enlaces a detalle y PDF.
+  - **Tests**: `test_factura_por_vendedor.py` — 10 casos de prueba (agrupación, totales, seguridad, idempotencia, atomicidad, modelo).
+  - **Docs SDD**: `DATABASE.md` (+campo `id_vendedor`), `ARCHITECTURE.md` (+diagrama y flujo), `DECISIONS.md` (ADR-021).
+
 ### Removed (2026-09-08)
 - **Eliminación de la vista y módulo de Auditoría del panel de administración**:
   - `apps/usuarios/controllers/admin_usuarios_controller.py`: Eliminada la vista `admin_audit_logs`.

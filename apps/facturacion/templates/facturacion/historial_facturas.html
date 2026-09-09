@@ -30,6 +30,7 @@
           <tr>
             <th scope="col" class="py-3 px-4 text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">No. Factura</th>
             <th scope="col" class="py-3 px-3 text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Fecha de Emisión</th>
+            <th scope="col" class="py-3 px-3 text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Vendedor</th>
             <th scope="col" class="py-3 px-3 text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Total</th>
             <th scope="col" class="py-3 px-3 text-center text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Estado</th>
             <th scope="col" class="py-3 px-4 text-end text-uppercase fw-bold text-success small" style="letter-spacing: 0.5px;">Acciones</th>
@@ -45,6 +46,13 @@
             </td>
             <td class="py-3 px-3 text-muted">
               <i class="far fa-calendar-alt me-1"></i> {{ f.creada_en|date:"d/m/Y H:i" }}
+            </td>
+            <td class="py-3 px-3 text-muted">
+              {% if f.vendedor %}
+                {{ f.vendedor.get_full_name|default:f.vendedor.correo }}
+              {% else %}
+                <span class="fst-italic">Sin vendedor</span>
+              {% endif %}
             </td>
             <td class="py-3 px-3 fw-bold text-dark fs-6">
               {{ f.total|currency_cop }}

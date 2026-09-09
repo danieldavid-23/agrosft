@@ -194,24 +194,26 @@ apps/clientes/
 
 ```
 apps/facturacion/
-├── controllers/factura_controller.py  → Crear/detalle/historial/PDF/generar desde pedido
-├── models.py                          → Factura, ItemFactura (db_table='factura'/'item_factura')
-├── services/factura_service.py        → FacturaService (creación desde carrito/movimiento, cancelación, historial)
-├── migrations/                        → 0001_initial, 0002_... (gestionadas por Django)
-└── templates/facturacion/             → detalle_factura, factura_pdf, historial_facturas
+├── controllers/factura_controller.py  → Crear/detalle/historial/PDF/facturas por pedido
+├── models.py                          → Factura (con campo vendedor), ItemFactura
+├── services/factura_service.py        → FacturaService (creación multi-vendedor, cancelación, historial)
+├── migrations/                        → 0001_initial, 0002_..., 0003_factura_vendedor
+├── templates/facturacion/             → detalle_factura, factura_pdf, historial_facturas, facturas_pedido
+└── tests/                             → test_factura_por_vendedor
 ```
 
 **Modelo de facturación**:
 
 ```mermaid
 graph LR
-    M[movimiento<br>Transacción] -->|opcional| F[factura<br>Cabecera]
+    M[movimiento<br>Transacción] -->|1:N| F[factura<br>Cabecera]
     F -->|1:N| I[item_factura<br>Detalle]
     I -->|N:1| P[tblproducto]
-    U[tblusuarios] -->|1:N| F
+    U[comprador<br>tblusuarios] -->|1:N| F
+    V[vendedor<br>tblusuarios] -->|0..N:1| F
 ```
 
-**Flujo**: El `FacturaService` crea un `Movimiento` (tipo `compra`) más los `ProductoUsuarioMovimiento` desde el carrito, y genera una `Factura` con sus `ItemFactura`. La generación de PDF usa `xhtml2pdf` (plantilla `factura_pdf.html`).
+**Flujo**: 1 Pedido (Movimiento) = N Facturas, una por vendedor. `FacturaService.crear_facturas_desde_carrito` crea un `Movimiento` (tipo `compra`), los `ProductoUsuarioMovimiento`, y agrupa por `pu.id_usuario` (vendedor) para generar una `Factura` por cada grupo con sus `ItemFactura`. `crear_facturas_desde_movimiento` recupera un movimiento existente y genera (o reutiliza) facturas por vendedor. La generación de PDF usa `xhtml2pdf` (plantilla `factura_pdf.html`). Ver [[DECISIONS#ADR-021]].
 
 ---
 

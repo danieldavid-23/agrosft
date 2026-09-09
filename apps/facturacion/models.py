@@ -10,11 +10,17 @@ class Factura(models.Model):
     id_factura = models.AutoField(primary_key=True)
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        db_column='id_usuario'
+        db_column='id_usuario', related_name='facturas_comprador'
+    )
+    # Vendedor dueño de esta factura (nullable para compatibilidad con facturas históricas)
+    vendedor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        db_column='id_vendedor', related_name='facturas_vendedor'
     )
     movimiento = models.ForeignKey(
         'ventas.Movimiento', on_delete=models.SET_NULL, null=True, blank=True,
-        db_column='id_movimiento'
+        db_column='id_movimiento', related_name='facturas'
     )
     total = models.DecimalField(max_digits=12, decimal_places=2)
     metodo_pago_nombre = models.CharField(max_length=60, blank=True, db_column='metodo_pago_nombre')
@@ -27,9 +33,13 @@ class Factura(models.Model):
         db_table = 'factura'
         verbose_name = 'Factura'
         verbose_name_plural = 'Facturas'
+        # Nota: La unicidad movimiento+vendedor se garantiza en FacturaService.
+        # MariaDB no soporta partial unique constraints, por lo que el control
+        # de duplicados se gestiona exclusivamente en la capa de servicio.
 
     def __str__(self):
-        return f'Factura #{self.id_factura} - {self.usuario.correo} - ${self.total}'
+        vendedor_str = self.vendedor.correo if self.vendedor else 'sin vendedor'
+        return f'Factura #{self.id_factura} - {self.usuario.correo} → {vendedor_str} - ${self.total}'
 
 
 class ItemFactura(models.Model):
