@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models.producto import Producto, Categoria, ProductoUsuario
+from .models.producto import Producto, Categoria, UnidadMedida, ProductoUsuario
 from apps.ventas.models.movimiento import TipoMovimiento
 
 
@@ -12,6 +12,15 @@ class CategoriaAdmin(admin.ModelAdmin):
     list_editable = ['activo']
 
 
+@admin.register(UnidadMedida)
+class UnidadMedidaAdmin(admin.ModelAdmin):
+    list_display = ['id_unidad', 'nombre', 'abreviatura', 'activo', 'created_at']
+    list_filter = ['activo']
+    search_fields = ['nombre', 'abreviatura']
+    ordering = ['id_unidad']
+    list_editable = ['activo']
+
+
 @admin.register(TipoMovimiento)
 class TipoMovimientoAdmin(admin.ModelAdmin):
     list_display = ['id_tipo_movimiento', 'tipo']
@@ -21,8 +30,8 @@ class TipoMovimientoAdmin(admin.ModelAdmin):
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ['id_producto', 'nombre', 'id_categoria', 'cantidad', 'stock_minimo', 'fecha_creacion', 'eliminado']
-    list_filter = ['id_categoria', 'fecha_creacion', 'eliminado']
+    list_display = ['id_producto', 'nombre', 'id_categoria', 'unidad_medida', 'cantidad', 'stock_minimo', 'fecha_creacion', 'eliminado']
+    list_filter = ['id_categoria', 'unidad_medida', 'fecha_creacion', 'eliminado']
     search_fields = ['nombre', 'descripcion']
     ordering = ['nombre']
     list_per_page = 20

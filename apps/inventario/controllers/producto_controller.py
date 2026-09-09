@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.core.cache import cache
 from decimal import Decimal
-from apps.inventario.models import Categoria, Producto, ProductoImagen, ProductoUsuario
+from apps.inventario.models import Categoria, UnidadMedida, Producto, ProductoImagen, ProductoUsuario
 from apps.inventario.forms.producto_form import ProductoForm
 from apps.inventario.repositories.producto_repository import ProductoRepository
 from apps.usuarios.models.profile_model import Tblusuarios
@@ -345,6 +345,7 @@ def crear_producto(request):
                         nombre=form.cleaned_data['nombre'],
                         descripcion=form.cleaned_data.get('descripcion') or '',
                         id_categoria=form.cleaned_data['id_categoria'],
+                        unidad_medida=form.cleaned_data['unidad_medida'],
                         cantidad=form.cleaned_data['cantidad'],
                         stock_minimo=form.cleaned_data.get('stock_minimo') or 5,
                         imagen=primera_imagen
@@ -404,11 +405,13 @@ def crear_producto(request):
         form = ProductoForm(initial={'stock_minimo': 5, 'cantidad': 1}, requerir_imagen=True)
 
     categorias = get_categorias_cached()
+    unidades = UnidadMedida.objects.filter(activo=True)
 
     return render(request, 'inventario/producto_form.html', {
         'form': form,
         'accion': 'crear',
         'categorias': categorias,
+        'unidades': unidades,
     })
 
 
@@ -596,6 +599,7 @@ def editar_producto(request, pk):
                     # NOTA: nombre y categoría NO son editables (se conservan del registro original).
                     producto = producto_usuario.id_producto
                     producto.descripcion = form.cleaned_data['descripcion']
+                    producto.unidad_medida = form.cleaned_data['unidad_medida']
                     
                     # Actualizar imágenes si se proporcionan nuevas (conservando existentes)
                     archivos_nuevos = request.FILES.getlist('imagen')
@@ -662,6 +666,7 @@ def editar_producto(request, pk):
             'nombre': producto_usuario.id_producto.nombre,
             'descripcion': producto_usuario.id_producto.descripcion,
             'id_categoria': producto_usuario.id_producto.id_categoria,
+            'unidad_medida': producto_usuario.id_producto.unidad_medida,
             'stock_minimo': producto_usuario.id_producto.stock_minimo,
             'imagen': producto_usuario.id_producto.imagen,
             'cantidad': stock_actual,  # Entero: evita mostrar decimales (.00)
@@ -675,6 +680,7 @@ def editar_producto(request, pk):
     form.fields['cantidad'].min_value = stock_actual
 
     categorias = get_categorias_cached()
+    unidades = UnidadMedida.objects.filter(activo=True)
     
     # Preparar detalle de imágenes con IDs para poder eliminarlas individualmente
     imagenes_detalle = []
@@ -706,6 +712,7 @@ def editar_producto(request, pk):
         'imagenes': producto_usuario.id_producto.get_imagenes(),
         'imagenes_detalle': imagenes_detalle,
         'categorias': categorias,
+        'unidades': unidades,
         'titulo': 'Editar Producto',
         'accion': 'editar'
     })

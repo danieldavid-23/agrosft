@@ -913,6 +913,45 @@ La función `crear_factura_desde_carrito` generaba una sola factura con todos lo
 
 ---
 
+## ADR-022: Campo "Unidad de Medida" en Productos
+
+**Fecha**: 2026-09-09
+**Estado**: Aceptada
+
+### Contexto
+
+El formulario de registro/edición de productos no contemplaba una "Unidad de Medida" (u, kg, lb, L, g), pese a ser información relevante para describir la presentación de un producto agrícola. No existía ninguna tabla de unidades de medida en el schema.
+
+### Decisión
+
+1. **Nueva tabla `tblunidad_medida`**: campos `id_unidad` (PK), `nombre` (único), `abreviatura` (único), `activo`, `created_at`. Cinco registros semilla obligatorios (Unidades u, Kilogramos kg, Libras lb, Litros L, Gramos g).
+2. **Columna FK en `tblproducto`**: `tblunidad_medida_id_unidad` nullable con `default = 1` (apunta a "Unidades") y `ON DELETE NO ACTION`, para no eliminar unidades en uso.
+3. **Modelo Django**: `UnidadMedida` y FK `unidad_medida` en `Producto` con `on_delete=models.PROTECT` y `default=1`. Ambos con `managed = False`, coherente con la regla de oro de la app `inventario` (schema gestionado externamente en MariaDB).
+4. **Schema externo**: se crea mediante `scripts/crear_unidad_medida.sql`, NO con migraciones Django (`MIGRATION_MODULES = {'inventario': None}`).
+5. **Form**: `ModelChoiceField` `unidad_medida` en `ProductoForm` con widget `Select form-control` y `empty_label="Seleccione una unidad de medida"`.
+6. **Vistas/Template/Admin**: `crear_producto`/`editar_producto` guardan y pasan el campo; `producto_form.html` renderiza el `<select>` debajo de "Categoría"; `admin.py` registra `UnidadMedidaAdmin` y amplía `ProductoAdmin`.
+
+### Consecuencias
+
+- ✅ El usuario selecciona la unidad de medida de su producto desde un desplegable con datos de BD.
+- ✅ `PROTECT`/`ON DELETE NO ACTION` impiden borrar una unidad referenciada por productos.
+- ✅ `default=1` garantiza compatibilidad con productos existentes (quedan en "Unidades").
+- ✅ Coherente con la regla de oro `managed=False`: no se generan migraciones Django para `inventario`.
+- ❌ La columna FK es nullable en BD (aunque el modelo define default), por flexibilidad de carga inicial; el formulario la exige.
+
+### Archivos Afectados
+
+- `scripts/crear_unidad_medida.sql` (nuevo)
+- `apps/inventario/models/producto.py` (+`UnidadMedida`, +FK en `Producto`)
+- `apps/inventario/models/__init__.py`
+- `apps/inventario/forms/producto_form.py` (+`unidad_medida`)
+- `apps/inventario/controllers/producto_controller.py` (guardado y contexto)
+- `apps/inventario/templates/inventario/producto_form.html` (select)
+- `apps/inventario/admin.py` (+`UnidadMedidaAdmin`, +campo en `ProductoAdmin`)
+- Docs SDD: `DATABASE.md`, `CHANGELOG.md`
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -934,6 +973,8 @@ La función `crear_factura_desde_carrito` generaba una sola factura con todos lo
 | ADR-018 | Redirección post-login por rol (is_staff) | Aceptada | Auth / Usuarios |
 | ADR-019 | Navbar específico para staff (is_staff) | Aceptada | Frontend / Auth |
 | ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Aceptada | Auth / Admin / Frontend |
+| ADR-021 | Facturación separada por vendedor (1 Pedido = 1 Factura por vendedor) | Aceptada | Facturación / Seguridad |
+| ADR-022 | Campo "Unidad de Medida" en productos | Aceptada | Inventario / Formulario |
 
 ---
 

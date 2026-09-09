@@ -27,6 +27,27 @@ class Categoria(models.Model):
         return self.nombre
 
 
+class UnidadMedida(models.Model):
+    """
+    Modelo que representa la tabla tblunidad_medida en la base de datos.
+    Unidades de medida disponibles para los productos (u, kg, lb, L, g...).
+    """
+    id_unidad = models.AutoField(primary_key=True, db_column='id_unidad')
+    nombre = models.CharField(max_length=50, unique=True, db_column='nombre')
+    abreviatura = models.CharField(max_length=10, unique=True, db_column='abreviatura')
+    activo = models.BooleanField(default=True, db_column='activo')
+    created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
+
+    class Meta:
+        db_table = 'tblunidad_medida'
+        managed = False
+        verbose_name = 'Unidad de Medida'
+        verbose_name_plural = 'Unidades de Medida'
+
+    def __str__(self):
+        return f"{self.nombre} ({self.abreviatura})"
+
+
 class Producto(models.Model):
     """
     Modelo que representa la tabla tblproducto en la base de datos
@@ -51,6 +72,13 @@ class Producto(models.Model):
         Categoria, 
         on_delete=models.CASCADE, 
         db_column='tblcategoria_idt_categoria'
+    )
+    unidad_medida = models.ForeignKey(
+        UnidadMedida,
+        on_delete=models.PROTECT,
+        default=1,
+        related_name='productos',
+        db_column='tblunidad_medida_id_unidad'
     )
     stock_minimo = models.IntegerField(default=5, db_column='stock_minimo')
     eliminado = models.BooleanField(default=False, db_column='eliminado')
