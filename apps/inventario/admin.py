@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models.producto import Producto, Categoria, ProductoUsuario, Estado
+from .models.producto import Producto, Categoria, ProductoUsuario
 from apps.ventas.models.movimiento import TipoMovimiento
 
 
