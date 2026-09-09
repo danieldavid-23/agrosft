@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import FileExtensionValidator
 from core.utils.helpers import validate_image_size
-from apps.inventario.models import Producto, Categoria, ProductoUsuario
+from apps.inventario.models import Producto, Categoria, UnidadMedida, ProductoUsuario
 
 
 class MultipleFileInput(forms.FileInput):
@@ -44,6 +44,11 @@ class ProductoForm(forms.Form):
     id_categoria = forms.ModelChoiceField(
         queryset=Categoria.objects.filter(activo=True),
         empty_label="Seleccione una categoría",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    unidad_medida = forms.ModelChoiceField(
+        queryset=UnidadMedida.objects.filter(activo=True),
+        empty_label="Seleccione una unidad de medida",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     imagen = MultipleFileField(
@@ -90,6 +95,7 @@ class ProductoForm(forms.Form):
                 self.fields['nombre'].initial = producto.nombre
                 self.fields['descripcion'].initial = producto.descripcion
                 self.fields['id_categoria'].initial = producto.id_categoria
+                self.fields['unidad_medida'].initial = producto.unidad_medida
                 self.fields['stock_minimo'].initial = producto.stock_minimo
                 if hasattr(producto, 'imagen'):
                     self.fields['imagen'].initial = producto.imagen
@@ -97,6 +103,7 @@ class ProductoForm(forms.Form):
                 self.fields['nombre'].initial = initial_data.get('nombre', '')
                 self.fields['descripcion'].initial = initial_data.get('descripcion', '')
                 self.fields['id_categoria'].initial = initial_data.get('id_categoria')
+                self.fields['unidad_medida'].initial = initial_data.get('unidad_medida')
                 self.fields['stock_minimo'].initial = initial_data.get('stock_minimo', 5)
                 self.fields['imagen'].initial = initial_data.get('imagen')
             

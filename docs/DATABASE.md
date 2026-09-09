@@ -107,6 +107,7 @@ erDiagram
 | `cantidad` | INT | No | 0 | Stock global de referencia |
 | `fecha_creacion` | DATETIME | No | CURRENT_TIMESTAMP | Fecha de creación |
 | `tblcategoria_idt_categoria` | INT (FK) | No | — | FK a tblcategoria |
+| `tblunidad_medida_id_unidad` | INT (FK) | Yes | 1 | FK a tblunidad_medida (PROTECT, default = "Unidades") |
 | `stock_minimo` | INT | No | 5 | Umbral de alerta de stock |
 | `estado` | VARCHAR(20) | No | 'pendiente' | Estado del producto |
 | `eliminado` | BOOLEAN | No | FALSE | Soft delete flag |
@@ -129,6 +130,22 @@ erDiagram
 | `created_at` | DATETIME | No | CURRENT_TIMESTAMP | Fecha de carga |
 
 **Modelo Django**: `apps.inventario.models.producto.ProductoImagen`
+
+---
+
+### 2.4.2 tblunidad_medida — Unidades de Medida
+
+| Columna | Tipo | Nullable | Default | Descripción |
+|---|---|---|---|---|
+| `id_unidad` | INT (PK, AUTO_INCREMENT) | No | — | Identificador único |
+| `nombre` | VARCHAR(50) | No | — | Nombre de la unidad (único) |
+| `abreviatura` | VARCHAR(10) | No | — | Abreviatura (único) |
+| `activo` | BOOLEAN | No | TRUE | Unidad habilitada |
+| `created_at` | DATETIME | No | CURRENT_TIMESTAMP | Fecha de creación |
+
+**Valores iniciales**: `Unidades (u)`, `Kilogramos (kg)`, `Libras (lb)`, `Litros (L)`, `Gramos (g)`  
+**Modelo Django**: `apps.inventario.models.producto.UnidadMedida` (`managed = False`)  
+**Nota**: Schema gestionado externamente en MariaDB (`scripts/crear_unidad_medida.sql`), coherente con la regla de oro de la app `inventario`.
 
 ---
 

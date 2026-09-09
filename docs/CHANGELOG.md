@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+### Added (2026-09-09)
+- **Campo "Unidad de Medida" en productos** (ADR-022):
+  - **BD (externo)**: nueva tabla `tblunidad_medida` (`id_unidad`, `nombre`, `abreviatura`, `activo`, `created_at`) + 5 registros semilla (Unidades u, Kilogramos kg, Libras lb, Litros L, Gramos g) + columna `tblunidad_medida_id_unidad` (FK nullable, default 1) en `tblproducto`. Script: `scripts/crear_unidad_medida.sql` (ejecutado en MariaDB).
+  - **Modelo**: `UnidadMedida` (`managed=False`, `db_table='tblunidad_medida'`) en `apps/inventario/models/producto.py`. FK `unidad_medida` en `Producto` (`on_delete=PROTECT`, `default=1`, `db_column='tblunidad_medida_id_unidad'`).
+  - **Form**: `ProductoForm` — nuevo `ModelChoiceField` `unidad_medida` (widget `Select form-control`, `empty_label="Seleccione una unidad de medida"`), con inicialización en `__init__`.
+  - **Controller**: `crear_producto()` y `editar_producto()` guardan `unidad_medida` y pasan `unidades` al template.
+  - **Template**: `producto_form.html` — select "Unidad de Medida" renderizado con `{{ form.unidad_medida }}` debajo de Categoría.
+  - **Admin**: registro `UnidadMedidaAdmin`; `ProductoAdmin` muestra/filtra por `unidad_medida`.
+  - **Docs SDD**: `DATABASE.md` (+sección 2.4.2 y columna FK), `DECISIONS.md` (ADR-022).
+
 ### Changed (2026-09-09)
 - **Nombre y categoría inmutables al editar producto + fotografía obligatoria (ADR-024)**:
   - `apps/inventario/controllers/producto_controller.py`: `editar_producto()` ya no sobrescribe `producto.nombre` ni `producto.id_categoria`; la imagen es obligatoria en edición cuando la publicación no tiene imagen (`requerir_imagen=(not tiene_imagen)`).
