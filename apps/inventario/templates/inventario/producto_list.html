@@ -25,23 +25,72 @@
 
     <div id="django-inventario-fallback">
         <!-- Encabezado Premium -->
-        <div class="row align-items-center mb-5">
-            <div class="col-md-8">
-                <h1 class="display-6 fw-bold mb-2">
-                    <i class="fas fa-boxes me-2" style="color: var(--primary-color)"></i>{{ titulo|default:'Mi Inventario' }}
-                </h1>
-                <p class="text-muted fs-5 mb-0">{{ subtitulo|default:'Gestiona tus productos registrados' }}</p>
+        <div class="inv-hero card border-0 rounded-4 overflow-hidden shadow-sm mb-4">
+            <div class="inv-hero-bg"></div>
+            <div class="card-body p-4 p-lg-5 position-relative">
+                <div class="row align-items-center g-4">
+                    <div class="col-md-8">
+                        <span class="inv-eyebrow d-inline-flex align-items-center gap-2 mb-2">
+                            <i class="fas fa-seedling"></i> Panel de gestión
+                        </span>
+                        <h1 class="display-6 fw-bold mb-2 text-white">
+                            <i class="fas fa-boxes me-2 text-white"></i>{{ titulo|default:'Mi Inventario' }}
+                        </h1>
+                        <p class="inv-hero-sub fs-6 mb-0">{{ subtitulo|default:'Gestiona tus productos registrados' }}</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a href="{% url 'inventario:crear' %}" class="btn btn-light btn-lg rounded-pill px-4 shadow-sm inv-hero-btn">
+                            <i class="fas fa-plus-circle me-2 text-success"></i>Nuevo Producto
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-4 text-md-end mt-4 mt-md-0">
-                <a href="{% url 'inventario:crear' %}" class="btn btn-success btn-lg shadow-sm">
-                    <i class="fas fa-plus-circle me-2"></i>Nuevo Producto
-                </a>
+        </div>
+
+        <!-- Estadísticas Rápidas -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="inv-stat card border-0 shadow-sm rounded-4">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="inv-stat-icon bg-primary-light"><i class="fas fa-box-open text-success"></i></div>
+                        <div>
+                            <div class="inv-stat-value fw-bold">{{ productos|length }}</div>
+                            <div class="inv-stat-label text-muted small">Productos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="inv-stat card border-0 shadow-sm rounded-4">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="inv-stat-icon bg-secondary-light"><i class="fas fa-tags text-warning"></i></div>
+                        <div>
+                            <div class="inv-stat-value fw-bold">{{ categorias|length }}</div>
+                            <div class="inv-stat-label text-muted small">Categorías</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="inv-stat card border-0 shadow-sm rounded-4">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="inv-stat-icon bg-accent-light"><i class="fas fa-box text-info"></i></div>
+                        <div>
+                            <div class="inv-stat-value fw-bold">{{ estados|length }}</div>
+                            <div class="inv-stat-label text-muted small">Estados</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Barra de Filtros y Búsqueda -->
-        <div class="card shadow-sm mb-5 border-0 rounded-4">
+        <div class="card shadow-sm mb-5 border-0 rounded-4 inv-filter-card">
             <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="fas fa-sliders-h text-success"></i>
+                    <span class="fw-bold text-muted small text-uppercase" style="letter-spacing: 0.08em;">Filtros de búsqueda</span>
+                </div>
                 <form method="get" class="row g-3">
                     <div class="col-md-5">
                         <label class="form-label text-muted small fw-bold text-uppercase mb-1">Buscar</label>
@@ -212,11 +261,12 @@
             {% empty %}
             <!-- Estado Vacío Premium -->
             <div class="col-12">
-                <div class="card border-0 shadow-sm rounded-4 text-center py-5 my-4 bg-white">
-                    <div class="card-body py-5">
+                <div class="card border-0 shadow-sm rounded-4 text-center py-5 my-4 bg-white position-relative overflow-hidden">
+                    <div class="empty-glow"></div>
+                    <div class="card-body py-5 position-relative">
                         <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
-                            style="width: 100px; height: 100px;">
-                            <i class="fas fa-box-open fa-3x text-secondary"></i>
+                            style="width: 110px; height: 110px; background: linear-gradient(135deg, var(--primary-light), var(--secondary-light)) !important;">
+                            <i class="fas fa-box-open fa-3x text-success"></i>
                         </div>
                         <h3 class="fw-bold h4">No se encontraron productos</h3>
                         <p class="text-muted mx-auto" style="max-width: 400px;">Aún no hay productos disponibles o los
@@ -270,6 +320,93 @@
 </div>
 
 <style>
+    /* Encabezado Premium con degradado */
+    .inv-hero {
+        position: relative;
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 55%, #5a9c69 100%);
+    }
+    .inv-hero-bg {
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.12) 0, transparent 45%),
+            radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.08) 0, transparent 40%);
+        pointer-events: none;
+    }
+    .inv-eyebrow {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        background: rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(6px);
+        padding: 0.3rem 0.85rem;
+        border-radius: 9999px;
+    }
+    .inv-hero-sub {
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .inv-hero-btn {
+        font-weight: 700;
+    }
+    .inv-hero-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* Tarjetas de estadísticas */
+    .inv-stat {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .inv-stat:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover) !important;
+    }
+    .inv-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .bg-primary-light { background: var(--primary-light); }
+    .bg-secondary-light { background: var(--secondary-light); }
+    .bg-accent-light { background: var(--accent-light); }
+    .inv-stat-value {
+        font-size: 1.35rem;
+        line-height: 1;
+        color: var(--text-main);
+    }
+    .inv-stat-label {
+        margin-top: 0.25rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+    }
+
+    /* Tarjeta de filtros */
+    .inv-filter-card {
+        background: linear-gradient(180deg, #ffffff 0%, #fdfdfb 100%);
+    }
+    .inv-filter-card .form-control,
+    .inv-filter-card .form-select {
+        background-color: #fff !important;
+    }
+
+    /* Brillo decorativo del estado vacío */
+    .empty-glow {
+        position: absolute;
+        top: -80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 320px;
+        height: 160px;
+        background: radial-gradient(ellipse at center, rgba(60, 141, 60, 0.12) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
     /* Estilos críticos para asegurar tamaño perfecto y carrusel */
     .product-image-container {
         height: 220px !important;

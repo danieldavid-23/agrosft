@@ -246,6 +246,13 @@
         font-family: 'Inter', sans-serif;
     }
 
+    /* Eliminar el espacio superior y lateral del contenedor principal para que el hero quede al ras con el navbar */
+    main.container-fluid {
+        padding-top: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
     /* ------------------------------------------------------------------
    HERO (Banner principal del inicio)
    ------------------------------------------------------------------ */
@@ -254,6 +261,7 @@
         background: linear-gradient(128deg, #0f2417 0%, #1d4d2b 42%, #3C8D3C 100%);
         overflow: hidden;
         isolation: isolate;
+        border-radius: 0;
     }
 
     /* textura de puntos sutiles sobre el gradiente */
@@ -293,7 +301,7 @@
     }
 
     .mp-hero-row {
-        min-height: 340px;
+        min-height: 220px;
     }
 
     .mp-hero>.container {

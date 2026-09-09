@@ -1,6 +1,9 @@
-from .movimiento import Movimiento, ProductoUsuarioMovimiento
+from .movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
+from .resena import Resena
 
 __all__ = [
     'Movimiento',
-    'ProductoUsuarioMovimiento'
+    'ProductoUsuarioMovimiento',
+    'TipoMovimiento',
+    'Resena'
 ]
