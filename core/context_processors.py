@@ -43,6 +43,9 @@ def layout_data(request):
     urls['historial'] = _url('usuarios:historial')
     urls['cambiar_password'] = _url('usuarios:cambiar_password')
 
+    # Panel de administración (visible solo para staff/superuser)
+    urls['panel_admin'] = _url('administracion:dashboard', '#')
+
 
 
     if request.user.is_authenticated:

@@ -138,6 +138,9 @@ function getToastTitle(tags) {
                 {{ user.nombre_corto || user.correo }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end shadow border-0" :class="{ show: showDropdown }" style="border-radius: var(--radius-md);">
+                <li v-if="user.is_staff || user.is_superuser">
+                  <a class="dropdown-item py-2" :href="urls.panel_admin"><i class="fas fa-cog fa-fw text-muted me-2"></i> Panel de Administración</a>
+                </li>
                 <li><a class="dropdown-item py-2" :href="urls.perfil"><i class="fas fa-id-card fa-fw text-muted me-2"></i> Mi Perfil</a></li>
                 <li><a class="dropdown-item py-2" :href="urls.cambiar_password"><i class="fas fa-key fa-fw text-muted me-2"></i> Seguridad</a></li>
                 <li><a class="dropdown-item py-2" :href="urls.facturacion_historial"><i class="fas fa-file-invoice-dollar fa-fw text-muted me-2"></i> Mis Facturas</a></li>

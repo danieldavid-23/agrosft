@@ -1,0 +1,42 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="card-header">
+        <span><i class="fas fa-store me-2 text-success"></i>Publicaciones de usuarios</span>
+        <span class="badge-soft badge-blue">{{ publicaciones|length }} publicaciones</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Vendedor</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-end">Precio</th>
+                        <th>Publicado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pub in publicaciones %}
+                    <tr>
+                        <td>#{{ pub.id_producto_usuario }}</td>
+                        <td class="fw-semibold">{{ pub.id_producto.nombre }}</td>
+                        <td>{{ pub.id_usuario.get_full_name }}</td>
+                        <td class="text-center">
+                            <span class="fw-bold {% if pub.cantidad <= 0 %}text-danger{% else %}text-success{% endif %}">{{ pub.cantidad }}</span>
+                        </td>
+                        <td class="text-end fw-semibold">{{ pub.precio|floatformat:0 }}</td>
+                        <td>{{ pub.fecha_creacion|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="empty-state"><i class="fas fa-store"></i><p>Sin publicaciones.</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

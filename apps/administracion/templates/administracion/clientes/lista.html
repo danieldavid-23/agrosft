@@ -1,0 +1,40 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="card-header">
+        <span><i class="fas fa-user-tie me-2 text-success"></i>Clientes registrados</span>
+        <span class="badge-soft badge-green">{{ clientes|length }} clientes</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Usuario (correo)</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th>Registro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clientes %}
+                    <tr>
+                        <td>#{{ c.id }}</td>
+                        <td class="fw-semibold">{{ c.nombre_completo }}</td>
+                        <td>{{ c.usuario.correo }}</td>
+                        <td>{{ c.telefono|default:'—' }}</td>
+                        <td>{{ c.direccion|default:'—'|truncatechars:40 }}</td>
+                        <td>{{ c.fecha_registro|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="empty-state"><i class="fas fa-user-tie"></i><p>Sin clientes.</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

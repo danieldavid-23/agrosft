@@ -1,0 +1,98 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="card-header">
+        <span><i class="fas fa-users me-2 text-success"></i>Usuarios del sistema</span>
+        <span class="badge-soft badge-green">{{ usuarios|length }} resultados</span>
+    </div>
+    <div class="card-body">
+        <!-- Filtros -->
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o correo..." value="{{ q }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="filtro" class="form-select">
+                    <option value="todos" {% if filtro == 'todos' %}selected{% endif %}>Todos</option>
+                    <option value="activos" {% if filtro == 'activos' %}selected{% endif %}>Activos</option>
+                    <option value="inactivos" {% if filtro == 'inactivos' %}selected{% endif %}>Inactivos</option>
+                    <option value="staff" {% if filtro == 'staff' %}selected{% endif %}>Staff</option>
+                    <option value="admin" {% if filtro == 'admin' %}selected{% endif %}>Administradores</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-admin-primary w-100">
+                    <i class="fas fa-filter me-1"></i>Filtrar
+                </button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Correo</th>
+                        <th>Teléfono</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr>
+                        <td>#{{ u.id_users }}</td>
+                        <td class="fw-semibold">{{ u.get_full_name }}</td>
+                        <td>{{ u.correo }}</td>
+                        <td>{{ u.telefono|default:'—' }}</td>
+                        <td>
+                            {% if u.is_superuser %}<span class="badge-soft badge-red">Super</span>
+                            {% elif u.is_staff %}<span class="badge-soft badge-blue">Staff</span>
+                            {% else %}<span class="badge-soft badge-gray">Usuario</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_active %}<span class="badge-soft badge-green">Activo</span>
+                            {% else %}<span class="badge-soft badge-red">Inactivo</span>{% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex gap-1 justify-content-end">
+                                <a href="{% url 'administracion:usuario_detalle' u.id_users %}"
+                                   class="btn btn-sm btn-outline-primary rounded-pill" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if u.is_active %}
+                                <form method="post" action="{% url 'administracion:usuario_estado' u.id_users %}" class="d-inline"
+                                      onsubmit="return confirm('¿Desactivar la cuenta de {{ u.get_full_name }}?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Desactivar">
+                                        <i class="fas fa-user-slash"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'administracion:usuario_estado' u.id_users %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-pill" title="Activar">
+                                        <i class="fas fa-user-check"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7">
+                        <div class="empty-state"><i class="fas fa-user-slash"></i><p>No se encontraron usuarios.</p></div>
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

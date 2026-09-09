@@ -1,0 +1,56 @@
+{% extends 'administracion/base_panel.html' %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="card-header">
+        <span><i class="fas fa-shield-alt me-2 text-success"></i>Registro de acciones administrativas</span>
+        <form method="post" action="{% url 'administracion:auditoria_limpiar' %}"
+              onsubmit="return confirm('¿Eliminar todos los registros de auditoría? Esta acción no se puede deshacer.');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                <i class="fas fa-trash me-1"></i>Limpiar
+            </button>
+        </form>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por acción, objetivo o detalle..." value="{{ q }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-admin-primary w-100"><i class="fas fa-filter me-1"></i>Buscar</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Administrador</th>
+                        <th>Acción</th>
+                        <th>Objetivo</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.fecha|date:"d/m/Y H:i" }}</td>
+                        <td class="fw-semibold">{{ log.admin.get_full_name|default:'Sistema' }}</td>
+                        <td><span class="badge-soft badge-blue">{{ log.accion }}</span></td>
+                        <td>{{ log.objetivo|default:'—' }}</td>
+                        <td><code>{{ log.ip_address|default:'—' }}</code></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5"><div class="empty-state"><i class="fas fa-shield-alt"></i><p>Sin registros de auditoría.</p></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

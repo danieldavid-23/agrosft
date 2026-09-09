@@ -144,8 +144,10 @@ class LoginView(View):
                     
                     messages.success(request, f'Bienvenido, {user.get_full_name()}!')
                     
-                    # Redirigir al marketplace
+                    # Redirigir al panel de administración si es staff/superuser
                     next_url = request.GET.get('next', None)
+                    if user.is_staff or user.is_superuser:
+                        return redirect('administracion:dashboard')
                     if next_url:
                         return redirect(next_url)
                     return redirect('inventario:marketplace')
