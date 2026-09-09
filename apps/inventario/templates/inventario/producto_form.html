@@ -54,18 +54,16 @@
 
                             <div class="col-md-8">
                                 <label class="form-label text-muted small fw-bold text-uppercase">
-                                    Nombre del Producto <span class="text-danger">*</span>
+                                    Nombre del Producto {% if accion == 'crear' %}<span class="text-danger">*</span>{% endif %}
                                 </label>
+                                <!-- Campo oculto real que alimenta el form Django -->
+                                <div style="display:none;">{{ form.nombre }}</div>
+                                {% if accion == 'crear' %}
                                 <!-- Select dinámico de nombres de producto -->
                                 <select id="selector-nombre-producto" class="form-control">
                                     <option value="">Seleccione un producto...</option>
                                     <option value="__nuevo__" class="text-success fw-bold">+ Agregar nuevo producto</option>
                                 </select>
-                                <!-- Campo oculto real que alimenta el form Django -->
-                                <div style="display:none;">{{ form.nombre }}</div>
-                                {% if form.nombre.errors %}
-                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.nombre.errors.0 }}</div>
-                                {% endif %}
                                 <div class="form-text small text-muted"><i class="fas fa-font me-1"></i>Mín. 3, máx. 200 caracteres</div>
 
                                 <!-- Inline form: crear nuevo producto -->
@@ -91,13 +89,23 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% else %}
+                                <input type="text" class="form-control" value="{{ producto.nombre }}" disabled readonly>
+                                <div class="form-text small text-muted"><i class="fas fa-lock me-1"></i>El nombre del producto no se puede modificar.</div>
+                                {% endif %}
+                                {% if form.nombre.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.nombre.errors.0 }}</div>
+                                {% endif %}
                             </div>
 
                             <!-- Categoría (Full width) -->
                             <div class="col-12">
                                 <label class="form-label text-muted small fw-bold text-uppercase">
-                                    Categoría <span class="text-danger">*</span>
+                                    Categoría {% if accion == 'crear' %}<span class="text-danger">*</span>{% endif %}
                                 </label>
+                                <!-- Campo oculto real que alimenta el form Django -->
+                                <div style="display:none;">{{ form.id_categoria }}</div>
+                                {% if accion == 'crear' %}
                                 <!-- Select dinámico de categorías -->
                                 <select id="selector-categoria" class="form-control">
                                     <option value="">Seleccione una categoría</option>
@@ -106,11 +114,6 @@
                                     {% endfor %}
                                     <option value="__nueva__" class="text-success fw-bold">+ Agregar categoría</option>
                                 </select>
-                                <!-- Campo oculto real que alimenta el form Django -->
-                                <div style="display:none;">{{ form.id_categoria }}</div>
-                                {% if form.id_categoria.errors %}
-                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.id_categoria.errors.0 }}</div>
-                                {% endif %}
 
                                 <!-- Inline form: crear nueva categoría -->
                                 <div id="inline-nueva-categoria" class="inline-create-form mt-2" style="display:none;">
@@ -135,6 +138,13 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% else %}
+                                <input type="text" class="form-control" value="{{ producto.id_categoria.nombre }}" disabled readonly>
+                                <div class="form-text small text-muted"><i class="fas fa-lock me-1"></i>La categoría no se puede modificar.</div>
+                                {% endif %}
+                                {% if form.id_categoria.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.id_categoria.errors.0 }}</div>
+                                {% endif %}
                             </div>
 
                             <!-- Precio, Stock y Alerta -->
@@ -194,6 +204,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <label for="{{ form.imagen.id_for_label }}" class="form-label text-muted small fw-bold text-uppercase d-flex align-items-center gap-2 mb-0">
                                         <i class="fas fa-images text-success"></i> Galería de Fotos del Producto
+                                        {% if form.imagen.field.required %}<span class="text-danger">*</span>{% endif %}
                                     </label>
                                     {% if imagenes_detalle %}
                                     <span class="badge fw-bold px-3 py-2 rounded-pill" style="background-color: var(--primary-color, #2d6a4f); color: #ffffff;">

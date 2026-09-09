@@ -331,7 +331,7 @@ def crear_producto(request):
     Usa el formulario ProductoForm y la plantilla producto_form.html.
     """
     if request.method == 'POST':
-        form = ProductoForm(request.POST, request.FILES)
+        form = ProductoForm(request.POST, request.FILES, requerir_imagen=True)
         if form.is_valid():
             try:
                 with transaction.atomic():
@@ -400,7 +400,7 @@ def crear_producto(request):
             logger.error(f"Errores de validación al crear producto: {form.errors}")
             messages.error(request, 'Por favor corrige los errores indicados en el formulario.')
     else:
-        form = ProductoForm(initial={'stock_minimo': 5, 'cantidad': 1})
+        form = ProductoForm(initial={'stock_minimo': 5, 'cantidad': 1}, requerir_imagen=True)
 
     categorias = get_categorias_cached()
 
@@ -572,8 +572,11 @@ def editar_producto(request, pk):
     # Stock actual de la publicación (entero, unidades no fraccionables)
     stock_actual = int(producto_usuario.cantidad)
 
+    # Determinar si la publicación ya tiene al menos una imagen registrada
+    tiene_imagen = bool(producto_usuario.id_producto.imagen) or producto_usuario.id_producto.imagenes_secundarias.exists()
+
     if request.method == 'POST':
-        form = ProductoForm(request.POST, request.FILES)  # Eliminar instance= que no es válido para forms.Form
+        form = ProductoForm(request.POST, request.FILES, requerir_imagen=(not tiene_imagen))  # Eliminar instance= que no es válido para forms.Form
         if form.is_valid():
             nuevo_stock = int(form.cleaned_data['cantidad'])
 
@@ -589,10 +592,9 @@ def editar_producto(request, pk):
             else:
                 with transaction.atomic():
                     # Actualizar campos del producto maestro (tblproducto)
+                    # NOTA: nombre y categoría NO son editables (se conservan del registro original).
                     producto = producto_usuario.id_producto
-                    producto.nombre = form.cleaned_data['nombre']
                     producto.descripcion = form.cleaned_data['descripcion']
-                    producto.id_categoria = form.cleaned_data['id_categoria']
                     
                     # Actualizar imágenes si se proporcionan nuevas (conservando existentes)
                     archivos_nuevos = request.FILES.getlist('imagen')
@@ -663,7 +665,7 @@ def editar_producto(request, pk):
             'cantidad': stock_actual,  # Entero: evita mostrar decimales (.00)
             'precio': producto_usuario.precio,
         }
-        form = ProductoForm(initial=initial_data)
+        form = ProductoForm(initial=initial_data, requerir_imagen=(not tiene_imagen))
         # TODOS los usuarios pueden editar stock_minimo (sin restricciones)
 
     # Configurar el campo 'cantidad' para impedir bajar el stock (form + input)

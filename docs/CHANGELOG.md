@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### Changed (2026-09-09)
+- **Nombre y categoría inmutables al editar producto + fotografía obligatoria (ADR-024)**:
+  - `apps/inventario/controllers/producto_controller.py`: `editar_producto()` ya no sobrescribe `producto.nombre` ni `producto.id_categoria`; la imagen es obligatoria en edición cuando la publicación no tiene imagen (`requerir_imagen=(not tiene_imagen)`).
+  - `apps/inventario/controllers/producto_controller.py`: `crear_producto()` instancia `ProductoForm(..., requerir_imagen=True)`.
+  - `apps/inventario/forms/producto_form.py`: `ProductoForm` acepta `requerir_imagen` (marca `imagen.required`); `MultipleFileField.clean` valida `required` sobre listas vacías.
+  - `apps/inventario/templates/inventario/producto_form.html`: en edición, nombre y categoría se muestran en solo lectura (`disabled readonly`) con nota "no se puede modificar"; asterisco condicional; la galería indica obligatoriedad con `form.imagen.field.required`.
+  - Documentación actualizada: `REQUIREMENTS.md` (RF-I01, RF-I03), `USER_STORIES.md` (US-05, US-07), `DECISIONS.md` (ADR-024).
+
 ### Added (2026-09-09)
 - **Reabastecimiento de inventario desde la edición de producto (ADR-023)**:
   - `scripts/insertar_tipo_reabastecimiento.sql`: nuevo script idempotente que asegura la existencia del tipo `reabastecimiento` en `tipo_movimiento`.

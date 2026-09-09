@@ -23,6 +23,8 @@ class MultipleFileField(forms.FileField):
     def clean(self, data, initial=None):
         single_file_clean = super().clean
         if isinstance(data, (list, tuple)):
+            if not data and self.required:
+                raise forms.ValidationError(self.error_messages['required'], code='required')
             result = [single_file_clean(d, initial) for d in data if d]
         else:
             result = single_file_clean(data, initial)
@@ -77,7 +79,10 @@ class ProductoForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         initial_data = kwargs.pop('initial', {})
+        requerir_imagen = kwargs.pop('requerir_imagen', False)
         super().__init__(*args, **kwargs)
+        if requerir_imagen:
+            self.fields['imagen'].required = True
         
         if initial_data:
             if 'nombre' in initial_data and hasattr(initial_data['nombre'], 'pk'):

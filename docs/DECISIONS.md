@@ -824,6 +824,42 @@ El módulo de edición de producto (`editar_producto()`) permitía anteriormente
 
 ---
 
+## ADR-024: Nombre y Categoría Inmutables en Edición + Fotografía Obligatoria
+
+**Fecha**: 2026-09-09  
+**Estado**: Aceptada  
+
+### Contexto
+
+En el módulo de edición de producto se permitía modificar el `nombre` y la `categoría` de un producto ya publicado, lo que podía romper la trazabilidad del catálogo maestro. Adicionalmente, el registro de productos permitía crear publicaciones sin ninguna fotografía, degradando la experiencia del marketplace.
+
+### Decisión
+
+1. **Nombre y categoría inmutables en edición**:
+   - En `editar_producto()`, se eliminan las asignaciones `producto.nombre` y `producto.id_categoria` (el backend ya no los sobrescribe).
+   - En `producto_form.html`, en modo edición (`accion == 'editar'`) los selectores dinámicos se sustituyen por campos de solo lectura (`disabled readonly`) con el valor actual, manteniendo ocultos `{{ form.nombre }}` y `{{ form.id_categoria }}` para que el formulario siga validando.
+2. **Fotografía obligatoria**:
+   - `ProductoForm` acepta el kwarg `requerir_imagen` que marca `imagen.required = True`.
+   - `MultipleFileField.clean` permite que `required` aplique también a listas vacías (antes devolvía `[]` sin validar).
+   - En `crear_producto`, la imagen es **siempre** obligatoria.
+   - En `editar_producto`, es obligatoria **solo** si la publicación no tiene imagen (`tiene_imagen == False`).
+
+### Consecuencias
+
+- ✅ Evita cambiar identidad de un producto ya publicado (integridad del catálogo).
+- ✅ Garantiza que toda publicación nueva tenga al menos una fotografía.
+- ✅ Validación doble: frontend (UI de solo lectura y nota de obligatorio) y backend (required).
+- ⚠️ Publicaciones existentes sin imagen seguirán apareciendo hasta que se editen (se les exigirá imagen en el próximo guardado).
+
+### Archivos Afectados
+
+- `apps/inventario/forms/producto_form.py`
+- `apps/inventario/controllers/producto_controller.py`
+- `apps/inventario/templates/inventario/producto_form.html`
+- `docs/REQUIREMENTS.md`, `USER_STORIES.md`, `CHANGELOG.md`
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -848,6 +884,7 @@ El módulo de edición de producto (`editar_producto()`) permitía anteriormente
 | ADR-021 | Eliminación de panel web admin y unificación de experiencia | Aceptada | Arquitectura / UI / Usuarios |
 | ADR-022 | Selectores dinámicos para Categoría y Nombre de Producto | Aceptada | Inventario / UI / UX |
 | ADR-023 | Tipo 'reabastecimiento' + stock por trigger | Aceptada | Edición inventario + BD |
+| ADR-024 | Nombre/Categoría inmutables + fotografía obligatoria | Aceptada | Formulario producto |
 
 ---
 

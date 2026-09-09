@@ -26,9 +26,9 @@
 
 | ID | Requisito | Prioridad | Estado |
 |---|---|---|---|
-| RF-I01 | El sistema debe permitir crear productos con nombre, descripción, categoría, precio, cantidad y stock mínimo | Alta | ✅ Implementado |
+| RF-I01 | El sistema debe permitir crear productos con nombre, descripción, categoría, precio, cantidad, stock mínimo y **fotografía obligatoria** | Alta | ✅ Implementado |
 | RF-I02 | El sistema debe listar los productos del usuario actual (Mi Inventario) | Alta | ✅ Implementado |
-| RF-I03 | El sistema debe permitir editar productos existentes. El stock solo puede **mantenerse o aumentar** (reabastecimiento); no se permite reducir unidades | Alta | ✅ Implementado |
+| RF-I03 | El sistema debe permitir editar productos existentes. El stock solo puede **mantenerse o aumentar** (reabastecimiento); **nombre y categoría no son editables** | Alta | ✅ Implementado |
 | RF-I04 | El sistema debe permitir eliminar productos (soft delete) | Alta | ✅ Implementado |
 | RF-I05 | El sistema debe mostrar un marketplace con productos de otros usuarios aprobados | Alta | ✅ Implementado |
 | RF-I06 | El sistema debe permitir buscar productos por nombre | Media | ✅ Implementado |
