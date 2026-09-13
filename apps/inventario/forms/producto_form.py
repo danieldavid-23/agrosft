@@ -64,16 +64,26 @@ class ProductoForm(forms.Form):
     stock_minimo = forms.IntegerField(
         min_value=0,
         required=False,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Stock mínimo para alerta'})
+        error_messages={
+            'min_value': 'El stock mínimo para alerta no puede ser un número negativo.',
+            'invalid': 'Ingrese un número entero válido para la alerta de stock.'
+        },
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Stock mínimo para alerta', 'min': '0'})
     )
     
     # Campos para la relación específica usuario-producto (tblproductos_has_tblusuarios)
     cantidad = forms.IntegerField(
-        min_value=0,
+        min_value=1,
+        error_messages={
+            'required': 'El número de unidades es obligatorio.',
+            'min_value': 'No se permiten números negativos ni cero. Ingrese solo números positivos.',
+            'invalid': 'Ingrese un número entero positivo válido para las unidades.'
+        },
         widget=forms.NumberInput(attrs={
             'class': 'form-control', 
-            'placeholder': 'Cantidad disponible',
-            'step': '1'
+            'placeholder': 'Cantidad disponible (mínimo 1)',
+            'step': '1',
+            'min': '1'
         })
     )
     precio = forms.DecimalField(
@@ -82,6 +92,22 @@ class ProductoForm(forms.Form):
         required=False,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Precio unitario'})
     )
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre', '').strip()
+        if not nombre:
+            raise forms.ValidationError('El nombre del producto es obligatorio.')
+        if len(nombre) < 3:
+            raise forms.ValidationError('El nombre del producto debe tener al menos 3 caracteres.')
+        if len(nombre) > 45:
+            raise forms.ValidationError('El nombre del producto no puede superar los 45 caracteres.')
+        return nombre
+
+    def clean_cantidad(self):
+        cantidad = self.cleaned_data.get('cantidad')
+        if cantidad is not None and cantidad <= 0:
+            raise forms.ValidationError('No se permiten números negativos ni cero. Ingrese solo números positivos.')
+        return cantidad
 
     def __init__(self, *args, **kwargs):
         initial_data = kwargs.pop('initial', {})

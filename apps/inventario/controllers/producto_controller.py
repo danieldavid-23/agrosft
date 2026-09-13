@@ -78,7 +78,7 @@ def api_crear_categoria(request):
 def api_nombres_producto(request):
     """
     API AJAX para obtener nombres únicos de productos existentes (no eliminados).
-    GET → JSON: {"nombres": ["Cebolla", "Papa", "Tomate"]}
+    GET → JSON: {"nombres": ["Cebolla", "Papa", "Tomate"], "mis_nombres": [...]}
     """
     nombres_qs = Producto.objects.filter(
         eliminado=False
@@ -91,7 +91,17 @@ def api_nombres_producto(request):
     # Deduplicar preservando orden alfabético
     nombres = sorted(list(set(n.strip() for n in nombres_qs if n and n.strip())))
 
-    return JsonResponse({'nombres': nombres})
+    # Nombres ya registrados en el inventario activo del usuario actual
+    mis_nombres = list(ProductoUsuario.objects.filter(
+        id_usuario=request.user,
+        id_producto__eliminado=False
+    ).values_list('id_producto__nombre', flat=True))
+    mis_nombres = sorted(list(set(n.strip() for n in mis_nombres if n and n.strip())))
+
+    return JsonResponse({
+        'nombres': nombres,
+        'mis_nombres': mis_nombres
+    })
 
 
 
@@ -334,70 +344,101 @@ def crear_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES, requerir_imagen=True)
         if form.is_valid():
-            try:
-                with transaction.atomic():
-                    # Obtener todos los archivos de imagen enviados
-                    archivos_imagen = request.FILES.getlist('imagen')
-                    primera_imagen = archivos_imagen[0] if archivos_imagen else None
+            nombre_limpio = form.cleaned_data['nombre'].strip()
+            
+            # 1. Validar que el usuario no tenga ya este producto en su inventario activo
+            ya_existe_en_usuario = ProductoUsuario.objects.filter(
+                id_usuario=request.user,
+                id_producto__nombre__iexact=nombre_limpio,
+                id_producto__eliminado=False
+            ).exists()
 
-                    # 1. Crear producto maestro en tblproducto
-                    producto = Producto.objects.create(
-                        nombre=form.cleaned_data['nombre'],
-                        descripcion=form.cleaned_data.get('descripcion') or '',
-                        id_categoria=form.cleaned_data['id_categoria'],
-                        unidad_medida=form.cleaned_data['unidad_medida'],
-                        cantidad=form.cleaned_data['cantidad'],
-                        stock_minimo=form.cleaned_data.get('stock_minimo') or 5,
-                        imagen=primera_imagen
-                    )
+            if ya_existe_en_usuario:
+                form.add_error(
+                    'nombre', 
+                    f'Ya tienes registrado el producto "{nombre_limpio}" en tu inventario. '
+                    f'No se permite agregar productos duplicados. Si deseas modificar las unidades o el precio, por favor edítalo desde tu inventario.'
+                )
+                messages.error(request, f'Ya tienes "{nombre_limpio}" en tu inventario. No se permiten duplicados.')
+            else:
+                try:
+                    with transaction.atomic():
+                        # Obtener todos los archivos de imagen enviados
+                        archivos_imagen = request.FILES.getlist('imagen')
+                        primera_imagen = archivos_imagen[0] if archivos_imagen else None
 
-                    # Guardar imágenes secundarias en tblproducto_imagenes (a partir de la segunda)
-                    if len(archivos_imagen) > 1:
-                        for idx, img_file in enumerate(archivos_imagen[1:], start=1):
-                            ProductoImagen.objects.create(
-                                id_producto=producto,
-                                imagen=img_file,
-                                orden=idx
+                        # 2. Buscar o crear producto en el catálogo maestro (tblproducto)
+                        producto = Producto.objects.filter(
+                            nombre__iexact=nombre_limpio,
+                            eliminado=False
+                        ).first()
+
+                        if not producto:
+                            producto = Producto.objects.create(
+                                nombre=nombre_limpio,
+                                descripcion=form.cleaned_data.get('descripcion') or '',
+                                id_categoria=form.cleaned_data['id_categoria'],
+                                unidad_medida=form.cleaned_data['unidad_medida'],
+                                cantidad=form.cleaned_data['cantidad'],
+                                stock_minimo=form.cleaned_data.get('stock_minimo') or 5,
+                                imagen=primera_imagen
                             )
+                            logger.info(f"Nuevo producto maestro creado en BD: '{producto.nombre}' (id={producto.id_producto}) por user {request.user.pk}")
+                        else:
+                            # Reutilizar producto maestro existente y actualizar imagen de portada si no poseía
+                            if not producto.imagen and primera_imagen:
+                                producto.imagen = primera_imagen
+                                producto.save(update_fields=['imagen'])
+                            logger.info(f"Reutilizando producto maestro existente en BD: '{producto.nombre}' (id={producto.id_producto})")
 
-                    # 2. Crear relación en tblproductos_has_tblusuarios (ProductoUsuario)
-                    precio_val = form.cleaned_data.get('precio')
-                    if precio_val is None:
-                        precio_val = Decimal('0.00')
+                        # Guardar imágenes secundarias en tblproducto_imagenes (a partir de la segunda)
+                        if len(archivos_imagen) > 1:
+                            ultimo_orden = producto.imagenes_secundarias.count()
+                            for idx, img_file in enumerate(archivos_imagen[1:], start=ultimo_orden + 1):
+                                ProductoImagen.objects.create(
+                                    id_producto=producto,
+                                    imagen=img_file,
+                                    orden=idx
+                                )
 
-                    pu = ProductoUsuario.objects.create(
-                        id_producto=producto,
-                        id_usuario=request.user,
-                        cantidad=Decimal(str(form.cleaned_data['cantidad'])),
-                        precio=precio_val
-                    )
+                        # 3. Crear relación en tblproductos_has_tblusuarios (ProductoUsuario)
+                        precio_val = form.cleaned_data.get('precio')
+                        if precio_val is None:
+                            precio_val = Decimal('0.00')
 
-                    # 3. Registrar movimiento inicial de ingreso
-                    try:
-                        tipo_ingreso = TipoMovimiento.objects.filter(tipo__in=['compra', 'ingreso']).first()
-                        if not tipo_ingreso:
-                            tipo_ingreso, _ = TipoMovimiento.objects.get_or_create(tipo='compra')
-                        movimiento = Movimiento.objects.create(
-                            id_tipo_movimiento=tipo_ingreso,
-                            id_usuario=request.user
+                        pu = ProductoUsuario.objects.create(
+                            id_producto=producto,
+                            id_usuario=request.user,
+                            cantidad=Decimal(str(form.cleaned_data['cantidad'])),
+                            precio=precio_val
                         )
-                        ProductoUsuarioMovimiento.objects.create(
-                            id_movimiento=movimiento,
-                            id_producto_usuario=pu,
-                            cantidad=form.cleaned_data['cantidad']
+
+                        # 4. Registrar movimiento inicial de ingreso
+                        try:
+                            tipo_ingreso = TipoMovimiento.objects.filter(tipo__in=['compra', 'ingreso']).first()
+                            if not tipo_ingreso:
+                                tipo_ingreso, _ = TipoMovimiento.objects.get_or_create(tipo='compra')
+                            movimiento = Movimiento.objects.create(
+                                id_tipo_movimiento=tipo_ingreso,
+                                id_usuario=request.user
+                            )
+                            ProductoUsuarioMovimiento.objects.create(
+                                id_movimiento=movimiento,
+                                id_producto_usuario=pu,
+                                cantidad=form.cleaned_data['cantidad']
+                            )
+                        except Exception as e_mov:
+                            logger.warning(f"No se pudo registrar movimiento inicial: {e_mov}")
+
+                        messages.success(
+                            request,
+                            f'¡Producto "{producto.nombre}" registrado exitosamente en tu inventario!'
                         )
-                    except Exception as e_mov:
-                        logger.warning(f"No se pudo registrar movimiento inicial: {e_mov}")
+                        return redirect('inventario:listar')
 
-                    messages.success(
-                        request,
-                        f'¡Producto "{producto.nombre}" registrado exitosamente en tu inventario!'
-                    )
-                    return redirect('inventario:listar')
-
-            except Exception as e:
-                logger.exception("Error al crear producto")
-                messages.error(request, f'Error al registrar el producto: {str(e)}')
+                except Exception as e:
+                    logger.exception("Error al crear producto")
+                    messages.error(request, f'Error al registrar el producto: {str(e)}')
         else:
             logger.error(f"Errores de validación al crear producto: {form.errors}")
             messages.error(request, 'Por favor corrige los errores indicados en el formulario.')

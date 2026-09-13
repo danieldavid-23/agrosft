@@ -64,7 +64,7 @@
                                     <option value="">Seleccione un producto...</option>
                                     <option value="__nuevo__" class="text-success fw-bold">+ Agregar nuevo producto</option>
                                 </select>
-                                <div class="form-text small text-muted"><i class="fas fa-font me-1"></i>Mín. 3, máx. 200 caracteres</div>
+                                <div class="form-text small text-muted"><i class="fas fa-font me-1"></i>Mín. 3, máx. 45 caracteres</div>
 
                                 <!-- Inline form: crear nuevo producto -->
                                 <div id="inline-nuevo-producto" class="inline-create-form mt-2" style="display:none;">
@@ -76,7 +76,7 @@
                                                 </div>
                                                 <span class="fw-bold small text-dark">Nuevo Producto</span>
                                             </div>
-                                            <input type="text" id="input-nuevo-producto" class="form-control form-control-sm mb-2" placeholder="Ej: Tomate cherry" minlength="3" maxlength="200">
+                                            <input type="text" id="input-nuevo-producto" class="form-control form-control-sm mb-2" placeholder="Ej: Tomate cherry" minlength="3" maxlength="45">
                                             <div id="error-nuevo-producto" class="text-danger small mb-2" style="display:none;"></div>
                                             <div class="d-flex gap-2">
                                                 <button type="button" id="btn-guardar-producto" class="btn btn-success btn-sm rounded-pill px-3 flex-grow-1">
@@ -182,6 +182,7 @@
                                     <span class="input-group-text bg-light border-end-0"><i class="fas fa-box"></i></span>
                                     {{ form.cantidad }}
                                 </div>
+                                <div id="error-cantidad-frontend" class="text-danger small mt-1" style="display:none;"></div>
                                 {% if accion == 'editar' %}
                                 <div class="form-text small text-muted mt-1" id="cantidad-ayuda">
                                     <i class="fas fa-arrow-up text-success me-1"></i>
@@ -646,10 +647,18 @@
                         // Insertar antes de "+ Agregar categoría"
                         const lastOpt = selectCat.querySelector('option[value="__nueva__"]');
                         selectCat.insertBefore(opt, lastOpt);
+
+                        // Insertar también en el select real de Django (realInputCat)
+                        if (realInputCat && realInputCat.tagName === 'SELECT') {
+                            const optDjango = document.createElement('option');
+                            optDjango.value = data.id_categoria;
+                            optDjango.textContent = data.nombre;
+                            realInputCat.appendChild(optDjango);
+                        }
                         
                         // Seleccionar la nueva opción
                         selectCat.value = data.id_categoria;
-                        realInputCat.value = data.id_categoria;
+                        if (realInputCat) realInputCat.value = data.id_categoria;
                         prevCatVal = data.id_categoria;
 
                         // Resetear inline form
@@ -682,6 +691,28 @@
         const errorProd = document.getElementById('error-nuevo-producto');
 
         let prevNombreVal = realInputNombre ? realInputNombre.value : '';
+        let catalogoNombres = [];
+        let misNombresUsuario = [];
+
+        function mostrarErrorProd(msg) {
+            if (errorProd) {
+                errorProd.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>' + msg;
+                errorProd.style.display = 'block';
+            }
+            if (inputNuevoProd) {
+                inputNuevoProd.classList.add('is-invalid');
+            }
+        }
+
+        function limpiarErrorProd() {
+            if (errorProd) {
+                errorProd.textContent = '';
+                errorProd.style.display = 'none';
+            }
+            if (inputNuevoProd) {
+                inputNuevoProd.classList.remove('is-invalid');
+            }
+        }
 
         // Cargar nombres existentes desde el backend
         if (selectNombre && realInputNombre) {
@@ -690,15 +721,17 @@
             })
             .then(res => res.json())
             .then(data => {
-                const nombres = data.nombres || [];
+                catalogoNombres = data.nombres || [];
+                misNombresUsuario = data.mis_nombres || [];
                 const addOption = selectNombre.querySelector('option[value="__nuevo__"]');
 
-                nombres.forEach(n => {
+                catalogoNombres.forEach(n => {
                     const nameStr = (typeof n === 'object' && n !== null) ? (n.nombre || n.id || '') : String(n);
-                    if (nameStr && nameStr.trim()) {
+                    const cleanStr = nameStr ? nameStr.trim() : '';
+                    if (cleanStr) {
                         const opt = document.createElement('option');
-                        opt.value = nameStr.trim();
-                        opt.textContent = nameStr.trim();
+                        opt.value = cleanStr;
+                        opt.textContent = cleanStr;
                         selectNombre.insertBefore(opt, addOption);
                     }
                 });
@@ -731,11 +764,16 @@
             selectNombre.addEventListener('change', function() {
                 if (this.value === '__nuevo__') {
                     inlineProd.style.display = 'block';
-                    if (inputNuevoProd) inputNuevoProd.focus();
+                    limpiarErrorProd();
+                    if (inputNuevoProd) {
+                        inputNuevoProd.value = '';
+                        inputNuevoProd.focus();
+                    }
                 } else {
                     inlineProd.style.display = 'none';
                     realInputNombre.value = this.value;
                     prevNombreVal = this.value;
+                    limpiarErrorProd();
                 }
             });
         }
@@ -744,8 +782,20 @@
             btnCancelarProd.addEventListener('click', function() {
                 inlineProd.style.display = 'none';
                 if (inputNuevoProd) inputNuevoProd.value = '';
-                if (errorProd) { errorProd.style.display = 'none'; errorProd.textContent = ''; }
+                limpiarErrorProd();
                 if (selectNombre) selectNombre.value = prevNombreVal;
+            });
+        }
+
+        if (inputNuevoProd) {
+            inputNuevoProd.addEventListener('input', function() {
+                limpiarErrorProd();
+            });
+            inputNuevoProd.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (btnGuardarProd) btnGuardarProd.click();
+                }
             });
         }
 
@@ -753,48 +803,58 @@
             btnGuardarProd.addEventListener('click', function() {
                 const nombreNuevo = inputNuevoProd ? inputNuevoProd.value.trim() : '';
                 if (!nombreNuevo) {
-                    if (errorProd) { errorProd.textContent = 'Ingresa el nombre del producto.'; errorProd.style.display = 'block'; }
+                    mostrarErrorProd('Ingresa el nombre del producto.');
                     return;
                 }
                 if (nombreNuevo.length < 3) {
-                    if (errorProd) { errorProd.textContent = 'El nombre debe tener al menos 3 caracteres.'; errorProd.style.display = 'block'; }
+                    mostrarErrorProd('El nombre debe tener al menos 3 caracteres.');
                     return;
                 }
-                if (nombreNuevo.length > 200) {
-                    if (errorProd) { errorProd.textContent = 'El nombre no puede superar los 200 caracteres.'; errorProd.style.display = 'block'; }
+                if (nombreNuevo.length > 45) {
+                    mostrarErrorProd('El nombre no puede superar los 45 caracteres.');
+                    return;
+                }
+
+                const nombreNormalizado = nombreNuevo.toLowerCase();
+
+                // 1. Validar si el usuario ya tiene este producto en su inventario
+                const yaEnMiInventario = misNombresUsuario.some(n => n.toLowerCase() === nombreNormalizado);
+                if (yaEnMiInventario) {
+                    mostrarErrorProd(`Ya tienes registrado el producto "${nombreNuevo}" en tu inventario. No se permite duplicar productos.`);
+                    return;
+                }
+
+                // 2. Validar si ya existe en las opciones cargadas en el selector o en el catálogo
+                let yaExisteEnSelect = false;
+                for (let i = 0; i < selectNombre.options.length; i++) {
+                    const optVal = selectNombre.options[i].value;
+                    if (optVal && optVal !== '__nuevo__' && optVal.toLowerCase() === nombreNormalizado) {
+                        yaExisteEnSelect = true;
+                        break;
+                    }
+                }
+                const yaEnCatalogo = catalogoNombres.some(n => n.toLowerCase() === nombreNormalizado);
+
+                if (yaExisteEnSelect || yaEnCatalogo) {
+                    mostrarErrorProd(`Ya existe un producto con el nombre "${nombreNuevo}". No se permite volver a agregarlo.`);
                     return;
                 }
 
                 // Agregar la nueva opción al selector
                 const addOption = selectNombre.querySelector('option[value="__nuevo__"]');
-                
-                // Verificar si ya existe en las opciones
-                let existingOpt = null;
-                for (let i = 0; i < selectNombre.options.length; i++) {
-                    if (selectNombre.options[i].value.toLowerCase() === nombreNuevo.toLowerCase()) {
-                        existingOpt = selectNombre.options[i];
-                        break;
-                    }
-                }
-
-                if (existingOpt) {
-                    existingOpt.selected = true;
-                    realInputNombre.value = existingOpt.value;
-                } else {
-                    const opt = document.createElement('option');
-                    opt.value = nombreNuevo;
-                    opt.textContent = nombreNuevo;
-                    selectNombre.insertBefore(opt, addOption);
-                    opt.selected = true;
-                    realInputNombre.value = nombreNuevo;
-                }
-
-                prevNombreVal = realInputNombre.value;
+                const opt = document.createElement('option');
+                opt.value = nombreNuevo;
+                opt.textContent = nombreNuevo;
+                selectNombre.insertBefore(opt, addOption);
+                opt.selected = true;
+                realInputNombre.value = nombreNuevo;
+                prevNombreVal = nombreNuevo;
+                catalogoNombres.push(nombreNuevo);
 
                 // Resetear inline form
                 inlineProd.style.display = 'none';
                 if (inputNuevoProd) inputNuevoProd.value = '';
-                if (errorProd) { errorProd.style.display = 'none'; errorProd.textContent = ''; }
+                limpiarErrorProd();
             });
         }
 
@@ -1038,56 +1098,173 @@
         }
 
         // ==========================================
-        // VALIDACIÓN DE STOCK (REABASTECIMIENTO)
-        // Impide reducir las unidades por debajo del stock actual.
+        // VALIDACIÓN DE UNIDADES (SOLO NÚMEROS POSITIVOS)
         // ==========================================
         const campoCantidad = document.getElementById('id_cantidad');
-        if (campoCantidad) {
-            const stockMinimo = parseInt(campoCantidad.getAttribute('min'), 10);
-            const stockMin = Number.isFinite(stockMinimo) ? stockMinimo : 0;
+        const errorCantidadEl = document.getElementById('error-cantidad-frontend');
 
-            // Asegurar que el input sea entero y con step=1
+        function mostrarErrorCantidad(msg) {
+            if (errorCantidadEl) {
+                errorCantidadEl.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>' + msg;
+                errorCantidadEl.style.display = 'block';
+            }
+            if (campoCantidad) {
+                campoCantidad.classList.add('is-invalid');
+                campoCantidad.setCustomValidity(msg);
+            }
+        }
+
+        function limpiarErrorCantidad() {
+            if (errorCantidadEl) {
+                errorCantidadEl.textContent = '';
+                errorCantidadEl.style.display = 'none';
+            }
+            if (campoCantidad) {
+                campoCantidad.classList.remove('is-invalid');
+                campoCantidad.setCustomValidity('');
+            }
+        }
+
+        if (campoCantidad) {
+            const esModoEditar = document.getElementById('cantidad-stock-actual') !== null;
+            const stockMinimoAttr = parseInt(campoCantidad.getAttribute('min'), 10);
+            const stockMinActual = esModoEditar && Number.isFinite(stockMinimoAttr) ? stockMinimoAttr : 1;
+
             campoCantidad.setAttribute('step', '1');
 
             function validarCantidad() {
-                let valor = parseInt(campoCantidad.value, 10);
-                if (Number.isNaN(valor)) {
-                    valor = stockMin;
+                const rawVal = campoCantidad.value.trim();
+
+                if (rawVal === '') {
+                    mostrarErrorCantidad('El número de unidades es obligatorio.');
+                    return false;
                 }
-                if (valor < stockMin) {
-                    campoCantidad.value = stockMin;
-                    campoCantidad.setCustomValidity('No puedes reducir las unidades por debajo del stock actual (' + stockMin + ').');
-                } else {
-                    campoCantidad.setCustomValidity('');
+
+                // Detectar números negativos por texto o signo
+                if (rawVal.includes('-') || rawVal.startsWith('-')) {
+                    mostrarErrorCantidad('No se permiten números negativos. Ingrese solo números positivos mayores a cero.');
+                    return false;
                 }
+
+                const num = Number(rawVal);
+                if (Number.isNaN(num) || !Number.isInteger(num)) {
+                    mostrarErrorCantidad('Ingrese un número entero válido en las unidades.');
+                    return false;
+                }
+
+                if (num < 0) {
+                    mostrarErrorCantidad('No se permiten números negativos. Ingrese solo números positivos mayores a cero.');
+                    return false;
+                }
+
+                if (num === 0) {
+                    mostrarErrorCantidad('No se permiten números negativos ni cero. Ingrese solo números positivos mayores a cero (mínimo 1).');
+                    return false;
+                }
+
+                if (esModoEditar && num < stockMinActual) {
+                    mostrarErrorCantidad('No puedes reducir las unidades por debajo del stock actual (' + stockMinActual + '). Solo se permite reabastecer.');
+                    return false;
+                }
+
+                limpiarErrorCantidad();
+                return true;
             }
 
-            // Impedir bajar con flechas/manual/teclado
             campoCantidad.addEventListener('input', function() {
-                // Validación en vivo sin bloquear el tipeo parcial excesivamente
-                const num = parseInt(this.value, 10);
-                if (!Number.isNaN(num) && num < stockMin) {
-                    this.setCustomValidity('No puedes reducir las unidades por debajo del stock actual (' + stockMin + ').');
-                } else {
-                    this.setCustomValidity('');
-                }
+                validarCantidad();
             });
             campoCantidad.addEventListener('change', validarCantidad);
+            campoCantidad.addEventListener('blur', validarCantidad);
             campoCantidad.addEventListener('paste', function() {
                 setTimeout(validarCantidad, 0);
             });
 
-            // Doble verificación antes de enviar el formulario
+            // Sincronización y validación global antes de enviar el formulario
             const formProducto = campoCantidad.closest('form');
             if (formProducto) {
                 formProducto.addEventListener('submit', function(e) {
-                    validarCantidad();
-                    const num = parseInt(campoCantidad.value, 10);
-                    if (campoCantidad.value === '' || Number.isNaN(num) || num < stockMin) {
+                    // 1. Validar Unidades
+                    if (!validarCantidad()) {
                         e.preventDefault();
-                        campoCantidad.value = stockMin;
-                        campoCantidad.setCustomValidity('No puedes reducir las unidades por debajo del stock actual (' + stockMin + ').');
-                        campoCantidad.reportValidity();
+                        campoCantidad.focus();
+                        return;
+                    }
+
+                    // 2. Manejo y sincronización de Nombre de Producto
+                    if (selectNombre) {
+                        if (selectNombre.value === '__nuevo__') {
+                            const nombreNuevoEscrito = inputNuevoProd ? inputNuevoProd.value.trim() : '';
+                            if (!nombreNuevoEscrito) {
+                                e.preventDefault();
+                                mostrarErrorProd('Debes ingresar el nombre del nuevo producto.');
+                                inlineProd.style.display = 'block';
+                                if (inputNuevoProd) inputNuevoProd.focus();
+                                return;
+                            }
+                            if (nombreNuevoEscrito.length < 3) {
+                                e.preventDefault();
+                                mostrarErrorProd('El nombre debe tener al menos 3 caracteres.');
+                                inlineProd.style.display = 'block';
+                                if (inputNuevoProd) inputNuevoProd.focus();
+                                return;
+                            }
+                            const nombreNorm = nombreNuevoEscrito.toLowerCase();
+                            // Validar si ya existe
+                            const yaEnInventario = misNombresUsuario.some(n => n.toLowerCase() === nombreNorm);
+                            if (yaEnInventario) {
+                                e.preventDefault();
+                                mostrarErrorProd(`Ya tienes registrado el producto "${nombreNuevoEscrito}" en tu inventario. No se permite duplicar productos.`);
+                                inlineProd.style.display = 'block';
+                                if (inputNuevoProd) inputNuevoProd.focus();
+                                return;
+                            }
+                            const yaEnSelect = Array.from(selectNombre.options).some(o => o.value && o.value !== '__nuevo__' && o.value.toLowerCase() === nombreNorm);
+                            const yaEnCat = catalogoNombres.some(n => n.toLowerCase() === nombreNorm);
+                            if (yaEnSelect || yaEnCat) {
+                                e.preventDefault();
+                                mostrarErrorProd(`Ya existe un producto con el nombre "${nombreNuevoEscrito}". No se permite volver a agregarlo.`);
+                                inlineProd.style.display = 'block';
+                                if (inputNuevoProd) inputNuevoProd.focus();
+                                return;
+                            }
+
+                            // Sincronizar en el selector y en el input real
+                            const opt = document.createElement('option');
+                            opt.value = nombreNuevoEscrito;
+                            opt.textContent = nombreNuevoEscrito;
+                            selectNombre.insertBefore(opt, selectNombre.querySelector('option[value="__nuevo__"]'));
+                            opt.selected = true;
+                            if (realInputNombre) realInputNombre.value = nombreNuevoEscrito;
+                        } else if (selectNombre.value) {
+                            if (realInputNombre) realInputNombre.value = selectNombre.value;
+                        } else {
+                            // Selector vacío
+                            if (realInputNombre && !realInputNombre.value.trim()) {
+                                e.preventDefault();
+                                selectNombre.classList.add('is-invalid');
+                                selectNombre.focus();
+                                return;
+                            }
+                        }
+                    }
+
+                    // 3. Manejo y sincronización de Categoría
+                    if (selectCat && realInputCat) {
+                        if (selectCat.value && selectCat.value !== '__nueva__') {
+                            if (realInputCat.tagName === 'SELECT') {
+                                // Asegurar que la opción exista en el select de Django
+                                let optExiste = Array.from(realInputCat.options).some(o => o.value === selectCat.value);
+                                if (!optExiste) {
+                                    const optSel = selectCat.options[selectCat.selectedIndex];
+                                    const optNew = document.createElement('option');
+                                    optNew.value = selectCat.value;
+                                    optNew.textContent = optSel ? optSel.textContent : selectCat.value;
+                                    realInputCat.appendChild(optNew);
+                                }
+                            }
+                            realInputCat.value = selectCat.value;
+                        }
                     }
                 });
             }
