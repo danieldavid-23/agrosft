@@ -169,6 +169,7 @@
                                     <span class="input-group-text bg-light border-end-0 fw-bold text-success">$</span>
                                     {{ form.precio }}
                                 </div>
+                                <div id="error-precio-frontend" class="text-danger small mt-1" style="display:none;"></div>
                                 {% if form.precio.errors %}
                                 <div class="text-danger small mt-1"><i class="fas fa-info-circle me-1"></i>{{ form.precio.errors.0 }}</div>
                                 {% endif %}
@@ -1098,6 +1099,80 @@
         }
 
         // ==========================================
+        // VALIDACIÓN DE PRECIO (SOLO NÚMEROS POSITIVOS)
+        // ==========================================
+        const campoPrecio = document.getElementById('id_precio');
+        const errorPrecioEl = document.getElementById('error-precio-frontend');
+
+        function mostrarErrorPrecio(msg) {
+            if (errorPrecioEl) {
+                errorPrecioEl.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>' + msg;
+                errorPrecioEl.style.display = 'block';
+            }
+            if (campoPrecio) {
+                campoPrecio.classList.add('is-invalid');
+                campoPrecio.setCustomValidity(msg);
+            }
+        }
+
+        function limpiarErrorPrecio() {
+            if (errorPrecioEl) {
+                errorPrecioEl.textContent = '';
+                errorPrecioEl.style.display = 'none';
+            }
+            if (campoPrecio) {
+                campoPrecio.classList.remove('is-invalid');
+                campoPrecio.setCustomValidity('');
+            }
+        }
+
+        function validarPrecio() {
+            if (!campoPrecio) return true;
+            const rawVal = campoPrecio.value.trim();
+
+            if (rawVal === '') {
+                limpiarErrorPrecio();
+                return true;
+            }
+
+            // Detectar números negativos por texto o signo
+            if (rawVal.includes('-') || rawVal.startsWith('-')) {
+                mostrarErrorPrecio('No se permiten números negativos. Ingrese solo números positivos.');
+                return false;
+            }
+
+            const num = parseFloat(rawVal);
+            if (Number.isNaN(num)) {
+                mostrarErrorPrecio('Ingrese un valor numérico válido para el precio.');
+                return false;
+            }
+
+            if (num < 0) {
+                mostrarErrorPrecio('No se permiten números negativos. Ingrese solo números positivos.');
+                return false;
+            }
+
+            limpiarErrorPrecio();
+            return true;
+        }
+
+        if (campoPrecio) {
+            campoPrecio.setAttribute('min', '0');
+
+            campoPrecio.addEventListener('input', validarPrecio);
+            campoPrecio.addEventListener('change', validarPrecio);
+            campoPrecio.addEventListener('blur', validarPrecio);
+            campoPrecio.addEventListener('paste', function() {
+                setTimeout(validarPrecio, 0);
+            });
+            campoPrecio.addEventListener('keydown', function(e) {
+                if (e.key === '-' || e.key === 'Subtract') {
+                    setTimeout(validarPrecio, 0);
+                }
+            });
+        }
+
+        // ==========================================
         // VALIDACIÓN DE UNIDADES (SOLO NÚMEROS POSITIVOS)
         // ==========================================
         const campoCantidad = document.getElementById('id_cantidad');
@@ -1188,6 +1263,13 @@
                     if (!validarCantidad()) {
                         e.preventDefault();
                         campoCantidad.focus();
+                        return;
+                    }
+
+                    // 1.1 Validar Precio
+                    if (!validarPrecio()) {
+                        e.preventDefault();
+                        if (campoPrecio) campoPrecio.focus();
                         return;
                     }
 

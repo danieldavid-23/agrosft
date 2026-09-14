@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django import forms
 from django.core.validators import FileExtensionValidator
 from core.utils.helpers import validate_image_size
@@ -90,7 +91,17 @@ class ProductoForm(forms.Form):
         max_digits=10,
         decimal_places=2,
         required=False,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Precio unitario'})
+        min_value=Decimal('0.00'),
+        error_messages={
+            'min_value': 'No se permiten números negativos. Ingrese solo números positivos.',
+            'invalid': 'Ingrese un número válido para el precio.'
+        },
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 
+            'step': '0.01', 
+            'placeholder': 'Precio unitario',
+            'min': '0'
+        })
     )
 
     def clean_nombre(self):
@@ -108,6 +119,12 @@ class ProductoForm(forms.Form):
         if cantidad is not None and cantidad <= 0:
             raise forms.ValidationError('No se permiten números negativos ni cero. Ingrese solo números positivos.')
         return cantidad
+
+    def clean_precio(self):
+        precio = self.cleaned_data.get('precio')
+        if precio is not None and precio < 0:
+            raise forms.ValidationError('No se permiten números negativos. Ingrese solo números positivos.')
+        return precio
 
     def __init__(self, *args, **kwargs):
         initial_data = kwargs.pop('initial', {})
