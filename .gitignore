@@ -33,3 +33,4 @@ db.sqlite3
 node_modules/
 daniel/
 nul
+*.env
