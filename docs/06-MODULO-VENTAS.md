@@ -12,11 +12,10 @@
 apps/ventas/
 ├── controllers/
 │   ├── carrito_controller.py       → CRUD carrito + checkout
+│   ├── compra_controller.py        → Historial y detalle de compras (comprador)
 │   ├── solicitud_controller.py     → Inbox vendedor (aceptar/rechazar/vender)
-│   ├── venta_controller.py         → Listado de ventas
-│   └── calificacion_controller.py  → Calificar transacción + historial
-├── forms/
-│   └── calificacion_form.py        → Form de rating 1.0–5.0
+│   └── venta_controller.py         → Listado y gestión de ventas
+├── forms/                          → Módulo reservado (sin formularios activos)
 ├── models/
 │   └── movimiento.py               → Movimiento, ProductoUsuarioMovimiento, TipoMovimiento (canónico)
 ├── services/

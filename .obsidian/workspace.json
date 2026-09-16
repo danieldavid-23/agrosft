@@ -1,20 +1,20 @@
 {
   "main": {
-    "id": "42a4b1729a317ad4",
+    "id": "2ba6740e598e67d1",
     "type": "split",
     "children": [
       {
-        "id": "cb719cf6b16cc107",
+        "id": "2269cb7f6de65d0c",
         "type": "tabs",
         "children": [
           {
-            "id": "3d462841d8e06148",
+            "id": "386274433817b7b3",
             "type": "leaf",
             "state": {
-              "type": "graph",
+              "type": "empty",
               "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Vista gráfica"
+              "icon": "lucide-file",
+              "title": "Nueva pestaña"
             }
           }
         ]
@@ -23,15 +23,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "31bd22473b4fe5b5",
+    "id": "7ec732de557709e2",
     "type": "split",
     "children": [
       {
-        "id": "9869116e19c81690",
+        "id": "a1eadc9c97aca086",
         "type": "tabs",
         "children": [
           {
-            "id": "07e6edb0a157b197",
+            "id": "1da6dc81a05a3e2f",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -44,7 +44,7 @@
             }
           },
           {
-            "id": "b5ac475f65cd8ffe",
+            "id": "7f9358de94ff24af",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -61,7 +61,7 @@
             }
           },
           {
-            "id": "a973683fa7abefa3",
+            "id": "49f5c1b86220cfb9",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -77,20 +77,19 @@
     "width": 300
   },
   "right": {
-    "id": "27a16d5adbe172e5",
+    "id": "6bdb4deacd6c75fa",
     "type": "split",
     "children": [
       {
-        "id": "fb0b7362c1074e9c",
+        "id": "825aeaeabdf046e0",
         "type": "tabs",
         "children": [
           {
-            "id": "224b28bf6baf525a",
+            "id": "1f2a908f776922d4",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "API.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -100,25 +99,24 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Enlaces entrantes de API"
+              "title": "Enlaces entrantes"
             }
           },
           {
-            "id": "e3345283007bdbbf",
+            "id": "fa9ad4ef9603bd71",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "API.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Enlaces salientes de API"
+              "title": "Enlaces salientes"
             }
           },
           {
-            "id": "45043ae442493d6d",
+            "id": "5b3523bc8bf06335",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -133,7 +131,7 @@
             }
           },
           {
-            "id": "79d70393f5b83e8d",
+            "id": "6d978c3947c203bf",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -147,18 +145,17 @@
             }
           },
           {
-            "id": "f86a52d0d8c10dc5",
+            "id": "d16295122bfcbc86",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "API.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Esquema de API"
+              "title": "Esquema"
             }
           }
         ]
@@ -179,33 +176,6 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "3d462841d8e06148",
-  "lastOpenFiles": [
-    "13-MODULO-FACTURACION.md",
-    "DECISIONS.md",
-    "API.md",
-    "SDD_RULES.md",
-    "CHANGELOG.md",
-    "ROADMAP.md",
-    "DATABASE.md",
-    "ARCHITECTURE.md",
-    "USER_STORIES.md",
-    "REQUIREMENTS.md",
-    "PROJECT_CONTEXT.md",
-    "12-BRECHAS-Y-ROADMAP.md",
-    "11-CONVENCIONES.md",
-    "10-API-ENDPOINTS.md",
-    "09-CONFIGURACION.md",
-    "08-FRONTEND.md",
-    "07-MODULO-CLIENTES.md",
-    "06-MODULO-VENTAS.md",
-    "05-MODULO-INVENTARIO.md",
-    "04-MODULO-USUARIOS.md",
-    "03-BASE-DATOS.md",
-    "02-ARQUITECTURA.md",
-    "01-VISION-GENERAL.md",
-    "00-INDEX.md",
-    "Bienvenido.md",
-    "cree un enlace.md"
-  ]
+  "active": "386274433817b7b3",
+  "lastOpenFiles": []
 }

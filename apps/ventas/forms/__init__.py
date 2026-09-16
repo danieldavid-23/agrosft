@@ -1,7 +1,5 @@
-from .movimiento import Movimiento, ProductoUsuarioMovimiento, TipoMovimiento
+"""
+Módulo de formularios para la aplicación de ventas.
+"""
 
-__all__ = [
-    'Movimiento',
-    'ProductoUsuarioMovimiento',
-    'TipoMovimiento',
-]
+__all__ = []

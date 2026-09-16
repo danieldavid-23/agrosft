@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+### Fixed (2026-09-16)
+- **Corrección de errores de importación y resolución estática**:
+  - `apps/ventas/forms/__init__.py`: Se removió la importación residual `from .movimiento import ...` (módulo inexistente en `forms/`, proveniente de `models/`), resolviendo `ModuleNotFoundError: No module named 'apps.ventas.forms.movimiento'`.
+  - `apps/administracion/controllers/__init__.py`: Se añadieron exportaciones explícitas de los controladores en `__all__` para resolver imports limpios en `urls.py` y análisis estático del IDE.
+  - `apps/ventas/controllers/__init__.py`: Se exportaron `carrito_controller`, `compra_controller`, `solicitud_controller` y `venta_controller` en `__all__`.
+  - `apps/facturacion/controllers/__init__.py`: Se exportó `factura_controller` en `__all__`.
+  - `.vscode/settings.json`: Configurado `python.defaultInterpreterPath` hacia el entorno virtual `./venv/Scripts/python.exe` y `python.analysis.extraPaths` apuntando al espacio de trabajo para evitar diagnósticos falsos de paquetes no resueltos por parte del analizador de lenguaje.
+  - Actualización de `docs/06-MODULO-VENTAS.md` reflejando la estructura real del módulo de ventas.
+
 ### Added (2026-09-09)
 - **Campo "Unidad de Medida" en productos** (ADR-022):
   - **BD (externo)**: nueva tabla `tblunidad_medida` (`id_unidad`, `nombre`, `abreviatura`, `activo`, `created_at`) + 5 registros semilla (Unidades u, Kilogramos kg, Libras lb, Litros L, Gramos g) + columna `tblunidad_medida_id_unidad` (FK nullable, default 1) en `tblproducto`. Script: `scripts/crear_unidad_medida.sql` (ejecutado en MariaDB).
