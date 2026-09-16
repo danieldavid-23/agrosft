@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path, include
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 from django.contrib import admin
 from django.http import JsonResponse
 from django.db import connection
@@ -26,11 +26,11 @@ admin.site.site_title = 'AgroSFT Admin'
 admin.site.index_title = 'Gestión de la Plataforma Agrícola'
 
 
-def home_redirect(request):
-    """Redirigir según estado de autenticación"""
-    if request.user.is_authenticated:
+def landing_view(request):
+    """Vista inicial / Landing Page de presentación de AgroSFT"""
+    if request.user.is_authenticated and not request.GET.get('landing'):
         return redirect('inventario:marketplace')
-    return redirect('usuarios:login')
+    return render(request, 'landing.html')
 
 
 def healthz(request):
@@ -44,7 +44,8 @@ def healthz(request):
         return JsonResponse({'status': 'error', 'database': 'unavailable'}, status=503)
 
 urlpatterns = [
-    path('', home_redirect, name='home'),
+    path('', landing_view, name='home'),
+    path('healthz/', healthz, name='healthz'),
     path('usuarios/', include('apps.usuarios.urls', namespace='usuarios')),
     path('inventario/', include('apps.inventario.urls', namespace='inventario')),
     path('clientes/', include('apps.clientes.urls', namespace='clientes')),

@@ -16,6 +16,7 @@ export default defineConfig({
         carrito: 'frontend/src/carrito/main.js',
         marketplace: 'frontend/src/marketplace/main.js',
         inventario: 'frontend/src/inventario/main.js',
+        landing: 'frontend/src/landing/main.js',
       },
       output: {
         entryFileNames: '[name].js',
