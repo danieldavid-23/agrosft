@@ -1,0 +1,15 @@
+.git
+.gitignore
+node_modules
+__pycache__
+*.py[cod]
+*.log
+staticfiles
+dist
+build
+coverage
+.pytest_cache
+.idea
+.vscode
+docs/*.docx
+venv/

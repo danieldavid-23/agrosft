@@ -17,6 +17,8 @@ Including another URLconf
 from django.urls import path, include
 from django.shortcuts import redirect
 from django.contrib import admin
+from django.http import JsonResponse
+from django.db import connection
 
 # Personalización del panel de administración
 admin.site.site_header = 'AgroSFT - Panel de Administración'
@@ -30,6 +32,16 @@ def home_redirect(request):
         return redirect('inventario:marketplace')
     return redirect('usuarios:login')
 
+
+def healthz(request):
+    """Health-check para Docker/Nginx: confirma que Django y MariaDB responden."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+            cursor.fetchone()
+        return JsonResponse({'status': 'ok', 'database': 'ok'})
+    except Exception:
+        return JsonResponse({'status': 'error', 'database': 'unavailable'}, status=503)
 
 urlpatterns = [
     path('', home_redirect, name='home'),
