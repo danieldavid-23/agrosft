@@ -117,8 +117,16 @@ def crear_solicitud(request):
     Crear una nueva solicitud de compra
     Redirige al marketplace para seleccionar productos
     """
+    if not getattr(request.user, 'tiene_telefono', False):
+        messages.warning(
+            request,
+            'Debes registrar un número de teléfono en tu perfil antes de enviar una solicitud de compra.'
+        )
+        return redirect('usuarios:perfil')
+
     messages.info(request, 'Para crear una solicitud, agrega productos al carrito y procede al checkout.')
     return redirect('ventas:carrito_detalle')
+
 
 
 @login_required

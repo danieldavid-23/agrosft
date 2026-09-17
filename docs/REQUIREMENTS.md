@@ -67,6 +67,8 @@
 | RF-V14 | El sistema debe mostrar historial de movimientos del usuario | Media | ✅ Implementado |
 | RF-V15 | El frontend de solicitudes debe funcionar sin conexión a base de datos | Alta | ❌ Eliminado — Se revirtió a renderizado Django server-side |
 | RF-V20 | El sistema debe permitir al vendedor generar y descargar la factura en PDF directamente desde el listado y detalle de ventas registradas | Alta | ✅ Implementado |
+| RF-V21 | El sistema debe impedir el envío de solicitudes de compra si el comprador no tiene un número de teléfono registrado en su perfil, alertándolo y redirigiéndolo para completarlo | Alta | ✅ Implementado |
+
 
 ### 1.4 Módulo de Clientes
 

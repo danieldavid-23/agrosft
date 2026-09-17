@@ -55,10 +55,18 @@ def crear_factura(request):
     Procesa el carrito y genera UNA FACTURA POR VENDEDOR.
     Redirige al resumen de facturas del movimiento creado.
     """
+    if not getattr(request.user, 'tiene_telefono', False):
+        messages.warning(
+            request,
+            'Debes tener un número de teléfono registrado en tu perfil antes de procesar una compra.'
+        )
+        return redirect('usuarios:perfil')
+
     carrito = Carrito(request)
     if len(carrito) == 0:
         messages.error(request, 'No hay productos en el carrito.')
         return redirect('ventas:carrito_detalle')
+
 
     try:
         facturas = FacturaService.crear_facturas_desde_carrito(

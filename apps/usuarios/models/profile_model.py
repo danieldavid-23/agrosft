@@ -144,6 +144,18 @@ class Tblusuarios(models.Model):
         """Verifica si el usuario está autenticado - siempre True para objetos usuario"""
         return True
 
+    @property
+    def tiene_telefono(self):
+        """
+        Verifica si el usuario tiene un número de teléfono válido registrado.
+        Requerido para enviar solicitudes de compra y permitir contacto por WhatsApp.
+        """
+        if not self.telefono:
+            return False
+        tel = str(self.telefono).strip()
+        return bool(tel and tel.lower() not in ['no proporcionado', 'none', 'null', '0', 's/n', 'sin telefono', 'sin teléfono'])
+
+
     def has_perm(self, perm, obj=None):
         """Verifica si el usuario tiene un permiso específico"""
         return self.is_active and (self.is_staff or self.is_superuser)

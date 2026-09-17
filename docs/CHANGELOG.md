@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+### Added (2026-09-16)
+- **Validación obligatoria de teléfono para envío de solicitudes de compra (ADR-025)**:
+  - `apps/usuarios/models/profile_model.py`: Añadida propiedad `@property tiene_telefono` en `Tblusuarios` que evalúa la presencia de un número telefónico real y filtra valores nulos/vacíos o marcadores como `'No proporcionado'`.
+  - `apps/ventas/controllers/carrito_controller.py`: `checkout_carrito()` valida que el comprador tenga teléfono antes de procesar el pedido. Si no tiene, bloquea la creación del `Movimiento` tipo `'compra'`, emite mensaje de advertencia y redirige a `usuarios:perfil`.
+  - `apps/ventas/controllers/solicitud_controller.py`: `crear_solicitud()` bloquea el acceso si el comprador carece de teléfono y redirige a `usuarios:perfil`.
+  - `apps/facturacion/controllers/factura_controller.py`: `crear_factura()` valida `request.user.tiene_telefono` antes de procesar facturas directas desde el carrito.
+  - `apps/ventas/templates/ventas/carrito/detalle.html`: Presenta banner de advertencia claro si el usuario no tiene teléfono registrado, e inhabilita el botón de compra redirigiendo a completar el perfil.
+  - `apps/ventas/templates/ventas/carrito/checkout.html`: Muestra el teléfono de contacto asociado a la solicitud.
+  - Documentación SDD: `REQUIREMENTS.md` (RF-V21), `USER_STORIES.md` (US-10), `DECISIONS.md` (ADR-025).
+
 ### Fixed (2026-09-16)
 - **Corrección de errores de importación y resolución estática**:
   - `apps/ventas/forms/__init__.py`: Se removió la importación residual `from .movimiento import ...` (módulo inexistente en `forms/`, proveniente de `models/`), resolviendo `ModuleNotFoundError: No module named 'apps.ventas.forms.movimiento'`.

@@ -952,6 +952,47 @@ El formulario de registro/edición de productos no contemplaba una "Unidad de Me
 
 ---
 
+## ADR-025: Validación de Teléfono Obligatorio para Envío de Solicitudes de Compra
+
+**Fecha**: 2026-09-16  
+**Estado**: Aceptada  
+
+### Contexto
+
+El modelo operativo de AgroSFT se fundamenta en la conexión directa entre compradores y agricultores/vendedores, donde la coordinación de la entrega y el pago se realiza a través de WhatsApp (utilizando el enlace generado con el número de teléfono del comprador tras la aceptación de la solicitud).  
+Si un comprador sin número de teléfono registrado envía una solicitud de compra, el vendedor no tiene un medio ágil y directo para coordinar la transacción, generando solicitudes huérfanas y fricción operativa.
+
+### Decisión
+
+1. **Propiedad en Modelo de Usuario**: Se incorpora la propiedad `@property tiene_telefono` en `Tblusuarios` (`apps/usuarios/models/profile_model.py`), que evalúa la presencia de un número no vacío y descarta valores no válidos como `'No proporcionado'`, `'none'`, `'null'`, etc.
+2. **Validación Server-Side en Controladores**:
+   - `apps/ventas/controllers/carrito_controller.py` (`checkout_carrito`): Verifica `request.user.tiene_telefono`. Si no lo tiene, bloquea la creación del `Movimiento` tipo `'compra'`, emite mensaje de advertencia y redirige a `usuarios:perfil`.
+   - `apps/ventas/controllers/solicitud_controller.py` (`crear_solicitud`): Previene el flujo y redirige a `usuarios:perfil`.
+   - `apps/facturacion/controllers/factura_controller.py` (`crear_factura`): Valida teléfono antes de generar facturas desde el carrito.
+3. **Validación y Feedback Visual en Frontend**:
+   - En `apps/ventas/templates/ventas/carrito/detalle.html`, si el usuario autenticado no tiene teléfono, se muestra un banner explicativo destacado con enlace directo a "Registrar Teléfono" en su perfil.
+   - El botón de checkout en el carrito se reemplaza condicionalmente con una acción indicativa hacia `usuarios:perfil`.
+   - En `apps/ventas/templates/ventas/carrito/checkout.html`, se expone de forma explícita el teléfono de contacto registrado.
+
+### Consecuencias
+
+- ✅ Garantiza que todo vendedor que reciba una solicitud cuente con el contacto del comprador para coordinar vía WhatsApp.
+- ✅ Previene transacciones incompletas o bloqueadas por falta de comunicación.
+- ✅ Guía proactivamente al usuario hacia la actualización de su perfil sin frustración.
+- ❌ Los usuarios sin teléfono deberán registrarlo antes de completar una compra.
+
+### Archivos Afectados
+
+- `apps/usuarios/models/profile_model.py` (+`tiene_telefono`)
+- `apps/ventas/controllers/carrito_controller.py` (bloqueo y redirección)
+- `apps/ventas/controllers/solicitud_controller.py` (bloqueo en creación)
+- `apps/facturacion/controllers/factura_controller.py` (validación en compra directa)
+- `apps/ventas/templates/ventas/carrito/detalle.html` (alerta y botón condicional)
+- `apps/ventas/templates/ventas/carrito/checkout.html` (vista informativa de teléfono)
+- Docs SDD: `REQUIREMENTS.md` (RF-V21), `USER_STORIES.md` (US-10), `DECISIONS.md` (ADR-025), `CHANGELOG.md`
+
+---
+
 ## Resumen de Decisiones
 
 | ID | Decisión | Estado | Impacto |
@@ -975,6 +1016,7 @@ El formulario de registro/edición de productos no contemplaba una "Unidad de Me
 | ADR-020 | Acceso y privilegios admin para superusuarios (is_superuser) | Aceptada | Auth / Admin / Frontend |
 | ADR-021 | Facturación separada por vendedor (1 Pedido = 1 Factura por vendedor) | Aceptada | Facturación / Seguridad |
 | ADR-022 | Campo "Unidad de Medida" en productos | Aceptada | Inventario / Formulario |
+| ADR-025 | Validación de teléfono obligatorio para solicitudes de compra | Aceptada | Ventas / Usuarios / UX |
 
 ---
 
