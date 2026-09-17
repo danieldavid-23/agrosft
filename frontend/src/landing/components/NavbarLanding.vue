@@ -62,7 +62,6 @@ onUnmounted(() => {
       <nav class="gh-nav-links">
         <a href="#caracteristicas" class="gh-link">Características</a>
         <a href="#como-funciona" class="gh-link">Cómo funciona</a>
-        <a href="#seguridad" class="gh-link">Seguridad</a>
       </nav>
 
       <!-- Action Buttons -->
@@ -105,9 +104,6 @@ onUnmounted(() => {
           </a>
           <a href="#como-funciona" class="gh-mobile-link" @click="closeMobileMenu">
             <i class="fas fa-network-wired me-2"></i> Cómo funciona
-          </a>
-          <a href="#seguridad" class="gh-mobile-link" @click="closeMobileMenu">
-            <i class="fas fa-shield-alt me-2"></i> Seguridad
           </a>
         </div>
         <div class="gh-mobile-actions">

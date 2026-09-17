@@ -28,8 +28,6 @@ admin.site.index_title = 'Gestión de la Plataforma Agrícola'
 
 def landing_view(request):
     """Vista inicial / Landing Page de presentación de AgroSFT"""
-    if request.user.is_authenticated and not request.GET.get('landing'):
-        return redirect('inventario:marketplace')
     return render(request, 'landing.html')
 
 

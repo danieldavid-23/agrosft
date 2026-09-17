@@ -4,7 +4,6 @@ import NavbarLanding from './components/NavbarLanding.vue'
 import HeroSection from './components/HeroSection.vue'
 import FeaturesSection from './components/FeaturesSection.vue'
 import HowItWorksSection from './components/HowItWorksSection.vue'
-import SecuritySection from './components/SecuritySection.vue'
 import CtaSection from './components/CtaSection.vue'
 import FooterLanding from './components/FooterLanding.vue'
 
@@ -130,11 +129,6 @@ onMounted(() => {
     <!-- How It Works Section -->
     <div class="gh-reveal-on-scroll">
       <HowItWorksSection />
-    </div>
-
-    <!-- Security Section -->
-    <div class="gh-reveal-on-scroll">
-      <SecuritySection />
     </div>
 
     <!-- Call to Action Banner -->

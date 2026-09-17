@@ -41,7 +41,6 @@ defineProps({
             <span class="link-group-title">Plataforma</span>
             <a href="#caracteristicas" class="footer-link">Características</a>
             <a href="#como-funciona" class="footer-link">Arquitectura</a>
-            <a href="#seguridad" class="footer-link">Seguridad</a>
           </div>
 
           <div class="link-group">
