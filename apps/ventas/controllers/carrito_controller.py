@@ -114,11 +114,34 @@ def checkout_carrito(request):
     """
     Checkout del carrito - Procesa la solicitud de compra
     """
+    if not getattr(request.user, 'tiene_telefono', False):
+        messages.warning(
+            request,
+            'Debes registrar un número de teléfono en tu perfil antes de enviar una solicitud de compra, '
+            'para que los vendedores puedan contactarte por WhatsApp para coordinar la entrega.'
+        )
+        return redirect('usuarios:perfil')
+
     carrito = Carrito(request)
-    
+
+    # Verificar que todos los vendedores tengan teléfono registrado
+    for item in carrito:
+        producto_usuario = item.get('producto')
+        if not producto_usuario:
+            continue
+        vendedor = producto_usuario.id_usuario
+        if not getattr(vendedor, 'tiene_telefono', False):
+            messages.error(
+                request,
+                f'El vendedor del producto "{producto_usuario.id_producto.nombre}" no tiene número de '
+                'teléfono registrado. No es posible enviar la solicitud de compra.'
+            )
+            return redirect('ventas:carrito_detalle')
+
     if len(carrito) == 0:
         messages.error(request, 'No hay productos en el carrito.')
         return redirect('ventas:carrito_detalle')
+
     
     try:
         with transaction.atomic():

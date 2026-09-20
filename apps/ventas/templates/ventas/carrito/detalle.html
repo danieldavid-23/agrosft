@@ -11,6 +11,22 @@
             <h4 class="mb-0 fw-bold" style="color: var(--primary-color);"><i class="fas fa-shopping-basket me-2"></i> Mi Carrito de Compras</h4>
         </div>
         <div class="card-body p-4">
+            {% if request.user.is_authenticated and not request.user.tiene_telefono %}
+            <div class="alert alert-warning border-0 shadow-sm rounded-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between p-3 mb-4" style="background-color: #fffbeb; border: 1px solid #fde68a !important;">
+                <div class="d-flex align-items-center mb-2 mb-md-0">
+                    <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center me-3" style="width: 44px; height: 44px; min-width: 44px;">
+                        <i class="fas fa-phone-slash text-warning fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-1 fw-bold text-dark">Número de teléfono requerido para solicitar compras</h6>
+                        <p class="mb-0 text-muted small">Debes registrar un número de teléfono en tu perfil para que el vendedor pueda contactarte por WhatsApp y coordinar la entrega.</p>
+                    </div>
+                </div>
+                <a href="{% url 'usuarios:perfil' %}" class="btn btn-warning rounded-pill px-3 py-2 fw-bold text-dark text-nowrap ms-md-3 shadow-sm align-self-start align-self-md-center">
+                    <i class="fas fa-user-edit me-1"></i>Registrar Teléfono
+                </a>
+            </div>
+            {% endif %}
             <div class="table-responsive">
                 <table class="table table-hover align-middle custom-table mb-0">
                     <thead>
@@ -75,10 +91,16 @@
             </div>
         </div>
         
-        <div class="card-footer bg-transparent border-top-0 pb-4 px-4 d-flex justify-content-end gap-3 flex-wrap">
+        <div class="card-footer bg-transparent border-top-0 pb-4 px-4 d-flex justify-content-end gap-3 flex-wrap align-items-center">
+            {% if request.user.tiene_telefono %}
             <a href="{% url 'ventas:carrito_checkout' %}" class="btn rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center text-white" style="background-color: var(--primary-color); border-color: var(--primary-color);" onmouseover="this.style.backgroundColor='var(--primary-hover)'; this.style.borderColor='var(--primary-hover)'" onmouseout="this.style.backgroundColor='var(--primary-color)'; this.style.borderColor='var(--primary-color)'">
                 <i class="fas fa-clipboard-check me-2 fs-5"></i>Crear Solicitud de Compra
             </a>
+            {% else %}
+            <a href="{% url 'usuarios:perfil' %}" class="btn btn-warning rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center text-dark" title="Debes registrar tu teléfono en tu perfil para enviar solicitudes">
+                <i class="fas fa-phone-slash me-2 fs-5"></i>Registra tu teléfono para solicitar compra
+            </a>
+            {% endif %}
         </div>
     </div>
     

@@ -241,16 +241,19 @@ graph TD
 **quiero** enviar una solicitud de compra al vendedor,  
 **para** iniciar el proceso de transacción.
 
-**Requisitos relacionados**: [[REQUIREMENTS#RF-V06]]
+**Requisitos relacionados**: [[REQUIREMENTS#RF-V06]], [[REQUIREMENTS#RF-V21]]
 
 **Criterios de Aceptación**:
+- [x] Requiere obligatoriamente que el comprador tenga un número de teléfono registrado en su perfil
+- [x] Si el comprador carece de teléfono válido, bloquea el checkout de la solicitud, notifica mediante mensaje flash y redirige a `usuarios:perfil`
+- [x] En la vista del carrito (`detalle.html`), muestra un banner informativo preventivo y ajusta el botón de solicitud hacia el perfil
 - [x] Checkout crea Movimiento de tipo "compra"
 - [x] Crea ProductoUsuarioMovimiento por cada item con la cantidad
 - [x] Trigger de BD descuenta stock automáticamente al registrar el movimiento de "compra"
 - [x] Limpia el carrito tras checkout exitoso
 - [x] Redirige a vista de solicitudes
 
-**Implementación**: `apps/ventas/controllers/carrito_controller.py` → `checkout_carrito()`
+**Implementación**: `apps/ventas/controllers/carrito_controller.py` → `checkout_carrito()`, `apps/usuarios/models/profile_model.py` → `Tblusuarios.tiene_telefono`
 
 ---
 
