@@ -133,18 +133,18 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(13, 17, 23, 0.75);
+  background: rgba(255, 255, 255, 0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(48, 54, 61, 0.4);
+  border-bottom: 1px solid #D6D8CC;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 0.85rem 0;
 }
 
 .gh-landing-nav.is-scrolled {
-  background: rgba(13, 17, 23, 0.94);
-  border-bottom-color: rgba(48, 54, 61, 0.85);
-  box-shadow: 0 8px 24px rgba(1, 4, 9, 0.4);
+  background: rgba(255, 255, 255, 0.98);
+  border-bottom-color: #c6cab8;
+  box-shadow: 0 4px 20px rgba(60, 141, 60, 0.08);
   padding: 0.65rem 0;
 }
 
@@ -163,18 +163,18 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.65rem;
   text-decoration: none;
-  color: #f0f6fc;
+  color: #27402d;
 }
 
 .gh-logo-wrap {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: rgba(46, 160, 67, 0.12);
-  border: 1px solid rgba(46, 160, 67, 0.3);
+  border-radius: 10px;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.3);
   padding: 4px;
 }
 
@@ -185,22 +185,22 @@ onUnmounted(() => {
 }
 
 .gh-brand-name {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
-  color: #f0f6fc;
+  color: #27402d;
 }
 
 .gh-brand-accent {
-  color: #2ea043;
+  color: #3C8D3C;
 }
 
 .gh-badge-pill {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #3fb950;
-  background: rgba(46, 160, 67, 0.15);
-  border: 1px solid rgba(46, 160, 67, 0.3);
+  color: #2E7535;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.25);
   padding: 0.15rem 0.45rem;
   border-radius: 20px;
 }
@@ -213,16 +213,16 @@ onUnmounted(() => {
 }
 
 .gh-link {
-  color: #8b949e;
+  color: #52635a;
   font-size: 0.92rem;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   transition: color 0.2s ease;
   position: relative;
 }
 
 .gh-link:hover {
-  color: #f0f6fc;
+  color: #3C8D3C;
 }
 
 /* Action Buttons */
@@ -238,8 +238,8 @@ onUnmounted(() => {
   justify-content: center;
   font-size: 0.88rem;
   font-weight: 600;
-  padding: 0.5rem 1.1rem;
-  border-radius: 6px;
+  padding: 0.5rem 1.15rem;
+  border-radius: 8px;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -247,28 +247,28 @@ onUnmounted(() => {
 }
 
 .gh-btn-ghost {
-  color: #c9d1d9;
+  color: #3D5245;
   background: transparent;
-  border: 1px solid transparent;
+  border: 1.5px solid #D6D8CC;
 }
 
 .gh-btn-ghost:hover {
-  color: #f0f6fc;
-  background: rgba(177, 186, 196, 0.12);
-  border-color: rgba(240, 246, 252, 0.1);
+  color: #2E7535;
+  background: #E8F5E8;
+  border-color: #3C8D3C;
 }
 
 .gh-btn-primary {
   color: #ffffff;
-  background-color: #238636;
-  border: 1px solid rgba(240, 246, 252, 0.1);
-  box-shadow: 0 1px 0 rgba(1, 4, 9, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  background-color: #3C8D3C;
+  border: 1.5px solid #2E7535;
+  box-shadow: 0 2px 8px rgba(60, 141, 60, 0.25);
 }
 
 .gh-btn-primary:hover {
-  background-color: #2ea043;
-  border-color: rgba(240, 246, 252, 0.15);
-  box-shadow: 0 0 14px rgba(46, 160, 67, 0.4);
+  background-color: #2E7535;
+  border-color: #25632C;
+  box-shadow: 0 4px 14px rgba(60, 141, 60, 0.35);
   transform: translateY(-1px);
 }
 
@@ -290,7 +290,7 @@ onUnmounted(() => {
   display: block;
   height: 2px;
   width: 100%;
-  background: #c9d1d9;
+  background: #3D5245;
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -310,10 +310,10 @@ onUnmounted(() => {
 /* Mobile Menu */
 .gh-mobile-menu {
   display: none;
-  background: #161b22;
-  border-bottom: 1px solid #30363d;
+  background: #ffffff;
+  border-bottom: 1px solid #D6D8CC;
   padding: 1.25rem 1.5rem 1.75rem;
-  box-shadow: 0 16px 32px rgba(1, 4, 9, 0.6);
+  box-shadow: 0 16px 32px rgba(39, 64, 45, 0.12);
 }
 
 .gh-mobile-links {
@@ -324,16 +324,16 @@ onUnmounted(() => {
 }
 
 .gh-mobile-link {
-  color: #c9d1d9;
+  color: #3D5245;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(48, 54, 61, 0.3);
+  border-bottom: 1px solid #F5F1E8;
 }
 
 .gh-mobile-link:hover {
-  color: #2ea043;
+  color: #3C8D3C;
 }
 
 .gh-mobile-actions {

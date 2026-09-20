@@ -108,10 +108,10 @@ const features = [
 
 <style scoped>
 .gh-section {
-  padding: 6rem 0;
-  background: #0d1117;
+  padding: 6.5rem 0;
+  background: #F5F1E8;
   position: relative;
-  border-top: 1px solid rgba(48, 54, 61, 0.5);
+  border-top: 1px solid #D6D8CC;
 }
 
 .gh-container {
@@ -128,28 +128,28 @@ const features = [
 .gh-section-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #3fb950;
-  background: rgba(46, 160, 67, 0.12);
-  border: 1px solid rgba(46, 160, 67, 0.3);
-  padding: 0.25rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2E7535;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.25);
+  padding: 0.3rem 0.95rem;
   border-radius: 20px;
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
 }
 
 .gh-section-title {
   font-size: clamp(2rem, 3.2vw, 2.6rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #f0f6fc;
+  color: #27402d;
   margin-bottom: 1rem;
   line-height: 1.2;
 }
 
 .gh-section-sub {
   font-size: 1.05rem;
-  color: #8b949e;
+  color: #52635a;
   line-height: 1.6;
 }
 
@@ -163,21 +163,21 @@ const features = [
 /* Feature Card */
 .gh-feature-card {
   position: relative;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 12px;
-  padding: 2rem 1.75rem;
+  background: #ffffff;
+  border: 1px solid #D6D8CC;
+  border-radius: 16px;
+  padding: 2.25rem 1.85rem;
   display: flex;
   flex-direction: column;
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  box-shadow: 0 4px 14px rgba(39, 64, 45, 0.04);
 }
 
 .gh-feature-card:hover {
   transform: translateY(-6px);
-  border-color: rgba(46, 160, 67, 0.6);
-  box-shadow: 0 20px 40px rgba(1, 4, 9, 0.5), 0 0 20px rgba(46, 160, 67, 0.15);
-  background: #1c2128;
+  border-color: #3C8D3C;
+  box-shadow: 0 20px 40px rgba(39, 64, 45, 0.1), 0 0 16px rgba(60, 141, 60, 0.12);
 }
 
 .feature-card-top {
@@ -188,47 +188,47 @@ const features = [
 }
 
 .feature-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  background: rgba(46, 160, 67, 0.12);
-  border: 1px solid rgba(46, 160, 67, 0.3);
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  color: #3fb950;
+  font-size: 1.35rem;
+  color: #3C8D3C;
   transition: all 0.25s ease;
 }
 
 .gh-feature-card:hover .feature-icon-wrapper {
-  background: #238636;
+  background: #3C8D3C;
   color: #ffffff;
-  border-color: #2ea043;
+  border-color: #2E7535;
   transform: scale(1.06);
 }
 
 .feature-tag {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #8b949e;
-  background: #21262d;
-  border: 1px solid #30363d;
-  padding: 0.2rem 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #2E7535;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.2);
+  padding: 0.25rem 0.7rem;
   border-radius: 20px;
 }
 
 .feature-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #f0f6fc;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #27402d;
   margin-bottom: 0.75rem;
   letter-spacing: -0.02em;
 }
 
 .feature-desc {
   font-size: 0.92rem;
-  color: #8b949e;
+  color: #52635a;
   line-height: 1.6;
   margin-bottom: 1.5rem;
   flex-grow: 1;
@@ -241,20 +241,20 @@ const features = [
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  border-top: 1px solid rgba(48, 54, 61, 0.5);
+  border-top: 1px solid #EAECE4;
   padding-top: 1.25rem;
 }
 
 .feature-bullets li {
-  font-size: 0.85rem;
-  color: #c9d1d9;
+  font-size: 0.88rem;
+  color: #3D5245;
   display: flex;
   align-items: flex-start;
 }
 
 .text-accent {
-  color: #3fb950;
-  font-size: 0.8rem;
+  color: #3C8D3C;
+  font-size: 0.82rem;
   margin-top: 3px;
 }
 
@@ -263,8 +263,8 @@ const features = [
   bottom: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #2ea043, transparent);
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #3C8D3C, transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
 }

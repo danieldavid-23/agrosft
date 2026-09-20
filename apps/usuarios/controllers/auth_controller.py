@@ -168,7 +168,7 @@ class LoginView(View):
 
 class LogoutView(DjangoLogoutView):
     """Vista para cerrar sesión de usuarios"""
-    next_page = 'usuarios:login'  # Redirigir al login después de cerrar sesión
+    next_page = 'home'  # Redirigir a la Landing Page después de cerrar sesión
     http_method_names = ['get', 'post', 'head', 'options']  # Permitir GET para enlaces <a>
     
     def get(self, request, *args, **kwargs):

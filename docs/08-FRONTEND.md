@@ -36,10 +36,26 @@ Definidos en `vite.config.js`:
 | `carrito` | `frontend/src/carrito/main.js` | `CarritoApp.vue` |
 | `inventario` | `frontend/src/inventario/main.js` | `InventarioApp.vue` |
 | `calificaciones` | `frontend/src/calificaciones/main.js` | `CalificacionApp.vue` |
+| `landing` | `frontend/src/landing/main.js` | `LandingPage.vue` |
 
 ---
 
 ## Componentes
+
+### LandingPage.vue — Página de Inicio Institucional
+
+Página principal de presentación de la plataforma para visitantes no autenticados y punto de entrada al ecosistema AgroSFT. Diseñada bajo la **Paleta Raíz y Confianza** (ADR-010).
+
+**Componentes internos**:
+- `NavbarLanding.vue`: Barra superior flotante clara (`rgba(255, 255, 255, 0.92)`), navegación y accesos directos a Iniciar Sesión y Registro.
+- `HeroSection.vue`: Cabecera principal con degradado verde institucional (`linear-gradient(165deg, #133f18 0%, #1f6326 45%, #2e7d33 100%)`), llamados a la acción y mockup interactivo.
+- `DashboardMockup.vue`: Representación visual del panel de inventario y pedidos con métricas en tiempo real, armonizado sobre el fondo verde.
+- `FeaturesSection.vue`: Cuadrícula de tarjetas blancas sobre fondo crema (`#F5F1E8`) destacando módulos del sistema (Inventario, Marketplace, Compras y Facturación).
+- `HowItWorksSection.vue`: Diagrama de flujo de valor y arquitectura en tarjetas sobre fondo blanco.
+- `CtaSection.vue`: Banner de conversión con degradado verde institucional y botón de acción en naranja cosecha (`#E8853B`).
+- `FooterLanding.vue`: Pie de página en crema natural con enlaces legales e institucionales.
+
+---
 
 ### LayoutApp.vue — Layout Global (Navbar + Footer + Toast)
 

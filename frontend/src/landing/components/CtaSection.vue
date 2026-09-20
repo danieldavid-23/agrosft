@@ -55,8 +55,8 @@ defineProps({
 
 <style scoped>
 .gh-cta-section {
-  padding: 5rem 0 6rem;
-  background: #0d1117;
+  padding: 5rem 0 6.5rem;
+  background: #F5F1E8;
   position: relative;
 }
 
@@ -68,12 +68,12 @@ defineProps({
 
 .gh-cta-card {
   position: relative;
-  background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
-  border: 1px solid rgba(46, 160, 67, 0.4);
-  border-radius: 20px;
+  background: linear-gradient(135deg, #133f18 0%, #1f6326 50%, #2e7d33 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 24px;
   padding: 4.5rem 2rem;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(1, 4, 9, 0.8), 0 0 35px rgba(46, 160, 67, 0.15);
+  box-shadow: 0 24px 50px rgba(19, 63, 24, 0.25), 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .cta-glow {
@@ -81,9 +81,9 @@ defineProps({
   top: -80px;
   left: 50%;
   transform: translateX(-50%);
-  width: 500px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(46, 160, 67, 0.3) 0%, transparent 70%);
+  width: 550px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(98, 169, 107, 0.25) 0%, rgba(232, 133, 59, 0.15) 50%, transparent 70%);
   filter: blur(50px);
   pointer-events: none;
 }
@@ -99,28 +99,29 @@ defineProps({
   display: inline-flex;
   align-items: center;
   font-size: 0.82rem;
-  font-weight: 600;
-  color: #3fb950;
-  background: rgba(46, 160, 67, 0.15);
-  border: 1px solid rgba(46, 160, 67, 0.4);
-  padding: 0.3rem 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.35rem 1rem;
   border-radius: 20px;
   margin-bottom: 1.5rem;
 }
 
 .cta-title {
   font-size: clamp(2.2rem, 3.8vw, 3rem);
-  font-weight: 800;
-  color: #f0f6fc;
+  font-weight: 900;
+  color: #ffffff;
   letter-spacing: -0.03em;
   line-height: 1.15;
   margin-bottom: 1.25rem;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
 }
 
 .cta-subtitle {
   font-size: 1.1rem;
-  color: #8b949e;
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.65;
   margin-bottom: 2.5rem;
 }
 
@@ -137,22 +138,23 @@ defineProps({
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   padding: 0.85rem 2rem;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #ffffff;
-  background-color: #238636;
-  border: 1px solid rgba(240, 246, 252, 0.15);
+  background: linear-gradient(135deg, #E8853B 0%, #D97A30 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   text-decoration: none;
-  box-shadow: 0 4px 14px rgba(35, 134, 54, 0.4);
+  box-shadow: 0 8px 24px rgba(232, 133, 59, 0.45);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
 }
 
 .btn-cta-primary:hover {
-  background-color: #2ea043;
-  box-shadow: 0 6px 22px rgba(46, 160, 67, 0.55);
+  background: linear-gradient(135deg, #f09247 0%, #e08337 100%);
+  box-shadow: 0 12px 30px rgba(232, 133, 59, 0.6);
   transform: translateY(-2px);
+  color: #ffffff;
 }
 
 .btn-cta-secondary {
@@ -162,19 +164,20 @@ defineProps({
   font-size: 1rem;
   font-weight: 600;
   padding: 0.85rem 1.85rem;
-  border-radius: 8px;
-  color: #c9d1d9;
-  background-color: #21262d;
-  border: 1px solid #30363d;
+  border-radius: 10px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
   text-decoration: none;
   transition: all 0.25s ease;
   cursor: pointer;
 }
 
 .btn-cta-secondary:hover {
-  color: #f0f6fc;
-  background-color: #30363d;
-  border-color: #8b949e;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-2px);
 }
 </style>

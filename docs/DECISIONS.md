@@ -261,6 +261,8 @@ El navbar se mantiene con fondo claro (blanco/blur) con acentos verdes. El panel
 ### Archivos Afectados
 
 - `templates/base.html` — Variables CSS, botones, navbar, footer
+- `templates/landing.html` — Plantilla base de inicio con fondo crema #F5F1E8 y skeleton pre-loader
+- `frontend/src/landing/` — Componentes Vue de la Landing Page adaptados a Raíz y Confianza
 - `static/admin/css/admin-custom.css` — Rebranding completo
 - `templates/admin/base_site.html` — Color de enlace
 - `templates/usuarios/admin_usuarios_list.html` — Avatares por rol

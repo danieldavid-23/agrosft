@@ -7,6 +7,19 @@
 
 ## [Unreleased]
 
+### Changed (2026-09-17)
+- **Alineación Visual de la Landing Page con la Paleta "Raíz y Confianza" (ADR-010)**:
+  - `templates/landing.html`: Reemplazado fondo oscuro `#0d1117` por crema natural institucional `#F5F1E8`, actualizado pre-loader en skeleton con tonos `#3D5245` y verde corporativo `#3C8D3C`.
+  - `frontend/src/landing/LandingPage.vue`: Fondo base de la landing unificado en `#F5F1E8`, scrollbar y preloader interactivo adaptados a la estética institucional.
+  - `frontend/src/landing/components/NavbarLanding.vue`: Navbar rediseñado a barra flotante translúcida clara (`rgba(255, 255, 255, 0.90)`), borde `#D6D8CC`, tipografía en gris pizarra y botón primario en verde institucional `#3C8D3C`.
+  - `frontend/src/landing/components/HeroSection.vue`: Fondo actualizado con el degradado institucional del login (`linear-gradient(165deg, #133f18 0%, #1f6326 45%, #2e7d33 100%)`), textos en blanco de alto contraste, pill translúcido y botón CTA en naranja cosecha `#E8853B`.
+  - `frontend/src/landing/components/DashboardMockup.vue`: Tarjetas y tabla de monitoreo agrícola armonizadas con fondo frosted dark-forest sobre el banner hero verde.
+  - `frontend/src/landing/components/FeaturesSection.vue`: Fondo de sección en `#F5F1E8`, tarjetas de superficie blanca `#ffffff` con bordes `#D6D8CC` y acentos en verde `#3C8D3C`.
+  - `frontend/src/landing/components/HowItWorksSection.vue`: Fondo en blanco, tarjetas en crema `#F5F1E8` y conectores institucionales.
+  - `frontend/src/landing/components/CtaSection.vue`: Banner con degradado verde institucional y botón de acción en naranja cosecha `#E8853B`.
+  - `frontend/src/landing/components/FooterLanding.vue`: Pie de página en crema natural con borde superior `#D6D8CC` y enlaces en `#52635a`.
+  - Documentación actualizada: `docs/08-FRONTEND.md`, `docs/DECISIONS.md`.
+
 ### Fixed (2026-09-16)
 - **Corrección de errores de importación y resolución estática**:
   - `apps/ventas/forms/__init__.py`: Se removió la importación residual `from .movimiento import ...` (módulo inexistente en `forms/`, proveniente de `models/`), resolviendo `ModuleNotFoundError: No module named 'apps.ventas.forms.movimiento'`.

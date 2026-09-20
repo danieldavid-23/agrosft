@@ -68,10 +68,10 @@ defineProps({
 
 <style scoped>
 .gh-landing-footer {
-  background: #0d1117;
-  border-top: 1px solid #30363d;
+  background: #F5F1E8;
+  border-top: 1px solid #D6D8CC;
   padding: 4.5rem 0 2.5rem;
-  color: #8b949e;
+  color: #7A8A7D;
   font-size: 0.9rem;
 }
 
@@ -89,11 +89,11 @@ defineProps({
 }
 
 .footer-logo-wrap {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(46, 160, 67, 0.12);
-  border: 1px solid rgba(46, 160, 67, 0.3);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.3);
   padding: 4px;
   display: flex;
   align-items: center;
@@ -107,18 +107,18 @@ defineProps({
 }
 
 .footer-brand-name {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #f0f6fc;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #27402d;
 }
 
 .text-accent {
-  color: #3fb950;
+  color: #3C8D3C;
 }
 
 .footer-tagline {
   font-size: 0.88rem;
-  color: #8b949e;
+  color: #52635a;
   line-height: 1.6;
   max-width: 340px;
 }
@@ -140,24 +140,25 @@ defineProps({
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #c9d1d9;
+  color: #27402d;
   margin-bottom: 0.35rem;
 }
 
 .footer-link {
-  color: #8b949e;
+  color: #52635a;
   text-decoration: none;
   font-size: 0.88rem;
+  font-weight: 500;
   transition: color 0.2s ease;
 }
 
 .footer-link:hover {
-  color: #3fb950;
+  color: #3C8D3C;
 }
 
 /* Bottom Bar */
 .gh-footer-bottom {
-  border-top: 1px solid #21262d;
+  border-top: 1px solid #D6D8CC;
   padding-top: 2rem;
   display: flex;
   align-items: center;
@@ -168,7 +169,7 @@ defineProps({
 
 .copyright-text {
   font-size: 0.82rem;
-  color: #8b949e;
+  color: #7A8A7D;
   margin: 0;
 }
 
@@ -179,13 +180,14 @@ defineProps({
 }
 
 .tech-badge {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
-  color: #8b949e;
-  background: #161b22;
-  border: 1px solid #30363d;
-  padding: 0.2rem 0.6rem;
+  color: #52635a;
+  background: #ffffff;
+  border: 1px solid #D6D8CC;
+  padding: 0.25rem 0.65rem;
   border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 @media (max-width: 860px) {

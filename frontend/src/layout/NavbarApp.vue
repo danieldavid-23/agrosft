@@ -50,7 +50,7 @@ async function logout() {
   } catch (err) {
     console.error('Error during logout:', err)
   } finally {
-    window.location.href = props.urls.login
+    window.location.href = props.urls.home
   }
 }
 

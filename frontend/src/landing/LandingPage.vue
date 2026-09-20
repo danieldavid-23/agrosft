@@ -147,9 +147,9 @@ onMounted(() => {
 <style>
 /* Global resets and typography for the landing root */
 .gh-landing-root {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  background-color: #0d1117;
-  color: #c9d1d9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #F5F1E8;
+  color: #3D5245;
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
@@ -165,7 +165,7 @@ onMounted(() => {
 }
 
 .text-accent {
-  color: #2ea043;
+  color: #3C8D3C;
 }
 
 /* ============================================================
@@ -178,7 +178,8 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   z-index: 9999;
-  background: #0d1117;
+  background: rgba(245, 241, 232, 0.96);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,9 +187,9 @@ onMounted(() => {
 }
 
 .gh-preloader-card {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #D6D8CC;
+  border-radius: 18px;
   padding: 2.5rem 2rem;
   max-width: 440px;
   width: 100%;
@@ -196,7 +197,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 24px 48px rgba(1, 4, 9, 0.75), 0 0 25px rgba(46, 160, 67, 0.15);
+  box-shadow: 0 20px 45px rgba(39, 64, 45, 0.09), 0 4px 12px rgba(60, 141, 60, 0.08);
 }
 
 .gh-spinner-wrapper {
@@ -216,11 +217,11 @@ onMounted(() => {
 }
 
 .gh-spinner-track {
-  stroke: #21262d;
+  stroke: #E8F5E8;
 }
 
 .gh-spinner-circle {
-  stroke: #2ea043;
+  stroke: #3C8D3C;
   stroke-linecap: round;
   stroke-dasharray: 90, 150;
   stroke-dashoffset: 0;
@@ -253,8 +254,8 @@ onMounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -268,22 +269,22 @@ onMounted(() => {
 }
 
 @keyframes pulseLogo {
-  0%, 100% { transform: scale(0.92); opacity: 0.85; }
-  50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 6px rgba(46, 160, 67, 0.6)); }
+  0%, 100% { transform: scale(0.92); opacity: 0.9; }
+  50% { transform: scale(1.06); opacity: 1; filter: drop-shadow(0 0 6px rgba(60, 141, 60, 0.4)); }
 }
 
 .gh-preloader-brand {
   font-size: 1.3rem;
   font-weight: 800;
-  color: #f0f6fc;
+  color: #27402d;
   letter-spacing: -0.02em;
   margin-bottom: 1.5rem;
 }
 
 .gh-tip-box {
-  background: #0d1117;
-  border: 1px solid #30363d;
-  border-radius: 10px;
+  background: #F5F1E8;
+  border: 1px solid #D6D8CC;
+  border-radius: 12px;
   padding: 1rem 1.25rem;
   width: 100%;
   text-align: left;
@@ -301,12 +302,12 @@ onMounted(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #c9d1d9;
+  color: #27402d;
 }
 
 .gh-tip-text {
   font-size: 0.85rem;
-  color: #8b949e;
+  color: #52635a;
   line-height: 1.5;
   margin: 0;
 }
@@ -320,7 +321,7 @@ onMounted(() => {
 .gh-loading-dots span {
   width: 6px;
   height: 6px;
-  background-color: #2ea043;
+  background-color: #3C8D3C;
   border-radius: 50%;
   animation: loadingDot 1.2s infinite ease-in-out;
 }
@@ -363,15 +364,15 @@ onMounted(() => {
 }
 
 .gh-landing-root::-webkit-scrollbar-track {
-  background: #0d1117;
+  background: #F5F1E8;
 }
 
 .gh-landing-root::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: #D6D8CC;
   border-radius: 5px;
 }
 
 .gh-landing-root::-webkit-scrollbar-thumb:hover {
-  background: #2ea043;
+  background: #3C8D3C;
 }
 </style>

@@ -89,10 +89,10 @@ const steps = [
 
 <style scoped>
 .gh-section {
-  padding: 6rem 0;
-  background: #0d1117;
+  padding: 6.5rem 0;
+  background: #ffffff;
   position: relative;
-  border-top: 1px solid rgba(48, 54, 61, 0.5);
+  border-top: 1px solid #D6D8CC;
 }
 
 .gh-container {
@@ -109,28 +109,28 @@ const steps = [
 .gh-section-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #3fb950;
-  background: rgba(46, 160, 67, 0.12);
-  border: 1px solid rgba(46, 160, 67, 0.3);
-  padding: 0.25rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2E7535;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.25);
+  padding: 0.3rem 0.95rem;
   border-radius: 20px;
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
 }
 
 .gh-section-title {
   font-size: clamp(2rem, 3.2vw, 2.6rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #f0f6fc;
+  color: #27402d;
   margin-bottom: 1rem;
   line-height: 1.2;
 }
 
 .gh-section-sub {
   font-size: 1.05rem;
-  color: #8b949e;
+  color: #52635a;
   line-height: 1.6;
 }
 
@@ -150,10 +150,10 @@ const steps = [
 /* Flow Card */
 .gh-flow-card {
   flex: 1;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 12px;
-  padding: 1.75rem 1.25rem;
+  background: #F5F1E8;
+  border: 1px solid #D6D8CC;
+  border-radius: 16px;
+  padding: 2rem 1.35rem;
   text-align: center;
   position: relative;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -161,76 +161,77 @@ const steps = [
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0 4px 12px rgba(39, 64, 45, 0.04);
 }
 
 .gh-flow-card:hover {
   transform: translateY(-5px);
-  border-color: #2ea043;
-  box-shadow: 0 16px 32px rgba(1, 4, 9, 0.6), 0 0 18px rgba(46, 160, 67, 0.18);
-  background: #1c2128;
+  border-color: #3C8D3C;
+  box-shadow: 0 16px 32px rgba(39, 64, 45, 0.1);
+  background: #faf7f0;
 }
 
 .flow-card-num {
   position: absolute;
   top: 12px;
   left: 14px;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  color: #8b949e;
+  color: #7A8A7D;
   font-family: ui-monospace, monospace;
 }
 
 .flow-card-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
-  background: rgba(46, 160, 67, 0.12);
-  border: 1px solid rgba(46, 160, 67, 0.3);
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  color: #3fb950;
+  color: #3C8D3C;
   margin: 0.5rem auto 1rem;
   transition: transform 0.25s ease;
 }
 
 .gh-flow-card:hover .flow-card-icon {
   transform: scale(1.1);
-  background: #238636;
+  background: #3C8D3C;
   color: #ffffff;
 }
 
 .flow-badge-pill {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #79c0ff;
-  background: rgba(56, 139, 253, 0.12);
-  border: 1px solid rgba(56, 139, 253, 0.3);
-  padding: 0.15rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #25632C;
+  background: #E8F5E8;
+  border: 1px solid rgba(60, 141, 60, 0.25);
+  padding: 0.2rem 0.65rem;
   border-radius: 12px;
   margin-bottom: 0.75rem;
 }
 
 .flow-role {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #f0f6fc;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #27402d;
   margin-bottom: 0.25rem;
 }
 
 .flow-tech {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #3fb950;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #3C8D3C;
   font-family: ui-monospace, monospace;
   margin-bottom: 0.75rem;
 }
 
 .flow-desc {
-  font-size: 0.82rem;
-  color: #8b949e;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  color: #52635a;
+  line-height: 1.55;
   margin: 0;
 }
 
@@ -241,7 +242,7 @@ const steps = [
   align-items: center;
   justify-content: center;
   padding: 0 0.5rem;
-  color: #3fb950;
+  color: #3C8D3C;
   position: relative;
 }
 
@@ -250,16 +251,17 @@ const steps = [
 }
 
 .connector-arrow {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: #21262d;
-  border: 1px solid #30363d;
+  background: #ffffff;
+  border: 1.5px solid #D6D8CC;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  color: #3fb950;
+  color: #3C8D3C;
+  box-shadow: 0 2px 8px rgba(39, 64, 45, 0.08);
 }
 
 /* Responsive */
